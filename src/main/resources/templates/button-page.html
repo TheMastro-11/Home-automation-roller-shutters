@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Button Page</title>
+    <style>
+        /* General page styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Container for the content */
+        .container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        /* Heading styling */
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        /* Button styling */
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Result message styling */
+        #resultMessage {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            color: #28a745;
+        }
+
+        /* Link styling (optional) */
+        a {
+            color: #007bff;
+            text-decoration: none;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Click Example</h1>
+
+    <!-- Form to submit the button click -->
+    <form th:action="@{/handleButtonClick}" method="post">
+        <button type="submit" name="action" value="click">Click Me!</button>
+    </form>
+
+    <!-- Display the result message -->
+    <p th:if="${message}" th:text="${message}"></p>
+</body>
+</html>

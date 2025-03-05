@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Input Page</title>
+    <style>
+        /* General page styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Container for the content */
+        .container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        /* Heading styling */
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        /* Input box styling */
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        /* Button styling */
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Result message styling */
+        .result {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            color: #28a745;
+        }
+
+        /* Optional: Add a link or additional content */
+        a {
+            color: #007bff;
+            text-decoration: none;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Input Example</h1>
+
+        <!-- Form to submit the input value -->
+        <form th:action="@{/handleInput}" method="post">
+            <input type="text" name="userInput" th:value="${userInput}" placeholder="Enter a value" required>
+            <button type="submit" class="btn">Submit</button>
+        </form>
+
+        <!-- Display the result message -->
+        <p class="result" th:if="${result}" th:text="${result}"></p>
+
+        <!-- Optional: Add a link or additional content -->
+        <a href="/">Go back to Home</a>
+    </div>
+</body>
+</html>
