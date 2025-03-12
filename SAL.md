@@ -112,11 +112,12 @@ Lo stato della tapparella viene aggiornato sulla shadow.
 1. **Prototipazione del Dispositivo IoT:**  
    - Configurazione dell’ESP8266 connesso al sensore di luminosità e al motore passo-passo.
    - Sviluppo del firmware che consente l’elaborazione dei dati e l’invio degli aggiornamenti tramite mqtt.
-2. **Integrazione con Node-RED e AWS IoT:**  
-   - Configurazione di Node-RED per gestire il flusso di dati dall’ESP8266 verso AWS IoT Shadow.
-   - Sviluppo di flussi che gestiscono le richieste di comando dal backend Java e la sincronizzazione dello stato.
+2. ~~Integrazione con Node-RED e AWS IoT~~  
+   - ~~Configurazione di Node-RED per gestire il flusso di dati dall’ESP8266 verso AWS IoT Shadow.~~
+   - ~~Sviluppo di flussi che gestiscono le richieste di comando dal backend Java e la sincronizzazione dello stato.~~  
+
 3. **Sviluppo del Backend e Frontend in Java:**  
-   - **Backend:** Comunicazione con Node-RED e operazioni CRUD per la gestione degli utenti (salvate su PostgreSQL) e per la programmazione delle operazioni.
+   - **Backend:** ~~Comunicazione con Node-RED e~~ operazioni CRUD per la gestione degli utenti (salvate su PostgreSQL) e per la programmazione delle operazioni.
    - **Frontend:** Realizzazione di un’interfaccia web in Java che permetta la visualizzazione dello stato dei dispositivi e la configurazione delle automazioni.
 4. **Database e Storage:**  
    - **PostgreSQL:** Utilizzato per gestire dati degli utenti, log-in, registrazioni e configurazioni di sistema.
@@ -127,8 +128,8 @@ Lo stato della tapparella viene aggiornato sulla shadow.
 #### 2.2.1 architettura HW-SW
 **Flusso di Dati** 
 1. Il **sensore di luminosità** invia i dati all'**ESP8266**.  
-2. L'ESP8266 trasmette i dati a **Node-RED**.  
-3. **Node-RED** aggiorna lo stato del dispositivo su **AWS IoT Shadow**.  
+2. L'ESP8266 trasmette i dati a ~~**Node-RED**~~ al **AWS IoT Shadow**.
+3. ~~**Node-RED** aggiorna lo stato del dispositivo su **AWS IoT Shadow**.~~ 
 4. Il **backend Java** interroga lo stato aggiornato.  
 5. Il **frontend Java** visualizza in tempo reale lo stato delle tapparelle e consente il controllo manuale.
 
@@ -148,7 +149,7 @@ Lo stato della tapparella viene aggiornato sulla shadow.
 
 **Flussi Node-RED**  
 - **Sottoscrizioni MQTT**:  
-  - Ascoltare i topic `$aws/things/{thingName}/shadow/update`.  
+  - Ascoltare i topic ~~`$aws/things/{thingName}/shadow/update`~~.  
 - **Logica di Automazione**:  
   - Confrontare i livelli di luce con le soglie; pubblicare cambiamenti dello stato `desired`.  
   - Inoltrare comandi dal backend Java ai dispositivi.  
@@ -178,7 +179,7 @@ Lo stato della tapparella viene aggiornato sulla shadow.
 | **Componente**              | **Tecnologia**                    | **Connessione**              | **Scopo / Descrizione**                                                                                                                                                   |
 |-----------------------------|-----------------------------------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Microcontrollore**       | ESP8266                           | Wi-Fi                        | Controllo dei dispositivi e raccolta dei dati dai sensori; comunica con Node-RED per l'invio dei dati e il controllo del motore.                                           |                                                                       |
-| **Logica Automazione**    | Node-RED                         | HTTP/MQTT                    | Implementa l'automazione basata su regole e funge da gateway API, interfacciando ESP8266 e AWS IoT per l'aggiornamento dello stato.                                      |
+| ~~**Logica Automazione**~~    | ~~Node-RED~~                         | ~~HTTP/MQTT~~                    | ~~Implementa l'automazione basata su regole e funge da gateway API, interfacciando ESP8266 e AWS IoT per l'aggiornamento dello stato.~~                                      |
 | **Database Temporale**            | DynamoDB                    | NoSQL API              | Memorizza le letture dei sensori in modo scalabile.                |  
 | **IoT Shadow**      | AWS IoT Shadow              | HTTP                  | Memorizza e sincronizza lo stato desiderato/effettivo dei dispositivi. | 
 | **Backend**                 | Java/Spring Boot                  | REST API                     | Gestisce l'autenticazione, la logica API; interagisce con Node-RED e PostgreSQL per la gestione dei dati e degli utenti.                           |
@@ -191,7 +192,7 @@ Lo stato della tapparella viene aggiornato sulla shadow.
 ## 3 Contesto, problematiche da affrontare, motivazione delle scelte progettuali svolte
 Abbiamo scelto di utilizzare java per poter programmare con un unico linguaggio e soprattutto del quale avessimo conoscenze pregresse.
 
-L'utilizzo delle api di nodered ci permette un controllo diretto sull'esecuzione del flusso di lavoro.
+~~L'utilizzo delle api di nodered ci permette un controllo diretto sull'esecuzione del flusso di lavoro.~~
 
 Tutti i programmi vengono eseguiti su docker per poter avere una gestione migliore dei diversi ambienti e permettere un porting su qualsiasi macchina.
 
@@ -203,18 +204,18 @@ Il focus sarà incentrato su:
 
 La fase di validazione ha lo scopo di verificare che il sistema soddisfi i requisiti funzionali, garantendo affidabilità, performance. I test sono suddivisi in:  
 - **Test Funzionali**: Verificare il corretto funzionamento di ciascun caso d'uso.  
-- **Test di Integrazione**: Controllare la corretta interazione tra i vari componenti (dispositivo, Node-RED, AWS IoT, backend e frontend).  
+- **Test di Integrazione**: Controllare la corretta interazione tra i vari componenti (dispositivo, ~~Node-RED~~, AWS IoT, backend e frontend).  
 - **Test di Performance e Scalabilità**: Valutare la latenza nelle comunicazioni, la capacità di gestione simultanea di più dispositivi e l'efficienza nell'aggiornamento in tempo reale. 
 
 
 - **Test sul Campo**:  
-  - Simulazione delle condizioni di luminosità variabile per verificare la reazione del dispositivo e il corretto invio dei dati a Node-RED.  
+  - Simulazione delle condizioni di luminosità variabile per verificare la reazione del dispositivo ~~e il corretto invio dei dati a Node-RED~~. 
   - Verifica del funzionamento del motore passo-passo in risposta ai comandi automatizzati e manuali.
   - movimento fluido della tapparella
   - gestione corretta dei dati del sensore, per esempio evitare di scambiare istanti di buio dovuti ad fattori accidentali (nuvola che passa per pochi secondi) e quindi implementare controlli o utilizzo di intervalli temporali etc.
 - **Test Software**:  
   - **Unit Test**: Validazione delle funzioni individuali del backend Java e dei moduli di Node-RED.  
-  - **Integration Test**: Controllo dell'interazione tra ESP8266, Node-RED e AWS IoT Shadow, verificando la corretta sincronizzazione dei dati. Coerenza nel cambiamento degli stati, es. lo stato chiuso deve apparire una volta che la tapparella ha completato l'operazione e non durante o prima per evitare sitauzioni incongruenti. 
+  - **Integration Test**: Controllo dell'interazione tra ESP8266 ~~, Node-RED~~ e AWS IoT Shadow, verificando la corretta sincronizzazione dei dati. Coerenza nel cambiamento degli stati, es. lo stato chiuso deve apparire una volta che la tapparella ha completato l'operazione e non durante o prima per evitare sitauzioni incongruenti. 
   - **End-to-End Test**: Simulazione del flusso completo, dall'acquisizione dei dati dal sensore fino alla visualizzazione e controllo tramite l'interfaccia web.
 - **Test di Sicurezza**:  
   - Verifica dell'autenticazione e della gestione dei privilegi tramite PostgreSQL. 
