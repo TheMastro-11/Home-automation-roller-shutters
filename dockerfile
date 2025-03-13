@@ -1,0 +1,14 @@
+# Use a Java base image (adjust version as needed)
+FROM openjdk:17-jdk-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy the JAR file into the container
+COPY build/libs/RestInterface-0.0.2-SNAPSHOT.jar app.jar
+
+# Expose the port your app runs on
+EXPOSE 8080
+
+# Command to run the JAR
+CMD ["java", "-jar", "app.jar"]

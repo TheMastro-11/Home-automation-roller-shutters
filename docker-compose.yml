@@ -1,0 +1,40 @@
+services:
+  app:
+      image: my-java-app
+      ports:
+        - "8080:8080"
+      environment:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/HARS
+        SPRING_DATASOURCE_USERNAME: admin
+        SPRING_DATASOURCE_PASSWORD: ESIT2024
+      depends_on:
+        db:
+          condition: service_healthy
+      networks:
+        - my-network
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ESIT2024
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d HARS"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my-network
+volumes:
+  postgres-data:
+
+
+networks:
+  my-network:
+    driver: bridge
+

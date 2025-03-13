@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.hars'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2-SNAPSHOT'
 
 java {
 	toolchain {
@@ -26,13 +26,18 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	//MQTT Library
 	implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
 
 	implementation 'org.yaml:snakeyaml:2.2'
+    
+    // PostgreSQL JDBC Driver
+    implementation 'org.postgresql:postgresql:42.7.3'
+
 }
 
 application {
-    mainClass = 'com.hars.webInterface.WebInterfaceApplication' // Set the main class
+    mainClass = 'com.hars.App' // Set the main class
 }
 
 tasks.named('test') {
