@@ -1,9 +1,11 @@
-cert/
+backend/cert/
 
-config.yaml
+backend/config.yaml
 
 .DS_Store
 
-build/
+backend/.DS_Store
 
-.gradle/
+backend/build/
+
+backend/.gradle/

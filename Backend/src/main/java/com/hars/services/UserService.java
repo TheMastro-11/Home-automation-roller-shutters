@@ -28,22 +28,10 @@ public class UserService{
     
     }
 
-    public String loginUser(User userLog){
-        Optional<User> userOpt = userRepository.findByName(userLog.getName());
+    public Optional<User> checkUser(String authenticationRequestUsername) {
+        Optional<User> userOpt = userRepository.findByName(authenticationRequestUsername);
 
-        if (userOpt.isEmpty()) {
-            return "Utente non trovato";
-        }
-
-        User user = userOpt.get();
-
-        String hashedPassword = hashPassword(userLog.getPassword());
-        if (!user.getPassword().equals(hashedPassword)) {
-            return "Password errata";
-        }
- 
-        return "Login riuscito!"; 
-
+        return userOpt;
     }
 
     private String hashPassword(String password) {
