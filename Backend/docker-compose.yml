@@ -1,19 +1,25 @@
+name: HARS
 services:
   app:
-      image: my-java-app
-      ports:
-        - "8080:8080"
-      environment:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/HARS
-        SPRING_DATASOURCE_USERNAME: admin
-        SPRING_DATASOURCE_PASSWORD: ESIT2024
-      depends_on:
-        db:
-          condition: service_healthy
-      networks:
-        - my-network
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: my-java-app
+    container_name: backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/HARS
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: ESIT2024
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - my-network
   db:
     image: postgres
+    container_name: postgres
     restart: always
     ports:
       - "5432:5432"

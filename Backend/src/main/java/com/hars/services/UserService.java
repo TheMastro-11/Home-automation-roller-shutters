@@ -1,50 +1,20 @@
 package com.hars.services;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hars.persistence.entities.User;
-import com.hars.persistence.entities.UserRepository;
+import com.hars.persistence.repository.UserRepository;
 
 @Service
-public class UserService{
+public class UserService  {
 
-    @Autowired
     private UserRepository userRepository;
 
-    public String registerUser(User user){
-        try {
-            User user2 = userRepository.save(user);
-            return "\"ok\"";
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return "\"no\"";
-    
-    }
-
     public Optional<User> checkUser(String authenticationRequestUsername) {
-        Optional<User> userOpt = userRepository.findByName(authenticationRequestUsername);
+        Optional<User> userOpt = userRepository.findByUsername(authenticationRequestUsername);
 
         return userOpt;
-    }
-
-    private String hashPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encodedHash = digest.digest(password.getBytes());
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : encodedHash) {
-                hexString.append(String.format("%02x", b));
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Errore nell'hashing della password", e);
-        }
     }
 }

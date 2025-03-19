@@ -2,12 +2,11 @@ import requests
 import json
 
 # URL dell'endpoint API (sostituiscilo con il tuo vero URL)
-url='http://84.220.36.142:8080/RegisterUser'
+url='http://localhost:8080/tmp'
 
 # Dati utente in formato JSON
 data = {
-    "name": "testuser@example.com",
-    "password": "mypassword123"
+    "string" : "mario"
 }
 
 # Header per indicare che stiamo inviando JSON
@@ -17,6 +16,8 @@ headers = {
 
 # Effettuare la richiesta POST
 response = requests.post(url, data=json.dumps(data), headers=headers)
+
+#response = requests.get(url)
 
 # Stampare la risposta del server
 print("Status Code:", response.status_code)
