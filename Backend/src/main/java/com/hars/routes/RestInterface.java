@@ -18,7 +18,7 @@ public class RestInterface {
 
 	@PostMapping("/tmp")
 	public String tmp(@RequestBody MyRequest user){
-		return "ok";
+		return "\"ok";
 	}
 
 
