@@ -1,0 +1,77 @@
+/* Stile generale */
+body {
+    background-color: #212121;
+    color: white;
+}
+
+/* Contenitore principale */
+.container {
+    background: linear-gradient(#212121, #212121) padding-box,
+        linear-gradient(120deg, transparent 25%, #1cb0ff, #40ff99) border-box;
+    border: 2px solid transparent;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Titolo */
+h2 {
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Bottone Logout */
+.btn-danger {
+    background: #ff4d4d;
+    border: none;
+    padding: 10px;
+    font-weight: bold;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-danger:hover {
+    background: #ff1a1a;
+    transform: scale(1.05);
+}
+
+/* Bottone Accedi */
+.btn-success {
+    background: #28a745;
+    border: none;
+    padding: 10px;
+    font-weight: bold;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+    transform: scale(1.05);
+}
+
+/* Bottone Registrati */
+.btn-primary {
+    background: #007bff;
+    border: none;
+    padding: 10px;
+    font-weight: bold;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #28a745;
+    transform: scale(1.05);
+}
+
+/* Link "Accedi" e "Registrati" */
+a {
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+a:hover {
+    color: #28a745; /* Verde quando il mouse passa sopra */
+    transform: scale(1.05);
+}
