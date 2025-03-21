@@ -9,28 +9,47 @@
 </head>
 <body class="d-flex justify-content-center align-items-center vh-100">
     <div class="container text-center p-4 shadow-lg rounded">
-        <h2>Benvenuto nella Dashboard!</h2>
+        <h2 id="welcomeMessage">Benvenuto nella Dashboard!</h2>
         <p>Questa è un'area protetta accessibile solo agli utenti loggati.</p>
-        <a href="logout.html" class="btn btn-danger mt-3">Logout</a>
+        <button id="logoutBtn" class="btn btn-danger mt-3">Logout</button>
     </div>
 
     <script>
-        function getCookie(name) {
-            let cookies = document.cookie.split("; ");
-            for (let cookie of cookies) {
-                let [key, value] = cookie.split("=");
-                if (key === name) return value;
+        async function verifyToken() {
+            const token = localStorage.getItem("jwt");
+            if (!token) {
+                alert("Devi effettuare il login!");
+                window.location.href = "login.html";
+                return;
             }
-            return null;
+
+            try {
+                let response = await fetch("http://84.220.36.142:8080/api/auth/validate", {
+                    method: "GET",
+                    headers: { "Authorization": "Bearer " + token }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Token non valido o scaduto");
+                }
+
+                let result = await response.json();
+                document.getElementById("welcomeMessage").innerText = "Benvenuto " + result.username + "!";
+            } catch (error) {
+                alert(error.message);
+                window.location.href = "login.html";
+            }
         }
 
-        // Controllo se il token esiste
-        let sessionToken = getCookie("sessionToken");
+        // Controlla il token quando la pagina viene caricata
+        window.onload = verifyToken;
 
-        if (!sessionToken) {
-            alert("Devi effettuare il login!");
-            //window.location.href = "login.html";
-        }
+        // Logout
+        document.getElementById("logoutBtn").addEventListener("click", function () {
+            localStorage.removeItem("jwt");
+            alert("Logout effettuato!");
+            window.location.href = "login.html";
+        });
     </script>
 </body>
 </html>
