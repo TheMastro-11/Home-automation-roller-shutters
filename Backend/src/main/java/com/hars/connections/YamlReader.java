@@ -1,4 +1,4 @@
-package com.hars.backend;
+package com.hars.connections;
 
 import java.io.InputStream;
 import java.util.Map;

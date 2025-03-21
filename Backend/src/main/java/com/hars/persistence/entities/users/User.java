@@ -1,4 +1,4 @@
-package com.hars.persistence.entities;
+package com.hars.persistence.entities.users;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -6,6 +6,8 @@ import java.util.Collections;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.hars.utils.Role;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,6 +24,7 @@ public class User implements UserDetails {
     private Long id;
     private String username;
     private String password;
+    private Role role = Role.USER;
 
     // Getters and Setters
 
@@ -75,5 +78,9 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public String getRole(){
+        return this.role.getRole();
     }
 }
