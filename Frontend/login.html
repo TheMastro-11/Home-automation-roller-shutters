@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,7 +9,7 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <!-- CSS personalizzato -->
+    <!-- Custom CSS -->
     <link href="css/styles.css" rel="stylesheet" />
   </head>
 
@@ -20,7 +20,7 @@
           <h2 class="text-center">Login</h2>
           <form id="loginForm">
             <div class="mb-3">
-              <label for="loginname" class="form-label">Nome</label>
+              <label for="loginname" class="form-label">Username</label>
               <input type="text" id="loginname" class="form-control" required />
             </div>
             <div class="mb-3">
@@ -32,10 +32,10 @@
                 required
               />
             </div>
-            <button type="submit" class="btn btn-primary w-100">Accedi</button>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
           </form>
           <p class="mt-3 text-center">
-            Non hai un account? <a href="register.html">Registrati</a>
+            Don't have an account? <a href="register.html">Register</a>
           </p>
         </div>
       </div>
@@ -82,17 +82,17 @@
             }
 
             if (response.ok && result.jwt) {
-              localStorage.setItem("jwt", result.jwt); // ✅ Usa "jwt" invece di "token"
-              alert("Login riuscito!");
+              localStorage.setItem("jwt", result.jwt); // Save JWT
+              alert("Login successful!");
               window.location.href = "dashboard.html";
             } else {
               alert(
-                "Errore nel login: " +
-                  (result.message || "Credenziali errate o token mancante")
+                "Login failed: " +
+                  (result.message || "Invalid credentials or missing token")
               );
             }
           } catch (error) {
-            alert("Errore di connessione: " + error.message);
+            alert("Connection error: " + error.message);
           }
         });
     </script>
