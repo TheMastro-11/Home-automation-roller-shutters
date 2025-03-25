@@ -136,7 +136,32 @@
           </form>
         </div>
       </div>
+      <script>
+        document
+          .getElementById("logoutBtn")
+          .addEventListener("click", function () {
+            // Remove JWT from localStorage
+            localStorage.removeItem("jwt");
 
+            // Clear session or any other cleanup
+            alert("You have been logged out!");
+
+            // Redirect to login page
+            window.location.href = "login.html";
+          });
+
+        // Function to show automation form
+        function showAutomationForm() {
+          document.getElementById("automation-form").style.display = "block";
+        }
+
+        // Function to cancel automation form
+        function cancelAutomation() {
+          const form = document.getElementById("automation-form");
+          form.style.display = "none"; // Hide the form
+          form.reset(); // Reset form fields
+        }
+      </script>
       <script>
         async function loadDevicesForAutomation() {
           const token = localStorage.getItem("jwt");
