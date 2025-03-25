@@ -20,14 +20,17 @@
 
       <!-- USER SECTION -->
       <div id="user-section" style="display: none">
-        <h4>Your Homes</h4>
-        <ul class="list-group" id="homes-list"></ul>
+        <h4>Your Home</h4>
+        <div id="home-details">
+          <p><strong id="selected-home-name"></strong></p>
+        </div>
 
         <div id="devices-section" class="mt-4" style="display: none">
-          <h5>Devices in selected home</h5>
+          <h5>Devices in your home</h5>
           <ul class="list-group" id="devices-list"></ul>
         </div>
       </div>
+
       <!-- AUTOMATIONS SECTION -->
       <div id="automations-section" class="mt-5">
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -39,11 +42,9 @@
             + Add
           </button>
         </div>
-        <ul class="list-group" id="automations-list">
-          <!-- Automazioni caricate dinamicamente -->
-        </ul>
+        <ul class="list-group" id="automations-list"></ul>
 
-        <!-- Form per nuova automazione -->
+        <!-- Form for new automation -->
         <div id="automation-form" class="mt-4" style="display: none">
           <h5>Create Automation</h5>
           <form onsubmit="createAutomation(event)">
@@ -57,378 +58,194 @@
               />
             </div>
             <div class="mb-2">
-              <label class="form-label">Device ID</label>
-              <input
-                type="text"
-                id="automationDeviceId"
-                class="form-control"
-                required
-              />
+              <label class="form-label">Select Device</label>
+              <select id="automationDeviceId" class="form-control" required>
+                <!-- Device options will be loaded here dynamically -->
+              </select>
             </div>
+
+            <!-- Trigger Section -->
             <div class="mb-2">
               <label class="form-label">Trigger</label>
-              <input
-                type="text"
-                id="automationTrigger"
-                class="form-control"
-                required
-              />
+              <div>
+                <label for="triggerType">Trigger Type</label>
+                <select
+                  id="triggerType"
+                  class="form-control"
+                  onchange="toggleTriggerOptions()"
+                  required
+                >
+                  <option value="luminosity">Luminosity</option>
+                  <option value="time">Time</option>
+                </select>
+              </div>
+
+              <!-- Luminosity Trigger -->
+              <div id="triggerLuminositySection" class="mt-2">
+                <label for="triggerLuminosity">Luminosity</label>
+                <select id="triggerLuminosity" class="form-control">
+                  <option value="0">0%</option>
+                  <option value="20">20%</option>
+                  <option value="40">40%</option>
+                  <option value="60">60%</option>
+                  <option value="80">80%</option>
+                  <option value="100">100%</option>
+                </select>
+              </div>
+
+              <!-- Time Trigger -->
+              <div id="triggerTimeSection" class="mt-2" style="display: none">
+                <label for="triggerTime">Time</label>
+                <input type="time" id="triggerTime" class="form-control" />
+              </div>
             </div>
+
+            <!-- Action Section -->
             <div class="mb-2">
               <label class="form-label">Action</label>
-              <input
-                type="text"
-                id="automationAction"
-                class="form-control"
-                required
-              />
+              <div>
+                <label for="action">Action</label>
+                <select id="action" class="form-control" required>
+                  <option value="open">Open</option>
+                  <option value="close">Close</option>
+                </select>
+              </div>
+              <div class="mt-2">
+                <label for="actionPercentage">Percentage</label>
+                <select id="actionPercentage" class="form-control" required>
+                  <option value="0">0%</option>
+                  <option value="20">20%</option>
+                  <option value="40">40%</option>
+                  <option value="60">60%</option>
+                  <option value="80">80%</option>
+                  <option value="100">100%</option>
+                </select>
+              </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
+
+            <div class="d-flex gap-2 mt-2">
+              <button type="submit" class="btn btn-primary">Save</button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="cancelAutomation()"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         </div>
       </div>
 
-      <!-- ADMIN SECTION -->
-      <div id="admin-section" style="display: none">
-        <h4>Admin Panel: Manage Homes</h4>
+      <script>
+        async function loadDevicesForAutomation() {
+          const token = localStorage.getItem("jwt");
+          const select = document.getElementById("automationDeviceId");
 
-        <div id="admin-homes">
-          <h5>Homes</h5>
-          <ul class="list-group" id="admin-homes-list"></ul>
-        </div>
-
-        <div id="admin-home-details" class="mt-4" style="display: none">
-          <h5>Selected Home Details</h5>
-          <p><strong id="selected-home-name"></strong></p>
-
-          <h6>Devices</h6>
-          <ul class="list-group" id="admin-devices-list"></ul>
-
-          <button
-            class="btn btn-outline-success mt-2"
-            onclick="alert('TODO: Add device logic')"
-          >
-            + Add Device
-          </button>
-
-          <h6 class="mt-4">Users</h6>
-          <ul class="list-group" id="admin-users-list"></ul>
-
-          <button
-            class="btn btn-outline-success mt-2"
-            onclick="alert('TODO: Add user logic')"
-          >
-            + Add User
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      function parseJwt(token) {
-        const base64Url = token.split(".")[1];
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split("")
-            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-            .join("")
-        );
-        return JSON.parse(jsonPayload);
-      }
-
-      function selectHome(homeId) {
-        localStorage.setItem("selectedHome", homeId);
-        loadDevices(homeId);
-      }
-
-      async function loadHomes() {
-        const token = localStorage.getItem("jwt");
-        const list = document.getElementById("homes-list");
-        list.innerHTML = "";
-
-        try {
-          const res = await fetch("http://84.220.36.142:8080/api/homes", {
-            headers: { Authorization: "Bearer " + token },
-          });
-
-          const homes = await res.json();
-
-          homes.forEach((home) => {
-            const li = document.createElement("li");
-            li.className =
-              "list-group-item d-flex justify-content-between align-items-center";
-            li.innerHTML = `
-            <span>${home.name}</span>
-            <button class="btn btn-sm btn-primary" onclick="selectHome('${home.id}')">Select</button>
-          `;
-            list.appendChild(li);
-          });
-        } catch (err) {
-          alert("Failed to load homes.");
-        }
-      }
-
-      async function loadDevices(homeId) {
-        const token = localStorage.getItem("jwt");
-        const list = document.getElementById("devices-list");
-        list.innerHTML = "";
-
-        try {
-          const res = await fetch(
-            `http://84.220.36.142:8080/api/homes/${homeId}/devices`,
-            {
+          try {
+            const res = await fetch("http://84.220.36.142:8080/api/devices", {
               headers: { Authorization: "Bearer " + token },
-            }
-          );
+            });
+            const devices = await res.json();
 
-          const devices = await res.json();
-
-          if (devices.length === 0) {
-            list.innerHTML =
-              "<li class='list-group-item'>No devices found.</li>";
+            devices.forEach((device) => {
+              const option = document.createElement("option");
+              option.value = device.id;
+              option.textContent = `${device.name} (${device.type})`;
+              select.appendChild(option);
+            });
+          } catch (err) {
+            alert("Failed to load devices.");
           }
-
-          devices.forEach((device) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-
-            let status =
-              device.type === "SHUTTER"
-                ? `Open: ${device.percentage}%`
-                : `Value: ${device.value}`;
-
-            let controls = "";
-
-            if (device.type === "SHUTTER") {
-              controls = `
-              <div class="mt-2">
-                <button class="btn btn-sm btn-success me-2" onclick="sendShutterCommand('${device.id}', 'open')">Open</button>
-                <button class="btn btn-sm btn-danger me-2" onclick="sendShutterCommand('${device.id}', 'close')">Close</button>
-                <button class="btn btn-sm btn-secondary" onclick="sendShutterCommand('${device.id}', 'partial')">Open 30%</button>
-              </div>
-            `;
-            }
-
-            li.innerHTML = `
-            <strong>${device.name}</strong> (${device.type})<br>
-            ${status}
-            ${controls}
-          `;
-
-            list.appendChild(li);
-          });
-
-          document.getElementById("devices-section").style.display = "block";
-        } catch (err) {
-          alert("Failed to load devices.");
         }
-      }
 
-      async function sendShutterCommand(deviceId, command) {
-        const token = localStorage.getItem("jwt");
+        function showAutomationForm() {
+          document.getElementById("automation-form").style.display = "block";
+        }
 
-        try {
-          const res = await fetch(
-            `http://84.220.36.142:8080/api/shutters/${deviceId}/command`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + token,
-              },
-              body: JSON.stringify({ command: command }),
-            }
-          );
+        function cancelAutomation() {
+          // Nascondi il form e resetta i campi
+          const form = document.getElementById("automation-form");
+          form.style.display = "none"; // Nasconde il form
+          form.reset(); // Resetta i campi
 
-          if (res.ok) {
-            alert("Command sent!");
-            const homeId = localStorage.getItem("selectedHome");
-            loadDevices(homeId);
-          } else {
-            alert("Error sending command.");
+          // Ripristina la visibilità del campo "trigger"
+          document.getElementById("triggerLuminositySection").style.display =
+            "none";
+          document.getElementById("triggerTimeSection").style.display = "none";
+          document.getElementById("triggerType").value = "luminosity"; // Ripristina il valore predefinito
+
+          // Mostra la sezione del trigger luminosità
+          document.getElementById("triggerLuminositySection").style.display =
+            "block";
+        }
+
+        // Handle trigger type change
+        function toggleTriggerOptions() {
+          const triggerType = document.getElementById("triggerType").value;
+
+          // Show/Hide trigger options based on the selected trigger type
+          if (triggerType === "luminosity") {
+            document.getElementById("triggerLuminositySection").style.display =
+              "block";
+            document.getElementById("triggerTimeSection").style.display =
+              "none";
+          } else if (triggerType === "time") {
+            document.getElementById("triggerLuminositySection").style.display =
+              "none";
+            document.getElementById("triggerTimeSection").style.display =
+              "block";
           }
-        } catch (err) {
-          alert("Network error.");
         }
-      }
 
-      async function loadAdminHomes() {
-        const token = localStorage.getItem("jwt");
-        const list = document.getElementById("admin-homes-list");
-        list.innerHTML = "";
+        async function createAutomation(event) {
+          event.preventDefault();
+          const token = localStorage.getItem("jwt");
+          const homeId = localStorage.getItem("selectedHome");
 
-        try {
-          const res = await fetch("http://84.220.36.142:8080/api/admin/homes", {
-            headers: { Authorization: "Bearer " + token },
-          });
+          const newAuto = {
+            name: document.getElementById("automationName").value,
+            deviceId: document.getElementById("automationDeviceId").value,
+            trigger: {
+              luminosity: document.getElementById("triggerLuminosity").value,
+              time: document.getElementById("triggerTime").value,
+            },
+            action: {
+              type: document.getElementById("action").value,
+              percentage: document.getElementById("actionPercentage").value,
+            },
+          };
 
-          const homes = await res.json();
+          try {
+            const res = await fetch(
+              `http://84.220.36.142:8080/api/homes/${homeId}/automations`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer " + token,
+                },
+                body: JSON.stringify(newAuto),
+              }
+            );
 
-          homes.forEach((home) => {
-            const li = document.createElement("li");
-            li.className =
-              "list-group-item d-flex justify-content-between align-items-center";
-            li.innerHTML = `
-            <span>${home.name}</span>
-            <button class="btn btn-sm btn-outline-primary" onclick="viewHomeDetails('${home.id}', '${home.name}')">View</button>
-          `;
-            list.appendChild(li);
-          });
-        } catch (err) {
-          alert("Error loading admin homes.");
-        }
-      }
-
-      async function viewHomeDetails(homeId, homeName) {
-        document.getElementById("selected-home-name").textContent = homeName;
-        document.getElementById("admin-home-details").style.display = "block";
-
-        const token = localStorage.getItem("jwt");
-
-        try {
-          const res = await fetch(
-            `http://84.220.36.142:8080/api/admin/homes/${homeId}/devices`,
-            {
-              headers: { Authorization: "Bearer " + token },
+            if (res.ok) {
+              alert("Automation created!");
+              loadAutomations();
+              cancelAutomation();
+            } else {
+              alert("Error creating automation.");
             }
-          );
-          const devices = await res.json();
-          const list = document.getElementById("admin-devices-list");
-          list.innerHTML = "";
-          devices.forEach((device) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-            li.textContent = `${device.name} (${device.type})`;
-            list.appendChild(li);
-          });
-        } catch (err) {
-          alert("Error loading devices for home.");
-        }
-
-        try {
-          const res = await fetch(
-            `http://84.220.36.142:8080/api/admin/homes/${homeId}/users`,
-            {
-              headers: { Authorization: "Bearer " + token },
-            }
-          );
-          const users = await res.json();
-          const list = document.getElementById("admin-users-list");
-          list.innerHTML = "";
-          users.forEach((user) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-            li.textContent = `${user.username} (${user.role})`;
-            list.appendChild(li);
-          });
-        } catch (err) {
-          alert("Error loading users for home.");
-        }
-      }
-
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        localStorage.removeItem("jwt");
-        window.location.href = "login.html";
-      });
-
-      window.onload = () => {
-        const token = localStorage.getItem("jwt");
-        if (!token) {
-          alert("Access denied. Please log in.");
-          window.location.href = "login.html";
-          return;
-        }
-
-        const payload = parseJwt(token);
-        const role = payload.role || payload.roles || "USER";
-
-        if (role === "ADMIN") {
-          document.getElementById("admin-section").style.display = "block";
-          loadAdminHomes();
-        } else {
-          document.getElementById("user-section").style.display = "block";
-          loadHomes();
-        }
-      };
-
-      function showAutomationForm() {
-        document.getElementById("automation-form").style.display = "block";
-      }
-
-      async function loadAutomations() {
-        const token = localStorage.getItem("jwt");
-        const homeId = localStorage.getItem("selectedHome");
-        const list = document.getElementById("automations-list");
-        list.innerHTML = "";
-
-        try {
-          const res = await fetch(
-            `http://84.220.36.142:8080/api/homes/${homeId}/automations`,
-            {
-              headers: { Authorization: "Bearer " + token },
-            }
-          );
-
-          const automations = await res.json();
-
-          if (automations.length === 0) {
-            list.innerHTML =
-              "<li class='list-group-item'>No automations yet.</li>";
+          } catch (err) {
+            alert("Connection error.");
           }
-
-          automations.forEach((auto) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-            li.innerHTML = `
-        <strong>${auto.name}</strong><br>
-        Device: ${auto.deviceId}, Trigger: ${auto.trigger}, Action: ${auto.action}
-        <!-- Aggiungerai qui eventualmente il tasto modifica -->
-      `;
-            list.appendChild(li);
-          });
-        } catch (err) {
-          alert("Error loading automations.");
         }
-      }
 
-      async function createAutomation(event) {
-        event.preventDefault();
-        const token = localStorage.getItem("jwt");
-        const homeId = localStorage.getItem("selectedHome");
-
-        const newAuto = {
-          name: document.getElementById("automationName").value,
-          deviceId: document.getElementById("automationDeviceId").value,
-          trigger: document.getElementById("automationTrigger").value,
-          action: document.getElementById("automationAction").value,
+        window.onload = () => {
+          loadDevicesForAutomation();
+          toggleTriggerOptions(); // Initialize visibility of trigger options
         };
-
-        try {
-          const res = await fetch(
-            `http://84.220.36.142:8080/api/homes/${homeId}/automations`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + token,
-              },
-              body: JSON.stringify(newAuto),
-            }
-          );
-
-          if (res.ok) {
-            alert("Automation created!");
-            loadAutomations();
-            document.getElementById("automation-form").reset();
-            document.getElementById("automation-form").style.display = "none";
-          } else {
-            alert("Error creating automation.");
-          }
-        } catch (err) {
-          alert("Connection error.");
-        }
-      }
-    </script>
+      </script>
+    </div>
   </body>
 </html>
