@@ -1,12 +1,16 @@
 package com.hars.persistence.entities.users;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.hars.utils.Permission;
 import com.hars.utils.Role;
 
 import jakarta.persistence.Entity;
@@ -25,13 +29,14 @@ public class User implements UserDetails {
     private String username;
     private String password;
     private Role role = Role.USER;
+    private List<Permission> permission = new ArrayList<>(Arrays.asList(Permission.READ));
 
     // Getters and Setters
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Return user roles/authorities
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        return Collections.singletonList(new SimpleGrantedAuthority(this.getRole()));
     }
 
     public Long getId() {
@@ -82,5 +87,15 @@ public class User implements UserDetails {
 
     public String getRole(){
         return this.role.getRole();
+    }
+
+    public List<String> getPermission(){
+        List<String> tmp = new ArrayList<>();
+        
+        for (Permission perm : this.permission) {
+            tmp.add(perm.getPermission());
+        }
+        
+        return tmp;
     }
 }
