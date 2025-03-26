@@ -34,6 +34,8 @@ public class Home {
         return this.name;
     }
 
+    public Home() {}
+
     public Home(String name){
         this.name = name;
     }
