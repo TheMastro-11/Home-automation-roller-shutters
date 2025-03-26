@@ -3,7 +3,7 @@ package com.hars.persistence.entities.home;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hars.persistence.entities.roller_shutter.Roller_shutter;
+import com.hars.persistence.entities.rollerShutter.RollerShutter;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -24,20 +24,35 @@ public class Home {
     private String name;
 
     @OneToMany(mappedBy = "home", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Roller_shutter> roller_shutter = new ArrayList<>();
+    private List<RollerShutter> rollerShutters = new ArrayList<>();
 
-    public void setName(String name){
+    //builder
+    public Home() {}
+
+    public Home(String name){
         this.name = name;
+    }
+    
+    //getter
+    public long getID(){
+        return this.id;
     }
 
     public String getName() {
         return this.name;
     }
 
-    public Home() {}
-
-    public Home(String name){
+    public List<RollerShutter> getRollerShutters(){
+        return this.rollerShutters;
+    }
+    
+    //setter
+    public void setName(String name){
         this.name = name;
+    }
+
+    public void setRollerShutters (List<RollerShutter> rollerShutters){
+        this.rollerShutters = rollerShutters;
     }
 
 }

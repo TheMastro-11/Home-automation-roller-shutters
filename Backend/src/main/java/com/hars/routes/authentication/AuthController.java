@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.entities.users.User;
-import com.hars.persistence.repository.users.UserRepository;
 import com.hars.security.AuthenticationRequest;
 import com.hars.security.AuthenticationResponse;
 import com.hars.services.users.UserService;

@@ -22,12 +22,10 @@ public class HomeController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createHome(@RequestBody Home home) {
-        // Check if the username is already taken
         if (homeService.homeRepository.findByName(home.getName()).isPresent()) {
             return ResponseEntity.badRequest().body("Error: Name is already taken!");
         }
 
-        // Save the user to the database
         homeService.homeRepository.save(home);
 
         return ResponseEntity.ok("\"Home created successfully!\"");
