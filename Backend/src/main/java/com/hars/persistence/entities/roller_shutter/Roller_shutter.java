@@ -1,5 +1,7 @@
 package com.hars.persistence.entities.roller_shutter;
 
+import org.springframework.web.filter.reactive.UrlHandlerFilter;
+
 import com.hars.persistence.entities.home.Home;
 import com.hars.services.home.HomeService;
 
@@ -19,7 +21,7 @@ public class Roller_shutter {
     private Long id;
 
     private String name;
-    private int percentage_open;
+    private int percentage_open = 0;
 
     private HomeService homeService;
 
@@ -27,14 +29,9 @@ public class Roller_shutter {
     @JoinColumn(name = "author_id") // Foreign key column in the "books" table
     private Home home;
 
-    public Roller_shutter(String name, int percentage_open, String homeName) {
+    public Roller_shutter(String name, Home home) {
         this.name = name;
-        this.percentage_open = percentage_open;
-        try {
-            Home validHome = homeService.loadHomeByName(homeName);
-            this.home = validHome;
-        } catch (Exception e) {
-        }
+        this.home = home;
     }
     
 }
