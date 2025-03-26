@@ -22,11 +22,11 @@ public class HomeController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createHome(@RequestBody Home home) {
-        if (homeService.homeRepository.findByName(home.getName()).isPresent()) {
+        if (homeService.isPresent(home)) {
             return ResponseEntity.badRequest().body("Error: Name is already taken!");
         }
 
-        homeService.homeRepository.save(home);
+        homeService.createHome(home);
 
         return ResponseEntity.ok("\"Home created successfully!\"");
     }

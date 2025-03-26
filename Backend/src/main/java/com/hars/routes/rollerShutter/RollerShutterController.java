@@ -22,7 +22,7 @@ public class RollerShutterController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createRoller_shutter(@RequestBody RollerShutter roller_shutter) {
-        if (rollerShutterService.rollerShutterRepository.findByName(roller_shutter.getName()).isPresent()) {
+        if (rollerShutterService.isPresent(roller_shutter)) {
             return ResponseEntity.badRequest().body("Error: Name is already taken!");
         }
 

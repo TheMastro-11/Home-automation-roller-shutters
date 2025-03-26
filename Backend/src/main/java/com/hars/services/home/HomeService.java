@@ -14,14 +14,24 @@ import jakarta.persistence.EntityNotFoundException;
 public class HomeService {
 
     @Autowired
-    public HomeRepository homeRepository;
+    private HomeRepository homeRepository;
 
     public Home loadHomeByName(String name) {
     return homeRepository.findByName(name)
             .orElseThrow(() -> new EntityNotFoundException("Home not found with name: " + name));
     }
 
+    public Boolean isPresent(Home home){
+        return homeRepository.findByName(home.getName()).isPresent();
+    }
+
     public List<Home> getAllHomes(){
         return homeRepository.findAll();
     }
+
+    public void createHome(Home home){
+        homeRepository.save(home);
+    }
+
+
 }

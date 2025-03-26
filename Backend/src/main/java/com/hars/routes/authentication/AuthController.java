@@ -35,7 +35,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody AuthenticationRequest registrationRequest) {
         // Check if the username is already taken
-        if (userService.userRepository.findByUsername(registrationRequest.getUsername()).isPresent()) {
+        if (userService.isPresent(registrationRequest.getUsername())) {
             return ResponseEntity.badRequest().body("Error: Username is already taken!");
         }
 
@@ -45,7 +45,7 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
 
         // Save the user to the database
-        userService.userRepository.save(user);
+        userService.createUser(user);
 
         return ResponseEntity.ok("\"User registered successfully!\"");
     }

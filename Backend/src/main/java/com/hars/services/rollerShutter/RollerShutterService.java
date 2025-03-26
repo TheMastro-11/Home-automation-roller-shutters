@@ -17,7 +17,7 @@ import jakarta.persistence.EntityNotFoundException;
 public class RollerShutterService {
 
     @Autowired
-    public RollerShutterRepository rollerShutterRepository;
+    private RollerShutterRepository rollerShutterRepository;
 
     @Autowired
     private HomeService homeService;
@@ -28,6 +28,10 @@ public class RollerShutterService {
                 .orElseThrow(() -> new UsernameNotFoundException("Home not found with name: " + name));
 
         return roller_shutter;
+    }
+
+    public Boolean isPresent(RollerShutter rollerShutter){
+        return rollerShutterRepository.findByName(rollerShutter.getName()).isPresent();
     }
 
     public String createRollerShutter(String name, String homeName) {
@@ -45,4 +49,6 @@ public class RollerShutterService {
     public List<RollerShutter> getAllRollerShutters(){
         return rollerShutterRepository.findAll();
     }
+
+    
 }
