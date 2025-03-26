@@ -12,7 +12,7 @@ import com.hars.persistence.repository.users.UserRepository;
 public class UserService implements UserDetailsService {
 
     @Autowired
-    public  UserRepository userRepository;
+    public UserRepository userRepository;
 
     @Override
     public User loadUserByUsername(String username) throws UsernameNotFoundException {
