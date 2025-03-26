@@ -1,4 +1,4 @@
-package com.hars.persistence.repository;
+package com.hars.persistence.repository.users;
  
 import java.util.Optional;
 
