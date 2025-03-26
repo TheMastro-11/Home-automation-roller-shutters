@@ -62,19 +62,11 @@
         let responseText = await response.text();
         console.log("Server response:", responseText);
 
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (jsonError) {
-          console.warn("Response is not valid JSON, using raw text.");
-          result = { message: responseText };
-        }
-
         if (response.ok) {
-          alert("Registration successful: " + result.message);
+          alert("Registration successful!");
           window.location.href = "login.html";
         } else {
-          alert("Registration failed: " + result.message);
+          alert("Registration failed: " + responseText);
         }
       } catch (error) {
         console.error("Full error:", error);
