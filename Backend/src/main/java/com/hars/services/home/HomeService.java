@@ -1,5 +1,7 @@
 package com.hars.services.home;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -19,5 +21,9 @@ public class HomeService {
                 .orElseThrow(() -> new UsernameNotFoundException("Home not found with name: " + name));
 
         return home;
+    }
+
+    public List<Home> getAllHomes(){
+        return homeRepository.findAll();
     }
 }
