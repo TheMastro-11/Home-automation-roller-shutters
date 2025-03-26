@@ -23,8 +23,6 @@ public class Roller_shutter {
     private String name;
     private int percentage_open = 0;
 
-    private HomeService homeService;
-
     @ManyToOne
     @JoinColumn(name = "author_id") // Foreign key column in the "books" table
     private Home home;
