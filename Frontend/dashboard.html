@@ -18,6 +18,40 @@
 
       <h2 class="mb-4 text-center">Dashboard</h2>
 
+      <!-- ADMIN SECTION -->
+      <div id="admin-section" style="display: none">
+        <h4>Admin Panel: Manage Homes</h4>
+
+        <div id="admin-homes">
+          <h5>Homes</h5>
+          <ul class="list-group" id="admin-homes-list"></ul>
+        </div>
+
+        <!-- Spinner di caricamento -->
+        <div id="loadingSpinner" class="spinner" style="display: none">
+          Loading...
+        </div>
+
+        <!-- Add New Home Form -->
+        <div id="add-home-form" class="mt-4">
+          <h5>Add New Home</h5>
+          <form onsubmit="addHome(event)">
+            <div class="mb-2">
+              <label class="form-label">Home Name</label>
+              <input
+                type="text"
+                id="newHomeName"
+                class="form-control"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-outline-success">
+              Add Home
+            </button>
+          </form>
+        </div>
+      </div>
+
       <!-- USER SECTION -->
       <div id="user-section" style="display: none">
         <h4>Your Home</h4>
@@ -25,9 +59,26 @@
           <p><strong id="selected-home-name"></strong></p>
         </div>
 
+        <!-- Devices Section -->
         <div id="devices-section" class="mt-4" style="display: none">
           <h5>Devices in your home</h5>
           <ul class="list-group" id="devices-list"></ul>
+
+          <!-- Shutter Control -->
+          <div id="shutter-controls" class="mt-4">
+            <h5>Shutter Control</h5>
+            <div id="shutter-status">
+              <!-- Shutter Status dynamically populated here -->
+            </div>
+            <div class="mt-2">
+              <button class="btn btn-primary" onclick="openAllShutters()">
+                Open All
+              </button>
+              <button class="btn btn-danger" onclick="closeAllShutters()">
+                Close All
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -42,12 +93,14 @@
             + Add
           </button>
         </div>
-        <ul class="list-group" id="automations-list"></ul>
+        <ul class="list-group" id="automations-list">
+          <!-- Automations will be loaded dynamically -->
+        </ul>
 
-        <!-- Form for new automation -->
+        <!-- Form for new or edit automation -->
         <div id="automation-form" class="mt-4" style="display: none">
-          <h5>Create Automation</h5>
-          <form onsubmit="createAutomation(event)">
+          <h5 id="form-title">Create Automation</h5>
+          <form onsubmit="createOrUpdateAutomation(event)">
             <div class="mb-2">
               <label class="form-label">Name</label>
               <input
@@ -136,33 +189,16 @@
           </form>
         </div>
       </div>
+
       <script>
         document
           .getElementById("logoutBtn")
           .addEventListener("click", function () {
-            // Remove JWT from localStorage
             localStorage.removeItem("jwt");
-
-            // Clear session or any other cleanup
             alert("You have been logged out!");
-
-            // Redirect to login page
             window.location.href = "login.html";
           });
 
-        // Function to show automation form
-        function showAutomationForm() {
-          document.getElementById("automation-form").style.display = "block";
-        }
-
-        // Function to cancel automation form
-        function cancelAutomation() {
-          const form = document.getElementById("automation-form");
-          form.style.display = "none"; // Hide the form
-          form.reset(); // Reset form fields
-        }
-      </script>
-      <script>
         async function loadDevicesForAutomation() {
           const token = localStorage.getItem("jwt");
           const select = document.getElementById("automationDeviceId");
@@ -186,30 +222,24 @@
 
         function showAutomationForm() {
           document.getElementById("automation-form").style.display = "block";
+          document.getElementById("form-title").innerText = "Create Automation"; // Reset to create form title
         }
 
         function cancelAutomation() {
-          // Nascondi il form e resetta i campi
           const form = document.getElementById("automation-form");
-          form.style.display = "none"; // Nasconde il form
-          form.reset(); // Resetta i campi
-
-          // Ripristina la visibilità del campo "trigger"
+          form.style.display = "none";
+          form.reset();
           document.getElementById("triggerLuminositySection").style.display =
             "none";
           document.getElementById("triggerTimeSection").style.display = "none";
-          document.getElementById("triggerType").value = "luminosity"; // Ripristina il valore predefinito
-
-          // Mostra la sezione del trigger luminosità
+          document.getElementById("triggerType").value = "luminosity";
           document.getElementById("triggerLuminositySection").style.display =
             "block";
         }
 
-        // Handle trigger type change
         function toggleTriggerOptions() {
           const triggerType = document.getElementById("triggerType").value;
 
-          // Show/Hide trigger options based on the selected trigger type
           if (triggerType === "luminosity") {
             document.getElementById("triggerLuminositySection").style.display =
               "block";
@@ -223,7 +253,43 @@
           }
         }
 
-        async function createAutomation(event) {
+        async function loadAutomations() {
+          const token = localStorage.getItem("jwt");
+          const homeId = localStorage.getItem("selectedHome");
+          const list = document.getElementById("automations-list");
+          list.innerHTML = "";
+
+          try {
+            const res = await fetch(
+              `http://84.220.36.142:8080/api/homes/${homeId}/automations`,
+              {
+                headers: { Authorization: "Bearer " + token },
+              }
+            );
+
+            const automations = await res.json();
+
+            if (automations.length === 0) {
+              list.innerHTML =
+                "<li class='list-group-item'>No automations yet.</li>";
+            }
+
+            automations.forEach((auto) => {
+              const li = document.createElement("li");
+              li.className = "list-group-item";
+              li.innerHTML = `
+                <strong>${auto.name}</strong><br>
+                Device: ${auto.deviceId}, Trigger: ${auto.trigger}, Action: ${auto.action}
+                <button class="btn btn-warning btn-sm mt-2" onclick="editAutomation('${auto.id}')">Edit</button>
+              `;
+              list.appendChild(li);
+            });
+          } catch (err) {
+            alert("Error loading automations.");
+          }
+        }
+
+        async function createOrUpdateAutomation(event) {
           event.preventDefault();
           const token = localStorage.getItem("jwt");
           const homeId = localStorage.getItem("selectedHome");
@@ -241,25 +307,88 @@
             },
           };
 
+          const isEdit =
+            document.getElementById("form-title").innerText ===
+            "Edit Automation";
+          const url = isEdit
+            ? `http://84.220.36.142:8080/api/homes/${homeId}/automations/${newAuto.id}`
+            : `http://84.220.36.142:8080/api/homes/${homeId}/automations`;
+
+          const method = isEdit ? "PUT" : "POST";
+
+          try {
+            const res = await fetch(url, {
+              method,
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token,
+              },
+              body: JSON.stringify(newAuto),
+            });
+
+            if (res.ok) {
+              alert("Automation saved!");
+              loadAutomations();
+              cancelAutomation();
+            } else {
+              alert("Error saving automation.");
+            }
+          } catch (err) {
+            alert("Connection error.");
+          }
+        }
+
+        async function loadShutterStatus() {
+          const token = localStorage.getItem("jwt");
+          const homeId = localStorage.getItem("selectedHome");
+          const statusElement = document.getElementById("shutter-status");
+
           try {
             const res = await fetch(
-              `http://84.220.36.142:8080/api/homes/${homeId}/automations`,
+              `http://84.220.36.142:8080/api/homes/${homeId}/shutters/status`,
+              {
+                headers: { Authorization: "Bearer " + token },
+              }
+            );
+            const shutters = await res.json();
+
+            shutters.forEach((shutter) => {
+              const statusLi = document.createElement("li");
+              statusLi.className = "list-group-item";
+              statusLi.innerHTML = `
+                <strong>${shutter.name}</strong>: ${shutter.percentage}% 
+                <button class="btn btn-sm btn-primary" onclick="setShutterPosition('${shutter.id}', 100)">Open</button>
+                <button class="btn btn-sm btn-danger" onclick="setShutterPosition('${shutter.id}', 0)">Close</button>
+                <button class="btn btn-sm btn-secondary" onclick="setShutterPosition('${shutter.id}', 50)">50%</button>
+              `;
+              statusElement.appendChild(statusLi);
+            });
+          } catch (err) {
+            alert("Failed to load shutter status.");
+          }
+        }
+
+        async function setShutterPosition(shutterId, position) {
+          const token = localStorage.getItem("jwt");
+
+          try {
+            const res = await fetch(
+              `http://84.220.36.142:8080/api/shutters/${shutterId}/command`,
               {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: "Bearer " + token,
                 },
-                body: JSON.stringify(newAuto),
+                body: JSON.stringify({ position }),
               }
             );
 
             if (res.ok) {
-              alert("Automation created!");
-              loadAutomations();
-              cancelAutomation();
+              alert(`Shutter position set to ${position}%`);
+              loadShutterStatus(); // Reload the shutter status
             } else {
-              alert("Error creating automation.");
+              alert("Failed to set shutter position.");
             }
           } catch (err) {
             alert("Connection error.");
@@ -269,7 +398,118 @@
         window.onload = () => {
           loadDevicesForAutomation();
           toggleTriggerOptions(); // Initialize visibility of trigger options
+          loadAutomations(); // Load automations on page load
+          loadShutterStatus(); // Load shutter status on page load
+          loadAdminHomes(); // Load admin homes list on page load
         };
+
+        async function addHome(event) {
+          event.preventDefault(); // Evita il comportamento di invio del form
+
+          const homeName = document.getElementById("newHomeName").value;
+          const token = localStorage.getItem("jwt");
+
+          const data = { name: homeName };
+
+          // Mostra lo spinner di caricamento
+          document.getElementById("loadingSpinner").style.display = "block";
+
+          try {
+            const res = await fetch(
+              "http://84.220.36.142:8080/admin/home",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer " + token,
+                },
+                body: JSON.stringify(data),
+              }
+            );
+
+            const result = await res.json();
+
+            // Nascondi lo spinner
+            document.getElementById("loadingSpinner").style.display = "none";
+
+            if (result === "ok") {
+              alert("Home added successfully!");
+              loadAdminHomes(); // Ricarica la lista delle case
+            } else {
+              alert("Failed to add home.");
+            }
+          } catch (err) {
+            // Nascondi lo spinner anche in caso di errore
+            document.getElementById("loadingSpinner").style.display = "none";
+            alert("Error adding home.");
+          }
+        }
+
+        async function removeHome(homeId) {
+          const token = localStorage.getItem("jwt");
+
+          // Mostra lo spinner di caricamento
+          document.getElementById("loadingSpinner").style.display = "block";
+
+          try {
+            const res = await fetch(
+              `http://84.220.36.142:8080/admin/home/${homeId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: "Bearer " + token,
+                },
+              }
+            );
+
+            const result = await res.json();
+
+            // Nascondi lo spinner
+            document.getElementById("loadingSpinner").style.display = "none";
+
+            if (result === "ok") {
+              alert("Home removed successfully!");
+              loadAdminHomes(); // Ricarica la lista delle case
+            } else {
+              alert("Failed to remove home.");
+            }
+          } catch (err) {
+            // Nascondi lo spinner anche in caso di errore
+            document.getElementById("loadingSpinner").style.display = "none";
+            alert("Error removing home.");
+          }
+        }
+
+        // Carica le abitazioni gestite dall'admin
+        async function loadAdminHomes() {
+          const token = localStorage.getItem("jwt");
+          const list = document.getElementById("admin-homes-list");
+          list.innerHTML = ""; // Svuota la lista prima di ricaricarla
+
+          try {
+            const res = await fetch(
+              "http://84.220.36.142:8080/admin/home",
+              {
+                headers: { Authorization: "Bearer " + token },
+              }
+            );
+
+            const homes = await res.json();
+
+            homes.forEach((home) => {
+              const li = document.createElement("li");
+              li.className =
+                "list-group-item d-flex justify-content-between align-items-center";
+              li.innerHTML = `
+        <span>${home.name}</span>
+        <button class="btn btn-sm btn-outline-danger" onclick="removeHome('${home.id}')">Remove</button>
+      `;
+              list.appendChild(li);
+            });
+          } catch (err) {
+            alert("Error loading homes.");
+          }
+        }
       </script>
     </div>
   </body>
