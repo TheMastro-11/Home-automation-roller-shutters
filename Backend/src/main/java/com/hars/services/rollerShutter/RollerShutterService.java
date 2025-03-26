@@ -49,6 +49,5 @@ public class RollerShutterService {
     public List<RollerShutter> getAllRollerShutters(){
         return rollerShutterRepository.findAll();
     }
-
     
 }

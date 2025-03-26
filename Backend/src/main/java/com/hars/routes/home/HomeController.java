@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hars.persistence.dto.home.HomeDTO;
 import com.hars.persistence.entities.home.Home;
 import com.hars.services.home.HomeService;
 
@@ -32,7 +33,7 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public List<Home> getAllHomes() {
+    public List<HomeDTO> getAllHomes() {
         return homeService.getAllHomes();
     }
 
