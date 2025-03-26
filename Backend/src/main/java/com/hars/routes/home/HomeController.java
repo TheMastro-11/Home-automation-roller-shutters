@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,11 +14,8 @@ import com.hars.persistence.entities.home.Home;
 import com.hars.services.home.HomeService;
 
 @RestController
-@RequestMapping("/home")
+@RequestMapping("/api/entities/home")
 public class HomeController {
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     @Autowired
     private HomeService homeService;
@@ -28,7 +24,7 @@ public class HomeController {
     public ResponseEntity<?> createHome(@RequestBody Home home) {
         // Check if the username is already taken
         if (homeService.homeRepository.findByName(home.getName()).isPresent()) {
-            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+            return ResponseEntity.badRequest().body("Error: Name is already taken!");
         }
 
         // Save the user to the database

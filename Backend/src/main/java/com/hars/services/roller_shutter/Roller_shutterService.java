@@ -1,5 +1,7 @@
 package com.hars.services.roller_shutter;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -9,12 +11,15 @@ import com.hars.persistence.entities.roller_shutter.Roller_shutter;
 import com.hars.persistence.repository.roller_shutter.Roller_shutterRepository;
 import com.hars.services.home.HomeService;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class Roller_shutterService {
 
     @Autowired
     public Roller_shutterRepository roller_shutterRepository;
 
+    @Autowired
     private HomeService homeService;
 
     public Roller_shutter loadHomeByName(String name) throws UsernameNotFoundException {
@@ -25,13 +30,19 @@ public class Roller_shutterService {
         return roller_shutter;
     }
 
-    public String createRollerShutter (String name, int percentage_open, String homeName){
+    public String createRollerShutter(String name, String homeName) {
+        // Input validation (as above)
         try {
             Home validHome = homeService.loadHomeByName(homeName);
             Roller_shutter roller_shutter = new Roller_shutter(name, validHome);
-        } catch (Exception e) {
-        }
+            roller_shutterRepository.save(roller_shutter);
+            return "Roller shutter created successfully!";
+        } catch (EntityNotFoundException e) {
+            throw new IllegalArgumentException("Invalid home name: " + homeName);
+        }   
+    }
 
-        return "ok";
+    public List<Roller_shutter> getAllRoller_shutters(){
+        return roller_shutterRepository.findAll();
     }
 }
