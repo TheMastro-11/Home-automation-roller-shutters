@@ -2,7 +2,7 @@ import requests
 import json
 
 # Base URL of your Spring Boot application
-BASE_URL = "http://localhost:8080/api/auth"
+BASE_URL = "http://192.168.178.30:8080/api/"
 
 # Headers for the requests
 HEADERS = {
@@ -11,7 +11,7 @@ HEADERS = {
 
 # Function to register a new user
 def register_user(username, password):
-    url = f"{BASE_URL}/register"
+    url = f"{BASE_URL}auth/register"
     data = {
         "username": username,
         "password": password
@@ -34,7 +34,7 @@ def register_user(username, password):
 
 # Function to authenticate a user and get a JWT token
 def authenticate_user(username, password):
-    url = f"{BASE_URL}/authenticate"
+    url = f"{BASE_URL}auth/authenticate"
     data = {
         "username": username,
         "password": password
@@ -63,6 +63,44 @@ def authenticate_user(username, password):
         print("Failed to parse JSON response:", e)
         return None
 
+def createHome(jwtToken):
+    HEADERS_BEARER = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {jwtToken}"
+    }
+
+    url = f"{BASE_URL}entities/home/create"
+    data = {
+        "name": "Trudda"
+    }
+
+    
+    response = requests.post(url, json=data, headers=HEADERS_BEARER)
+    print("Authenticate User - Status Code:", response.status_code)
+    print("Authenticate User - Raw Response:", response.text)
+    print(response.json())
+    
+def createRoller_shutter(jwtToken):
+    HEADERS_BEARER = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {jwtToken}"
+    }
+
+    url = f"{BASE_URL}entities/roller_shutter/create"
+    data = {
+        "name": "Finestra",
+        "home" : {
+            "name" : "Trudda"
+        }
+    }
+
+    
+    response = requests.post(url, json=data, headers=HEADERS_BEARER)
+    print("Authenticate User - Status Code:", response.status_code)
+    print("Authenticate User - Raw Response:", response.text)
+    print(response.json())
+
+        
 # Example usage
 if __name__ == "__main__":
     # Register a new user
@@ -70,8 +108,7 @@ if __name__ == "__main__":
 
     # Authenticate the user and get a JWT token
     jwt_token = authenticate_user("ma", "aaaa")
-
-    if jwt_token:
-        print("Authentication successful! Use the JWT token for authorized requests.")
-    else:
-        print("Authentication failed.")
+    
+    createHome(jwt_token)
+    
+    createRoller_shutter(jwt_token)

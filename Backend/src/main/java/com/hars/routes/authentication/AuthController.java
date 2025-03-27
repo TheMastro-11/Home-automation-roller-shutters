@@ -11,18 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.entities.users.User;
-import com.hars.persistence.repository.UserRepository;
 import com.hars.security.AuthenticationRequest;
 import com.hars.security.AuthenticationResponse;
-import com.hars.services.UserService;
+import com.hars.services.users.UserService;
 import com.hars.utils.JwtUtil;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -39,7 +35,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody AuthenticationRequest registrationRequest) {
         // Check if the username is already taken
-        if (userRepository.findByUsername(registrationRequest.getUsername()).isPresent()) {
+        if (userService.isPresent(registrationRequest.getUsername())) {
             return ResponseEntity.badRequest().body("Error: Username is already taken!");
         }
 
@@ -49,7 +45,7 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
 
         // Save the user to the database
-        userRepository.save(user);
+        userService.createUser(user);
 
         return ResponseEntity.ok("\"User registered successfully!\"");
     }

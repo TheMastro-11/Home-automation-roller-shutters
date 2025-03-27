@@ -3,9 +3,6 @@ import requests
 # Base URL of your Spring Boot application
 url = "http://localhost:8080/tmp"
 
-# JWT token (replace this with the actual token you received from the server)
-jwt_token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYSIsImlhdCI6MTc0MjQxOTM5OSwiZXhwIjoxNzQzMjgzMzk5fQ.33kGn5uRQvBQuWKPRIBj7mBsmXN968_6gjgo5UJSQwI"
-
 # Headers for the request
 HEADERS = {
     "Content-Type": "application/json",
@@ -35,3 +32,5 @@ try:
 
 except requests.exceptions.RequestException as e:
     print("An error occurred during the request:", e)
+    
+    
