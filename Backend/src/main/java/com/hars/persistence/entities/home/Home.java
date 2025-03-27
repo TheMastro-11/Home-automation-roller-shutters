@@ -47,12 +47,20 @@ public class Home {
     }
     
     //setter
+    public void setId(Long id){
+        this.id = id;
+    }
+    
     public void setName(String name){
         this.name = name;
     }
 
     public void setRollerShutters (List<RollerShutter> rollerShutters){
         this.rollerShutters = rollerShutters;
+    }
+
+    public String toJson(){
+        return "\"Name\" : \"" + this.name + "\"";
     }
 
 }

@@ -24,8 +24,12 @@ public class HomeService {
             .orElseThrow(() -> new EntityNotFoundException("Home not found with name: " + name));
     }
 
-    public Boolean isPresent(Home home){
-        return homeRepository.findByName(home.getName()).isPresent();
+    public Boolean isPresentByName(String name){
+        return homeRepository.findByName(name).isPresent();
+    }
+
+    public Boolean isPresentById(Long id){
+        return homeRepository.findById(id).isPresent();
     }
 
     public List<HomeDTO> getAllHomes() {
@@ -35,28 +39,52 @@ public class HomeService {
             .collect(Collectors.toList());
     }
 
-    public void createHome(Home home){
-        homeRepository.save(home);
+    public Home createHome(Home home){
+        return homeRepository.save(home);
+    } 
+
+    public void deleteHome(Long id){
+        try {
+            Home home = homeRepository.findById(id).get();
+            homeRepository.delete(home);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
-    private HomeDTO convertToDTO(Home home) {
-    HomeDTO dto = new HomeDTO();
-    dto.setName(home.getName());
-    
-    if (home.getRollerShutters() != null) {
-        dto.setRollerShutters(
-            home.getRollerShutters().stream()
-                .map(rs -> {
-                    RollerShutterDTO rsDto = new RollerShutterDTO();
-                    rsDto.setName(rs.getName());
-                    rsDto.setPercentageOpening(rs.getPercentageOpening());
-                    return rsDto;
-                })
-                .collect(Collectors.toList())
-        );
+    public Home putHome(Long id, Home newHome){
+        try {
+            Home home = homeRepository.findById(id).get();
+            Long oldId = home.getID();
+            home = newHome;
+            home.setId(oldId);
+            return homeRepository.save(home);
+        } catch (Exception e) {
+            throw e;
+        }
     }
+
+
+    //helpers
+    private HomeDTO convertToDTO(Home home) {
+        HomeDTO dto = new HomeDTO();
+        dto.setId(home.getID());
+        dto.setName(home.getName());
     
-    return dto;
+        if (home.getRollerShutters() != null) {
+            dto.setRollerShutters(
+                home.getRollerShutters().stream()
+                    .map(rs -> {
+                        RollerShutterDTO rsDto = new RollerShutterDTO();
+                        rsDto.setName(rs.getName());
+                        rsDto.setPercentageOpening(rs.getPercentageOpening());
+                        return rsDto;
+                    })
+                    .collect(Collectors.toList())
+            );
+        }
+    
+        return dto;
     }
 
 
