@@ -26,9 +26,13 @@ public class RollerShutterController {
             return ResponseEntity.badRequest().body("Error: Name is already taken!");
         }
 
-        String result = rollerShutterService.createRollerShutter(roller_shutter.getName(), roller_shutter.getHome().getName());
+        try {
+            String result = rollerShutterService.createRollerShutter(roller_shutter.getName(), roller_shutter.getHome().getName());
+            return ResponseEntity.ok("\""+result+"\"");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok("\""+e.toString()+"\"");
+        }
 
-        return ResponseEntity.ok("\""+result+"\"");
     }
 
     @GetMapping("/")

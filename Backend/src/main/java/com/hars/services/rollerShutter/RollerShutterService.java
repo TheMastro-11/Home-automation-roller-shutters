@@ -35,14 +35,13 @@ public class RollerShutterService {
     }
 
     public String createRollerShutter(String name, String homeName) {
-        // Input validation (as above)
         try {
             Home validHome = homeService.loadHomeByName(homeName);
             RollerShutter roller_shutter = new RollerShutter(name, validHome);
             rollerShutterRepository.save(roller_shutter);
             return "Roller shutter created successfully!";
         } catch (EntityNotFoundException e) {
-            throw new IllegalArgumentException("Invalid home name: " + homeName);
+            throw new IllegalArgumentException("This home does not exist: " + homeName);
         }   
     }
 
