@@ -5,12 +5,12 @@ import java.util.List;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 
 public class HomeDTO {
-    private Long id;
+    private String name;
     private List<RollerShutterDTO> rollerShutters;
 
     //Getters
-    public Long getID() {
-        return id;
+    public String getName() {
+        return this.name;
     }
 
     public List<RollerShutterDTO> getRollerShutters() {
@@ -18,8 +18,8 @@ public class HomeDTO {
     }
 
     //Setters
-    public void setID(Long id) {
-        this.id = id;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setRollerShutters(List<RollerShutterDTO> rollerShutters) {

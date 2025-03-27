@@ -41,14 +41,13 @@ public class HomeService {
 
     private HomeDTO convertToDTO(Home home) {
     HomeDTO dto = new HomeDTO();
-    dto.setID(home.getID());
+    dto.setName(home.getName());
     
     if (home.getRollerShutters() != null) {
         dto.setRollerShutters(
             home.getRollerShutters().stream()
                 .map(rs -> {
                     RollerShutterDTO rsDto = new RollerShutterDTO();
-                    rsDto.setID(rs.getID());
                     rsDto.setName(rs.getName());
                     rsDto.setPercentageOpening(rs.getPercentageOpening());
                     return rsDto;
