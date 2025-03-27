@@ -209,20 +209,18 @@
 
         // Funzione che esegue il controllo del ruolo e mostra/nasconde le sezioni
         function checkRoleAndDisplay() {
-          if (true){
-          
-          //(isAdmin()) {  // Verifica se l'utente è admin
+          if (isAdmin()) { // Verifica se l'utente è admin
             // Mostra la sezione admin
             document.getElementById("admin-section").style.display = "block";
             // Nascondi la sezione user
             document.getElementById("user-section").style.display = "none";
-            loadAdminHomes();  // Carica le case amministrate
+            loadAdminHomes(); // Carica le case amministrate
           } else {
             // Nascondi la sezione admin
             document.getElementById("admin-section").style.display = "none";
             // Mostra la sezione user
-            document.getElementById("user-section").style.display = "block";  // Corretto per mostrare la parte dell'utente
-            //loadHomes();  // Carica le case dell'utente
+            document.getElementById("user-section").style.display = "block"; // Corretto per mostrare la parte dell'utente
+            loadHomes(); // Carica le case dell'utente
           }
         }
 
@@ -272,7 +270,7 @@
           }
         }
 
-        // Funzione comune per ottenere le case (solo id e name)
+        // Funzione comune per ottenere le case (solo name)
         async function loadHomes() {
           const token = localStorage.getItem("jwt");
           const homeList = document.getElementById("home-list");
@@ -290,10 +288,10 @@
             if (res.ok) {
               const homes = await res.json(); // Ottieni tutte le case
               homes.forEach((home) => {
-                // Aggiungi solo id e name alla lista
+                // Aggiungi solo name alla lista
                 const li = document.createElement("li");
                 li.className = "list-group-item";
-                li.innerHTML = `Home ID: ${home.id}, Home Name: ${home.name}`;
+                li.innerHTML = `Home Name: ${home.name}`;
                 homeList.appendChild(li);
               });
             } else {
@@ -319,18 +317,16 @@
               }
             );
 
-            // Controllo dello status della risposta
             if (res.ok) {
-              const homes = await res.json(); // Ottieni tutte le case
+              const homes = await res.json();
               homes.forEach((home) => {
-                // Aggiungi solo id e name alla lista
                 const li = document.createElement("li");
-                li.className = "list-group-item";
-                li.innerHTML = `Home ID: ${home.id}, Home Name: ${home.name}`;
+                li.classList.add("admin-home-item"); // Usa la classe personalizzata
+                li.innerHTML = `Home Name: ${home.name}`;
                 homeList.appendChild(li);
               });
             } else {
-              console.log(`Error: ${res.status}`); // Stampa l'errore se lo status non è 200
+              console.log(`Error: ${res.status}`);
               alert("Failed to load admin homes.");
             }
           } catch (err) {
@@ -338,7 +334,6 @@
           }
         }
 
-        // Esegui il controllo al caricamento della pagina
         window.onload = () => {
           checkRoleAndDisplay(); // Controlla il ruolo e mostra la sezione corretta
         };
