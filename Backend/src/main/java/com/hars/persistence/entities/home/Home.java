@@ -3,6 +3,7 @@ package com.hars.persistence.entities.home;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
 
 import jakarta.persistence.CascadeType;
@@ -12,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -25,6 +27,9 @@ public class Home {
 
     @OneToMany(mappedBy = "home", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<RollerShutter> rollerShutters = new ArrayList<>();
+
+    @OneToOne
+    private LightSensor lightSensor;
 
     //builder
     public Home() {}
@@ -45,6 +50,10 @@ public class Home {
     public List<RollerShutter> getRollerShutters(){
         return this.rollerShutters;
     }
+
+    public LightSensor getLightSensor() {
+        return this.lightSensor;
+    }
     
     //setter
     public void setId(Long id){
@@ -61,6 +70,10 @@ public class Home {
 
     public String toJson(){
         return "\"Name\" : \"" + this.name + "\"";
+    }
+
+    public void setLightSensor(LightSensor lightSensor) {
+        this.lightSensor = lightSensor;
     }
 
 }

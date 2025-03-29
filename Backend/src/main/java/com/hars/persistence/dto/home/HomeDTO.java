@@ -2,12 +2,14 @@ package com.hars.persistence.dto.home;
 
 import java.util.List;
 
+import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 
 public class HomeDTO {
     private Long id;
     private String name;
     private List<RollerShutterDTO> rollerShutters;
+    private LightSensorDTO lightSensor;
 
     //Getters
     public Long getId(){
@@ -19,7 +21,11 @@ public class HomeDTO {
     }
 
     public List<RollerShutterDTO> getRollerShutters() {
-        return rollerShutters;
+        return this.rollerShutters;
+    }
+    
+    public LightSensorDTO getLightSensor() {
+        return this.lightSensor;
     }
 
     //Setters
@@ -33,5 +39,9 @@ public class HomeDTO {
 
     public void setRollerShutters(List<RollerShutterDTO> rollerShutters) {
         this.rollerShutters = rollerShutters;
+    }
+
+    public void setLightSensor(LightSensorDTO lightSensor) {
+        this.lightSensor = lightSensor;
     }
 }

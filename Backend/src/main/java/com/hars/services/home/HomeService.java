@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hars.persistence.dto.home.HomeDTO;
+import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 import com.hars.persistence.entities.home.Home;
+import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.repository.home.HomeRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -78,6 +80,13 @@ public class HomeService {
                     })
                     .collect(Collectors.toList())
             );
+        }
+
+        if (home.getLightSensor() != null) {
+            LightSensorDTO lightSensorDto = new LightSensorDTO();
+            LightSensor lightSensor = home.getLightSensor();
+            lightSensorDto.setName(lightSensor.getName());
+            dto.setLightSensor(lightSensorDto);
         }
     
         return dto;
