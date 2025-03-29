@@ -1,10 +1,11 @@
 package com.hars.routes.rollerShutter;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,24 +21,83 @@ public class RollerShutterController {
     @Autowired
     private RollerShutterService rollerShutterService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createRoller_shutter(@RequestBody RollerShutter roller_shutter) {
-        if (rollerShutterService.isPresent(roller_shutter)) {
-            return ResponseEntity.badRequest().body("Error: Name is already taken!");
-        }
-
+    @GetMapping("/")
+    public ResponseEntity<?> getAllRollerShutter() {
         try {
+            return ResponseEntity.ok(rollerShutterService.getAllRollerShutters());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Get all RollerShutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<String> createRoller_shutter(@RequestBody RollerShutter roller_shutter) {
+        try {
+            if (rollerShutterService.isPresentByName(roller_shutter.getName())) {
+                return ResponseEntity.badRequest().body("Error: Name is already taken!");
+            }
+
             String result = rollerShutterService.createRollerShutter(roller_shutter.getName(), roller_shutter.getHome().getName());
             return ResponseEntity.ok("\""+result+"\"");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.ok("\""+e.toString()+"\"");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
 
     }
 
-    @GetMapping("/")
-    public List<RollerShutter> getAllRollerShutter() {
-        return rollerShutterService.getAllRollerShutters();
+    @DeleteMapping(("/delete/{id}"))
+    public ResponseEntity<String> deleteRollerShutter(@PathVariable Long id){
+        try {
+            if (!rollerShutterService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+            
+            rollerShutterService.deleteRollerShutter(id);
+            return ResponseEntity.ok("\"RollerShutter deleted successfully!\"");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Delete\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
     }
 
+    @PatchMapping("/patch/name/{id}")
+    public ResponseEntity<String> patchNameRollerShutter (@PathVariable Long id, @RequestBody RollerShutter rollerShutter) {
+        try {
+            if (!rollerShutterService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            String newRollerShutter = rollerShutterService.patchNameRollerShutter(id, rollerShutter.getName() ).toJson();
+            return ResponseEntity.ok(newRollerShutter);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+    }
+
+    @PatchMapping("/patch/opening/{id}")
+    public ResponseEntity<String> patchOpeningRollerShutter (@PathVariable Long id, @RequestBody RollerShutter rollerShutter) {
+        try {
+            if (!rollerShutterService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            String newRollerShutter = rollerShutterService.patchOpeningRollerShutter(id, rollerShutter.getPercentageOpening()).toJson();
+            return ResponseEntity.ok(newRollerShutter);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify opening percentage\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+    }
+
+    @PatchMapping("/patch/home/{id}")
+    public ResponseEntity<String> patchHomeRollerShutter (@PathVariable Long id, @RequestBody RollerShutter rollerShutter) {
+        try {
+            if (!rollerShutterService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            String newRollerShutter = rollerShutterService.patchHomeRollerShutter(id, rollerShutter.getHome().getName()).toJson();
+            return ResponseEntity.ok(newRollerShutter);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify related home\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+    }
 }

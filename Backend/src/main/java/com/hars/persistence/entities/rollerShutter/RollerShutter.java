@@ -20,7 +20,7 @@ public class RollerShutter {
     private Long id;
 
     private String name;
-    private int percentage_opening = 0;
+    private int percentageOpening = 0;
 
     @ManyToOne
     @JoinColumn(name = "home_id")
@@ -44,19 +44,33 @@ public class RollerShutter {
     }
 
     public int getPercentageOpening(){
-        return this.percentage_opening;
+        return this.percentageOpening;
     }
     public Home getHome(){
         return this.home;
     }
 
     //setter
+    public void setId(Long id){
+        this.id = id;
+    }
+
     public void setName(String name){
         this.name = name;
     }
     
     public void setPercentageOpening(int percentage){
-        this.percentage_opening = percentage;
+        this.percentageOpening = percentage;
+    }
+
+    public void setHome(Home home){
+        this.home = home;
+    }
+
+    public String toJson(){
+        return "\"Name\" : \"" + this.name + "\", " +
+            "\"PercentageOpening\" : \"" + this.percentageOpening + "\"," +
+            "\"Home\" : \"" + this.home + "\"";
     }
     
 }
