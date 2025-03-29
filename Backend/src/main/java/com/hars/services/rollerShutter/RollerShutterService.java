@@ -68,7 +68,8 @@ public class RollerShutterService {
     public RollerShutter patchOpeningRollerShutter(Long id, int increase_value){
         try {
             RollerShutter rollerShutter = rollerShutterRepository.findById(id).get();
-            rollerShutter.setPercentageOpening(increase_value);
+            int oldValue = rollerShutter.getPercentageOpening();
+            rollerShutter.setPercentageOpening(increase_value + oldValue);
             rollerShutter = rollerShutterRepository.save(rollerShutter);
             return rollerShutter;
         } catch (Exception e) {

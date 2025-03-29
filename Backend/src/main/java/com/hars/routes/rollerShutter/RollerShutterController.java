@@ -31,13 +31,13 @@ public class RollerShutterController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createRoller_shutter(@RequestBody RollerShutter roller_shutter) {
+    public ResponseEntity<String> createRollerShutter(@RequestBody RollerShutter rollerShutter) {
         try {
-            if (rollerShutterService.isPresentByName(roller_shutter.getName())) {
+            if (rollerShutterService.isPresentByName(rollerShutter.getName())) {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = rollerShutterService.createRollerShutter(roller_shutter.getName(), roller_shutter.getHome().getName());
+            String result = rollerShutterService.createRollerShutter(rollerShutter.getName(), rollerShutter.getHome().getName());
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
