@@ -19,28 +19,24 @@ public class HomeService {
     @Autowired
     private HomeRepository homeRepository;
 
-    public Home loadHomeByName(String name) {
-    return homeRepository.findByName(name)
-            .orElseThrow(() -> new EntityNotFoundException("Home not found with name: " + name));
-    }
-
-    public Boolean isPresentByName(String name){
-        return homeRepository.findByName(name).isPresent();
-    }
-
-    public Boolean isPresentById(Long id){
-        return homeRepository.findById(id).isPresent();
-    }
-
     public List<HomeDTO> getAllHomes() {
-        return homeRepository.findAll()
+        try {
+            return homeRepository.findAll()
             .stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     public Home createHome(Home home){
-        return homeRepository.save(home);
+        try {
+            return homeRepository.save(home);
+        } catch (Exception e) {
+            throw e;
+        }
+        
     } 
 
     public void deleteHome(Long id){
@@ -85,6 +81,19 @@ public class HomeService {
         }
     
         return dto;
+    }
+
+    public Home loadHomeByName(String name) {
+    return homeRepository.findByName(name)
+            .orElseThrow(() -> new EntityNotFoundException("Home not found with name: " + name));
+    }
+
+    public Boolean isPresentByName(String name){
+        return homeRepository.findByName(name).isPresent();
+    }
+
+    public Boolean isPresentById(Long id){
+        return homeRepository.findById(id).isPresent();
     }
 
 
