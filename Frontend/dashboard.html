@@ -1,674 +1,974 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <title>Register</title>
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Custom CSS -->
+    <link href="css/styles.css" rel="stylesheet" />
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-</head>
-
-<body class="d-flex justify-content-center align-items-center vh-100">
-  <div class="container py-4">
-    <div class="text-end mb-3">
-      <button id="logoutBtn" class="btn btn-danger">Logout</button>
-    </div>
-
-    <h2 class="mb-4 text-center">Dashboard</h2>
-
-    <!-- ADMIN SECTION -->
-    <div id="admin-section" style="display: none">
-      <h4>Admin Panel: Manage Homes</h4>
-
-      <div id="admin-homes">
-        <h5>Homes</h5>
-        <ul class="list-group" id="admin-homes-list"></ul>
+  <body class="d-flex justify-content-center align-items-center vh-100">
+    <div class="container py-4">
+      <div class="text-end mb-3">
+        <button id="logoutBtn" class="btn btn-danger">Logout</button>
       </div>
 
-      <!-- Automation Panel -->
-      <div id="automation-panel" style="display: none;">
-        <h4>Automation Panel for Home <span id="home-name"></span></h4>
-        <h5>Automations</h5>
-        <ul class="list-group" id="automation-list"></ul>
+      <h2 class="mb-4 text-center">Dashboard</h2>
 
-        <h5>Add Automation</h5>
-        <form onsubmit="addAutomation(event)">
-          <input type="hidden" id="automation-home-id" />
-          <div class="mb-2">
-            <label class="form-label">Automation Name</label>
-            <input type="text" id="automationName" class="form-control" required />
+      <!-- ADMIN SECTION -->
+      <div id="admin-section" style="display: none">
+        <h4>Admin Panel: Manage Homes</h4>
+
+        <div id="admin-homes">
+          <h5>Homes</h5>
+          <ul class="list-group" id="admin-homes-list"></ul>
+        </div>
+
+        <div id="loadingSpinner" class="spinner" style="display: none">
+          Loading...
+        </div>
+
+        <div id="add-home-form" class="mt-4">
+          <h5>Add New Home</h5>
+          <form onsubmit="addHome(event)">
+            <div class="mb-2">
+              <label class="form-label">Home Name</label>
+              <input
+                type="text"
+                id="newHomeName"
+                class="form-control"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-outline-success">
+              Add Home
+            </button>
+          </form>
+        </div>
+        <!-- Edit Home Form -->
+        <div id="edit-home-form" class="mt-4" style="display: none">
+          <h5>Edit Home Name</h5>
+          <form onsubmit="editHome(event)">
+            <input type="hidden" id="editHomeId" />
+            <div class="mb-2">
+              <label class="form-label">New Home Name</label>
+              <input
+                type="text"
+                id="editHomeName"
+                class="form-control"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="cancelEditHome()"
+            >
+              Cancel
+            </button>
+          </form>
+        </div>
+      </div>
+      <!-- USER SECTION -->
+      <div id="user-section" style="display: none">
+        <h4 id="user-home-title"></h4>
+        <div id="home-details">
+          <p><strong id="selected-home-name">Loading...</strong></p>
+        </div>
+        <!-- Devices Section -->
+        <div id="devices-section" class="mt-4">
+          <h5>Devices in your home</h5>
+          <ul class="list-group" id="devices-list"></ul>
+
+          <div id="shutter-controls" class="mt-4">
+            <h5>Shutter Control</h5>
+            <div id="shutter-status"></div>
+            <div class="mt-2">
+              <button class="btn btn-primary" onclick="openAllShutters()">
+                Open All
+              </button>
+              <button class="btn btn-danger" onclick="closeAllShutters()">
+                Close All
+              </button>
+            </div>
           </div>
-          <button type="submit" class="btn btn-outline-success">Add Automation</button>
-        </form>
-      </div>
+        </div>
 
-      <div id="loadingSpinner" class="spinner" style="display: none">Loading...</div>
+        <!-- Light Sensors Section -->
+        <div id="light-sensors-section" class="mt-4">
+          <h5>Light Sensors</h5>
+          <ul class="list-group" id="light-sensors-list"></ul>
 
-      <div id="add-home-form" class="mt-4">
-        <h5>Add New Home</h5>
-        <form onsubmit="addHome(event)">
-          <div class="mb-2">
-            <label class="form-label">Home Name</label>
-            <input type="text" id="newHomeName" class="form-control" required />
+          <div class="mt-3">
+            <h6>Add New Sensor</h6>
+            <form onsubmit="createLightSensor(event)">
+              <div class="row g-2">
+                <div class="col">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="newSensorName"
+                    placeholder="Name"
+                    required
+                  />
+                </div>
+                <div class="col">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="newSensorOpening"
+                    placeholder="Opening (%)"
+                    min="0"
+                    max="100"
+                    required
+                  />
+                </div>
+                <div class="col">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="newSensorHome"
+                    placeholder="Home ID"
+                    required
+                  />
+                </div>
+                <div class="col">
+                  <button class="btn btn-outline-primary" type="submit">
+                    + Add
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
-          <button type="submit" class="btn btn-outline-success">Add Home</button>
-        </form>
-      </div>
-    </div>
+        </div>
 
-    <!-- USER SECTION -->
-    <div id="user-section" style="display: none">
-      <h4>Your Home</h4>
-      <div id="home-details">
-        <p><strong id="selected-home-name"></strong></p>
-      </div>
+        <div id="edit-light-sensor" class="mt-4" style="display: none">
+          <h5>Edit Light Sensor</h5>
+          <form onsubmit="submitEditSensor(event)">
+            <input type="hidden" id="sensorEditId" />
+            <div class="mb-2">
+              <label class="form-label">New Name</label>
+              <input type="text" id="editSensorName" class="form-control" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Opening (%)</label>
+              <input
+                type="number"
+                id="editSensorOpening"
+                class="form-control"
+                min="0"
+                max="100"
+              />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Home ID</label>
+              <input type="text" id="editSensorHome" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
 
-      <!-- Devices Section -->
-      <div id="devices-section" class="mt-4">
-        <h5>Devices in your home</h5>
-        <ul class="list-group" id="devices-list"></ul>
+        <!-- Lista dei Roller Shutters -->
+        <div id="rollerShutter-list" class="mt-4">
+          <h5>Roller Shutters in your Home</h5>
+          <ul class="list-group" id="rollerShutter-list-items">
+            <!-- Qui verranno aggiunti gli elementi dei roller shutters -->
+          </ul>
+        </div>
 
-        <div id="shutter-controls" class="mt-4">
-          <h5>Shutter Control</h5>
-          <div id="shutter-status"></div>
+        <!-- Selezione Roller Shutter -->
+        <div id="rollerShutter-controls" class="mt-4" style="display: none">
+          <h5>Adjust Roller Shutter Opening</h5>
+          <div id="rollerShutterStatus">Current Opening: 0%</div>
           <div class="mt-2">
-            <button class="btn btn-primary" onclick="openAllShutters()">Open All</button>
-            <button class="btn btn-danger" onclick="closeAllShutters()">Close All</button>
+            <button
+              class="btn btn-primary"
+              onclick="adjustRollerShutterOpening(true)"
+            >
+              Increase +10%
+            </button>
+            <button
+              class="btn btn-danger"
+              onclick="adjustRollerShutterOpening(false)"
+            >
+              Decrease -10%
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Light Sensors Section -->
-      <div id="light-sensors-section" class="mt-4">
-        <h5>Light Sensors</h5>
-        <ul class="list-group" id="light-sensors-list"></ul>
+      <!-- AUTOMATIONS SECTION -->
+      <div id="automations-section" class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h4>Automations</h4>
+          <button
+            class="btn btn-outline-success"
+            onclick="showAutomationForm()"
+          >
+            + Add
+          </button>
+        </div>
+        <ul class="list-group" id="automations-list"></ul>
 
-        <div class="mt-3">
-          <h6>Add New Sensor</h6>
-          <form onsubmit="createLightSensor(event)">
-            <div class="row g-2">
-              <div class="col">
-                <input type="text" class="form-control" id="newSensorName" placeholder="Name" required />
+        <div id="automation-form" class="mt-4" style="display: none">
+          <h5 id="form-title">Create Automation</h5>
+          <form onsubmit="createOrUpdateAutomation(event)">
+            <div class="mb-2">
+              <label class="form-label">Name</label>
+              <input
+                type="text"
+                id="automationName"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Select Device</label>
+              <select
+                id="automationDeviceId"
+                class="form-control"
+                required
+              ></select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Trigger</label>
+              <select
+                id="triggerType"
+                class="form-control"
+                onchange="toggleTriggerOptions()"
+                required
+              >
+                <option value="luminosity">Luminosity</option>
+                <option value="time">Time</option>
+              </select>
+
+              <div id="triggerLuminositySection" class="mt-2">
+                <label for="triggerLuminosity">Luminosity</label>
+                <select id="triggerLuminosity" class="form-control">
+                  <option value="0">0%</option>
+                  <option value="20">20%</option>
+                  <option value="40">40%</option>
+                  <option value="60">60%</option>
+                  <option value="80">80%</option>
+                  <option value="100">100%</option>
+                </select>
               </div>
-              <div class="col">
-                <input type="number" class="form-control" id="newSensorOpening" placeholder="Opening (%)" min="0"
-                  max="100" required />
+
+              <div id="triggerTimeSection" class="mt-2" style="display: none">
+                <label for="triggerTime">Time</label>
+                <input type="time" id="triggerTime" class="form-control" />
               </div>
-              <div class="col">
-                <input type="text" class="form-control" id="newSensorHome" placeholder="Home ID" required />
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Action</label>
+              <select id="action" class="form-control" required>
+                <option value="open">Open</option>
+                <option value="close">Close</option>
+              </select>
+              <div class="mt-2">
+                <label for="actionPercentage">Percentage</label>
+                <select id="actionPercentage" class="form-control" required>
+                  <option value="0">0%</option>
+                  <option value="20">20%</option>
+                  <option value="40">40%</option>
+                  <option value="60">60%</option>
+                  <option value="80">80%</option>
+                  <option value="100">100%</option>
+                </select>
               </div>
-              <div class="col">
-                <button class="btn btn-outline-primary" type="submit">+ Add</button>
-              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-2">
+              <button type="submit" class="btn btn-primary">Save</button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="cancelAutomation()"
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
       </div>
-
-      <div id="edit-light-sensor" class="mt-4" style="display: none">
-        <h5>Edit Light Sensor</h5>
-        <form onsubmit="submitEditSensor(event)">
-          <input type="hidden" id="sensorEditId" />
-          <div class="mb-2">
-            <label class="form-label">New Name</label>
-            <input type="text" id="editSensorName" class="form-control" />
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Opening (%)</label>
-            <input type="number" id="editSensorOpening" class="form-control" min="0" max="100" />
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Home ID</label>
-            <input type="text" id="editSensorHome" class="form-control" />
-          </div>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </form>
-      </div>
     </div>
+    <script>
+      //const API = "http://84.220.36.142:8080";
+      const API = "http://localhost:8080";
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", function () {
+          localStorage.removeItem("jwt");
+          alert("You have been logged out!");
+          window.location.href = "login.html";
+        });
 
-    <!-- AUTOMATIONS SECTION -->
-    <div id="automations-section" class="mt-5">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4>Automations</h4>
-        <button class="btn btn-outline-success" onclick="showAutomationForm()">+ Add</button>
-      </div>
-      <ul class="list-group" id="automations-list"></ul>
-
-      <div id="automation-form" class="mt-4" style="display: none">
-        <h5 id="form-title">Create Automation</h5>
-        <form onsubmit="createOrUpdateAutomation(event)">
-          <div class="mb-2">
-            <label class="form-label">Name</label>
-            <input type="text" id="automationName" class="form-control" required />
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Select Device</label>
-            <select id="automationDeviceId" class="form-control" required></select>
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label">Trigger</label>
-            <select id="triggerType" class="form-control" onchange="toggleTriggerOptions()" required>
-              <option value="luminosity">Luminosity</option>
-              <option value="time">Time</option>
-            </select>
-            </select>
-
-            <div id="triggerLuminositySection" class="mt-2">
-              <label for="triggerLuminosity">Luminosity</label>
-              <select id="triggerLuminosity" class="form-control">
-                <option value="0">0%</option>
-                <option value="20">20%</option>
-                <option value="40">40%</option>
-                <option value="60">60%</option>
-                <option value="80">80%</option>
-                <option value="100">100%</option>
-              </select>
-            </div>
-
-            <div id="triggerTimeSection" class="mt-2" style="display: none">
-              <label for="triggerTime">Time</label>
-              <input type="time" id="triggerTime" class="form-control" />
-            </div>
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label">Action</label>
-            <select id="action" class="form-control" required>
-              <option value="open">Open</option>
-              <option value="close">Close</option>
-            </select>
-            <div class="mt-2">
-              <label for="actionPercentage">Percentage</label>
-              <select id="actionPercentage" class="form-control" required>
-                <option value="0">0%</option>
-                <option value="20">20%</option>
-                <option value="40">40%</option>
-                <option value="60">60%</option>
-                <option value="80">80%</option>
-                <option value="100">100%</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="d-flex gap-2 mt-2">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <button type="button" class="btn btn-danger" onclick="cancelAutomation()">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  <script>
-    const API = "http://84.220.36.142:8080";
-
-    document.getElementById("logoutBtn").addEventListener("click", function () {
-      localStorage.removeItem("jwt");
-      alert("You have been logged out!");
-      window.location.href = "login.html";
-    });
-
-    function isAdmin() {
-      const token = localStorage.getItem("jwt");
-      if (token) {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload.role === "admin";
-      }
-      return false;
-    }
-
-    function checkRoleAndDisplay() {
-      if(true){   //test
-      //(isAdmin()) {
-        document.getElementById("admin-section").style.display = "block";
-        document.getElementById("user-section").style.display = "none";
-        loadAdminHomes();
-      } else {
-        document.getElementById("admin-section").style.display = "none";
-        document.getElementById("user-section").style.display = "block";
-        document.getElementById("light-sensors-section").style.display = "none";
-    
-        loadHomes();
-        loadDevices();
-        // loadLightSensors();
-        // setInterval(loadLightSensors, 10000);
-      }
-    }
-    
-
-    function toggleTriggerOptions() {
-      const type = document.getElementById("triggerType").value;
-      document.getElementById("triggerLuminositySection").style.display = type === "luminosity" ? "block" : "none";
-      document.getElementById("triggerTimeSection").style.display = type === "time" ? "block" : "none";
-    }
-
-    function cancelAutomation() {
-      document.getElementById("automation-form").style.display = "none";
-    }
-
-    function showAutomationForm() {
-      document.getElementById("automation-form").style.display = "block";
-      document.getElementById("form-title").innerText = "Create Automation";
-      document.getElementById("automationName").value = "";
-      document.getElementById("triggerType").value = "luminosity";
-      toggleTriggerOptions();
-      document.getElementById("triggerLuminosity").value = "60";
-      document.getElementById("triggerTime").value = "";
-      document.getElementById("action").value = "open";
-      document.getElementById("actionPercentage").value = "100";
-    }
-
-    async function createOrUpdateAutomation(event) {
-      event.preventDefault();
-      const token = localStorage.getItem("jwt");
-
-      const name = document.getElementById("automationName").value;
-      const deviceId = document.getElementById("automationDeviceId").value;
-      const triggerType = document.getElementById("triggerType").value;
-      const triggerValue = triggerType === "luminosity"
-        ? document.getElementById("triggerLuminosity").value
-        : document.getElementById("triggerTime").value;
-      const action = document.getElementById("action").value;
-      const percentage = document.getElementById("actionPercentage").value;
-
-      const data = {
-        name,
-        deviceId,
-        trigger: {
-          type: triggerType,
-          value: triggerValue
-        },
-        action: {
-          type: action,
-          percentage: parseInt(percentage)
+      function isAdmin() {
+        const token = localStorage.getItem("jwt");
+        if (token) {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          return payload.role === "admin";
         }
-      };
+        return false;
+      }
 
-      try {
-        const res = await fetch(`${API}/api/entities/automation/create`, {
+      function checkRoleAndDisplay() {
+        //if (true) {
+        //test
+        if (isAdmin()) {
+          document.getElementById("admin-section").style.display = "block";
+          document.getElementById("user-section").style.display = "none";
+          loadAdminHomes();
+        } else {
+          document.getElementById("admin-section").style.display = "none";
+          document.getElementById("user-section").style.display = "block";
+          document.getElementById("light-sensors-section").style.display =
+            "none";
+
+          loadHomes();
+          loadDevices();
+          // loadLightSensors();
+          // setInterval(loadLightSensors, 10000);
+        }
+      }
+
+      async function loadUserHome() {
+        const token = localStorage.getItem("jwt");
+        const userHomeTitle = document.getElementById("user-home-title");
+        const nameDisplay = document.getElementById("selected-home-name");
+
+        try {
+          const res = await fetch(`${API}/api/entities/home`, {
+            headers: { Authorization: "Bearer " + token },
+          });
+
+          const homes = await res.json();
+          if (homes.length > 0) {
+            const userHome = homes[0]; // Assuming the user is linked to the first home
+            nameDisplay.textContent = userHome.name; // Set the home name in the paragraph
+            userHomeTitle.textContent = userHome.name; // Set the title to the home name
+          } else {
+            nameDisplay.textContent = "No home found";
+            userHomeTitle.textContent = "No home found";
+          }
+        } catch (err) {
+          console.error("Error loading user home:", err);
+          nameDisplay.textContent = "Error loading home";
+          userHomeTitle.textContent = "Error loading home";
+        }
+      }
+
+      function toggleTriggerOptions() {
+        const type = document.getElementById("triggerType").value;
+        document.getElementById("triggerLuminositySection").style.display =
+          type === "luminosity" ? "block" : "none";
+        document.getElementById("triggerTimeSection").style.display =
+          type === "time" ? "block" : "none";
+      }
+
+      function cancelAutomation() {
+        document.getElementById("automation-form").style.display = "none";
+      }
+
+      function showAutomationForm() {
+        document.getElementById("automation-form").style.display = "block";
+        document.getElementById("form-title").innerText = "Create Automation";
+        document.getElementById("automationName").value = "";
+        document.getElementById("triggerType").value = "luminosity";
+        toggleTriggerOptions();
+        document.getElementById("triggerLuminosity").value = "60";
+        document.getElementById("triggerTime").value = "";
+        document.getElementById("action").value = "open";
+        document.getElementById("actionPercentage").value = "100";
+      }
+
+      async function createOrUpdateAutomation(event) {
+        event.preventDefault();
+        const token = localStorage.getItem("jwt");
+
+        const name = document.getElementById("automationName").value;
+        const deviceId = document.getElementById("automationDeviceId").value;
+        const triggerType = document.getElementById("triggerType").value;
+        const triggerValue =
+          triggerType === "luminosity"
+            ? document.getElementById("triggerLuminosity").value
+            : document.getElementById("triggerTime").value;
+        const action = document.getElementById("action").value;
+        const percentage = document.getElementById("actionPercentage").value;
+
+        const data = {
+          name,
+          deviceId,
+          trigger: {
+            type: triggerType,
+            value: triggerValue,
+          },
+          action: {
+            type: action,
+            percentage: parseInt(percentage),
+          },
+        };
+
+        try {
+          const res = await fetch(`${API}/api/entities/automation/create`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify(data),
+          });
+
+          if (res.ok) {
+            alert("Automation saved successfully!");
+            document.getElementById("automation-form").style.display = "none";
+          } else {
+            alert("Failed to save automation.");
+          }
+        } catch (err) {
+          alert("Error saving automation.");
+        }
+      }
+
+      async function loadDevices() {
+        const token = localStorage.getItem("jwt");
+        const select = document.getElementById("automationDeviceId");
+        if (!select) return;
+        select.innerHTML = "";
+        try {
+          const res = await fetch(`${API}/api/entities/device/`, {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (res.ok) {
+            const devices = await res.json();
+            devices.forEach((device) => {
+              const option = document.createElement("option");
+              option.value = device.id;
+              option.textContent = device.name;
+              select.appendChild(option);
+            });
+          }
+        } catch (err) {
+          console.log("Error loading devices");
+        }
+      }
+
+      async function loadLightSensors() {
+        const token = localStorage.getItem("jwt");
+        const sensorList = document.getElementById("light-sensors-list");
+        sensorList.innerHTML = "";
+
+        try {
+          const res = await fetch(`${API}/api/entities/lightSensor/`, {
+            headers: { Authorization: "Bearer " + token },
+          });
+          const sensors = await res.json();
+          sensors.forEach((sensor) => {
+            const li = document.createElement("li");
+            li.className = "list-group-item";
+            li.innerHTML = `
+    <strong>${sensor.name}</strong> - ${sensor.opening}%<br>Home: ${
+              sensor.home?.name || "N/A"
+            }
+    <div class="mt-2">
+      <button class="btn btn-sm btn-warning me-2" onclick="editLightSensor('${
+        sensor.id
+      }')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteLightSensor('${
+        sensor.id
+      }')">Delete</button>
+    </div>`;
+            sensorList.appendChild(li);
+          });
+        } catch (err) {
+          console.log("Error loading sensors:", err);
+        }
+      }
+
+      async function createLightSensor(event) {
+        event.preventDefault();
+        const name = document.getElementById("newSensorName").value;
+        const opening = parseInt(
+          document.getElementById("newSensorOpening").value
+        );
+        const home = document.getElementById("newSensorHome").value;
+        const token = localStorage.getItem("jwt");
+
+        await fetch(`${API}/api/entities/lightSensor/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer " + token,
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify({ name, opening, home }),
         });
 
-        if (res.ok) {
-          alert("Automation saved successfully!");
-          document.getElementById("automation-form").style.display = "none";
-        } else {
-          alert("Failed to save automation.");
-        }
-      } catch (err) {
-        alert("Error saving automation.");
+        loadLightSensors();
       }
-    }
 
-    async function loadDevices() {
-      const token = localStorage.getItem("jwt");
-      const select = document.getElementById("automationDeviceId");
-      if (!select) return;
-      select.innerHTML = "";
-      try {
-        const res = await fetch(`${API}/api/entities/device/`, {
-          headers: { Authorization: "Bearer " + token },
-        });
-        if (res.ok) {
-          const devices = await res.json();
-          devices.forEach(device => {
-            const option = document.createElement("option");
-            option.value = device.id;
-            option.textContent = device.name;
-            select.appendChild(option);
+      function editLightSensor(id) {
+        document.getElementById("sensorEditId").value = id;
+        document.getElementById("edit-light-sensor").style.display = "block";
+      }
+
+      async function submitEditSensor(event) {
+        event.preventDefault();
+        const id = document.getElementById("sensorEditId").value;
+        const name = document.getElementById("editSensorName").value;
+        const opening = document.getElementById("editSensorOpening").value;
+        const home = document.getElementById("editSensorHome").value;
+        const token = localStorage.getItem("jwt");
+
+        if (name) {
+          await fetch(`${API}/api/entities/lightSensor/patch/name/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({ name }),
           });
         }
-      } catch (err) {
-        console.log("Error loading devices");
-      }
-    }
 
-    async function loadLightSensors() {
-      const token = localStorage.getItem("jwt");
-      const sensorList = document.getElementById("light-sensors-list");
-      sensorList.innerHTML = "";
+        if (opening) {
+          await fetch(`${API}/api/entities/lightSensor/patch/opening/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({ opening: parseInt(opening) }),
+          });
+        }
 
-      try {
-        const res = await fetch(`${API}/api/entities/lightSensor/`, {
-          headers: { Authorization: "Bearer " + token },
-        });
-        const sensors = await res.json();
-        sensors.forEach((sensor) => {
-          const li = document.createElement("li");
-          li.className = "list-group-item";
-          li.innerHTML = `
-    <strong>${sensor.name}</strong> - ${sensor.opening}%<br>Home: ${sensor.home?.name || "N/A"}
-    <div class="mt-2">
-      <button class="btn btn-sm btn-warning me-2" onclick="editLightSensor('${sensor.id}')">Edit</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteLightSensor('${sensor.id}')">Delete</button>
-    </div>`;
-          sensorList.appendChild(li);
-        });
-      } catch (err) {
-        console.log("Error loading sensors:", err);
-      }
-    }
+        if (home) {
+          await fetch(`${API}/api/entities/lightSensor/patch/home/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({ home }),
+          });
+        }
 
-    async function createLightSensor(event) {
-      event.preventDefault();
-      const name = document.getElementById("newSensorName").value;
-      const opening = parseInt(document.getElementById("newSensorOpening").value);
-      const home = document.getElementById("newSensorHome").value;
-      const token = localStorage.getItem("jwt");
-
-      await fetch(`${API}/api/entities/lightSensor/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({ name, opening, home }),
-      });
-
-      loadLightSensors();
-    }
-
-    function editLightSensor(id) {
-      document.getElementById("sensorEditId").value = id;
-      document.getElementById("edit-light-sensor").style.display = "block";
-    }
-
-    async function submitEditSensor(event) {
-      event.preventDefault();
-      const id = document.getElementById("sensorEditId").value;
-      const name = document.getElementById("editSensorName").value;
-      const opening = document.getElementById("editSensorOpening").value;
-      const home = document.getElementById("editSensorHome").value;
-      const token = localStorage.getItem("jwt");
-
-      if (name) {
-        await fetch(`${API}/api/entities/lightSensor/patch/name/${id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify({ name }),
-        });
-      }
-
-      if (opening) {
-        await fetch(`${API}/api/entities/lightSensor/patch/opening/${id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify({ opening: parseInt(opening) }),
-        });
-      }
-
-      if (home) {
-        await fetch(`${API}/api/entities/lightSensor/patch/home/${id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify({ home }),
-        });
-      }
-
-      alert("Sensor updated!");
-      document.getElementById("edit-light-sensor").style.display = "none";
-      loadLightSensors();
-    }
-
-    async function deleteLightSensor(id) {
-      const token = localStorage.getItem("jwt");
-      try {
-        await fetch(`${API}/api/entities/lightSensor/delete/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + token },
-        });
+        alert("Sensor updated!");
+        document.getElementById("edit-light-sensor").style.display = "none";
         loadLightSensors();
-      } catch (err) {
-        alert("Error deleting sensor.");
       }
-    }
 
-    async function loadHomes() {
-      const token = localStorage.getItem("jwt");
-      const res = await fetch(`${API}/api/entities/home`, {
-        headers: { Authorization: "Bearer " + token },
-      });
-      const homes = await res.json();
-      const nameDisplay = document.getElementById("selected-home-name");
-      if (homes.length > 0) {
-        nameDisplay.textContent = homes[0].name;
+      async function deleteLightSensor(id) {
+        const token = localStorage.getItem("jwt");
+        try {
+          await fetch(`${API}/api/entities/lightSensor/delete/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: "Bearer " + token },
+          });
+          loadLightSensors();
+        } catch (err) {
+          alert("Error deleting sensor.");
+        }
       }
-    }
 
-    async function loadAdminHomes() {
-      const token = localStorage.getItem("jwt");
-      const homeList = document.getElementById("admin-homes-list");
-      homeList.innerHTML = "";
-
-      try {
-        const res = await fetch(`${API}/api/entities/home/`, {
+      async function loadHomes() {
+        const token = localStorage.getItem("jwt");
+        const res = await fetch(`${API}/api/entities/home`, {
           headers: { Authorization: "Bearer " + token },
         });
         const homes = await res.json();
-        homes.forEach((home) => {
-          const li = document.createElement("li");
-          li.classList.add("admin-home-item");
-          li.innerHTML = `
-    <span>${home.name}</span>
-    <button class="btn btn-sm btn-danger" onclick="deleteHome('${home.id}')">Delete</button>
-    <button class="btn btn-sm btn-info" onclick="showAutomationPanel('${home.id}', '${home.name}')">Automatizza</button>
-    `;
-          homeList.appendChild(li);
-        });
-      } catch (err) {
-        alert("Error loading admin homes.");
-      }
-    }
-
-    async function addHome(event) {
-      event.preventDefault();
-      const homeName = document.getElementById("newHomeName").value;
-      const token = localStorage.getItem("jwt");
-      const data = { name: homeName };
-      document.getElementById("loadingSpinner").style.display = "block";
-
-      try {
-        const res = await fetch(`${API}/api/entities/home/create`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify(data),
-        });
-        document.getElementById("loadingSpinner").style.display = "none";
-        if (res.ok) {
-          alert("Home added successfully!");
-          loadAdminHomes();
-        } else {
-          alert("Failed to add home.");
+        const nameDisplay = document.getElementById("selected-home-name");
+        if (homes.length > 0) {
+          nameDisplay.textContent = homes[0].name;
         }
-      } catch (err) {
-        document.getElementById("loadingSpinner").style.display = "none";
-        alert("Error adding home.");
       }
-    }
 
-    async function deleteHome(homeId) {
-      const token = localStorage.getItem("jwt");
-      if (!confirm("Are you sure you want to delete this home?")) return;
+      async function loadAdminHomes() {
+        const token = localStorage.getItem("jwt");
+        const homeList = document.getElementById("admin-homes-list");
+        homeList.innerHTML = "";
 
-      try {
-        const res = await fetch(`${API}/api/entities/home/${homeId}`, {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + token },
-        });
-        if (res.ok) {
-          alert("Home deleted successfully!");
-          loadAdminHomes();
-        } else {
-          alert("Failed to delete home.");
+        try {
+          const res = await fetch(`${API}/api/entities/home/`, {
+            headers: { Authorization: "Bearer " + token },
+          });
+          const homes = await res.json();
+          homes.forEach((home) => {
+            const li = document.createElement("li");
+            li.classList.add("admin-home-item");
+            li.innerHTML = `
+  <span>${home.name}</span>
+  <button class="btn btn-sm btn-warning me-2" onclick="showEditHome('${home.id}', '${home.name}')">Edit</button>
+  <button class="btn btn-sm btn-danger me-2" onclick="deleteHome('${home.id}')">Delete</button>
+  <button class="btn btn-sm btn-info" onclick="showAutomationPanel('${home.id}', '${home.name}')">Automatizza</button>
+`;
+
+            homeList.appendChild(li);
+          });
+        } catch (err) {
+          alert("Error loading admin homes.");
         }
-      } catch (err) {
-        alert("Error deleting home.");
       }
-    }
 
-    function showAutomationPanel(homeId, homeName) {
-      document.getElementById("automation-panel").style.display = "block";
-      document.getElementById("home-name").textContent = homeName;
-      document.getElementById("automation-home-id").value = homeId;
-      loadAutomationsForHome(homeId);
-    }
+      async function addHome(event) {
+        event.preventDefault();
+        const homeName = document.getElementById("newHomeName").value;
+        const token = localStorage.getItem("jwt");
+        const data = { name: homeName };
+        document.getElementById("loadingSpinner").style.display = "block";
 
-    async function loadAutomationsForHome(homeId) {
-      const token = localStorage.getItem("jwt");
-      const automationList = document.getElementById("automation-list");
-      automationList.innerHTML = "";
+        try {
+          const res = await fetch(`${API}/api/entities/home/create`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify(data),
+          });
+          document.getElementById("loadingSpinner").style.display = "none";
+          if (res.ok) {
+            alert("Home added successfully!");
+            loadAdminHomes();
+          } else {
+            alert("Failed to add home.");
+          }
+        } catch (err) {
+          document.getElementById("loadingSpinner").style.display = "none";
+          alert("Error adding home.");
+        }
+      }
 
-      try {
-        const res = await fetch(`${API}/api/entities/home/${homeId}/automations`, {
-          headers: { Authorization: "Bearer " + token },
-        });
-        const automations = await res.json();
-        automations.forEach((automation) => {
-          const li = document.createElement("li");
-          li.className = "list-group-item";
-          li.innerHTML = `${automation.name}
+      async function editHome(event) {
+        event.preventDefault();
+        const token = localStorage.getItem("jwt");
+        const id = document.getElementById("editHomeId").value;
+        const newName = document.getElementById("editHomeName").value;
+
+        try {
+          const res = await fetch(`${API}/api/entities/home/put/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({
+              id: id,
+              name: newName, // Only sending the updated name
+              rollerShutters: [], // Not touching roller shutters
+              lightSensor: null, // Not touching light sensor
+            }),
+          });
+
+          if (res.ok) {
+            alert("Home name updated successfully!");
+            document.getElementById("edit-home-form").style.display = "none"; // Nascondi la modifica
+            loadAdminHomes(); // Ricarica la lista delle case
+            document.getElementById("add-home-form").style.display = "block"; // Mostra la sezione di aggiunta
+          } else {
+            alert("Failed to update home.");
+          }
+        } catch (err) {
+          alert("Error updating home.");
+        }
+      }
+
+      function showEditHome(homeId, homeName) {
+        // Nascondi il modulo di aggiunta della home
+        document.getElementById("add-home-form").style.display = "none";
+
+        // Mostra il modulo di modifica della home
+        document.getElementById("edit-home-form").style.display = "block";
+
+        // Imposta il valore dell'ID e del nome della home da modificare
+        document.getElementById("editHomeId").value = homeId;
+        document.getElementById("editHomeName").value = homeName;
+      }
+
+      function cancelEditHome() {
+        // Mostra il modulo di aggiunta della home
+        document.getElementById("add-home-form").style.display = "block";
+
+        // Nascondi il modulo di modifica della home
+        document.getElementById("edit-home-form").style.display = "none";
+      }
+
+      async function deleteHome(homeId) {
+        const token = localStorage.getItem("jwt");
+        if (!confirm("Are you sure you want to delete this home?")) return;
+
+        try {
+          const res = await fetch(`${API}/api/entities/home/delete/${homeId}`, {
+            method: "DELETE",
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (res.ok) {
+            alert("Home deleted successfully!");
+            loadAdminHomes();
+          } else {
+            alert("Failed to delete home.");
+          }
+        } catch (err) {
+          alert("Error deleting home.");
+        }
+      }
+
+      function showAutomationPanel(homeId, homeName) {
+        document.getElementById("automation-panel").style.display = "block";
+        document.getElementById("home-name").textContent = homeName;
+        document.getElementById("automation-home-id").value = homeId;
+        loadAutomationsForHome(homeId);
+      }
+
+      async function loadAutomationsForHome(homeId) {
+        const token = localStorage.getItem("jwt");
+        const automationList = document.getElementById("automation-list");
+        automationList.innerHTML = "";
+
+        try {
+          const res = await fetch(
+            `${API}/api/entities/home/${homeId}/automations`,
+            {
+              headers: { Authorization: "Bearer " + token },
+            }
+          );
+          const automations = await res.json();
+          automations.forEach((automation) => {
+            const li = document.createElement("li");
+            li.className = "list-group-item";
+            li.innerHTML = `${automation.name}
     <button class="btn btn-sm btn-danger" onclick="deleteAutomation('${automation.id}', '${homeId}')">Delete</button>`;
-          automationList.appendChild(li);
-        });
-      } catch (err) {
-        alert("Error loading automations.");
-      }
-    }
-
-    async function addAutomation(event) {
-      event.preventDefault();
-      const homeId = document.getElementById("automation-home-id").value;
-      const automationName = document.getElementById("automationName").value;
-      const token = localStorage.getItem("jwt");
-      const data = { name: automationName };
-
-      try {
-        const res = await fetch(`${API}/api/entities/home/${homeId}/automations`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify(data),
-        });
-        if (res.ok) {
-          alert("Automation added successfully!");
-          loadAutomationsForHome(homeId);
-        } else {
-          alert("Failed to add automation.");
+            automationList.appendChild(li);
+          });
+        } catch (err) {
+          alert("Error loading automations.");
         }
-      } catch (err) {
-        alert("Error adding automation.");
       }
-    }
 
-    async function deleteAutomation(automationId, homeId) {
-      const token = localStorage.getItem("jwt");
-      if (!confirm("Are you sure you want to delete this automation?")) return;
+      async function addAutomation(event) {
+        event.preventDefault();
+        const homeId = document.getElementById("automation-home-id").value;
+        const automationName = document.getElementById("automationName").value;
+        const token = localStorage.getItem("jwt");
+        const data = { name: automationName };
 
-      try {
-        const res = await fetch(`${API}/api/entities/automation/${automationId}`, {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + token },
-        });
-
-        if (res.ok) {
-          alert("Automation deleted successfully!");
-          loadAutomationsForHome(homeId);
-        } else {
-          alert("Failed to delete automation.");
+        try {
+          const res = await fetch(
+            `${API}/api/entities/home/${homeId}/automations`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token,
+              },
+              body: JSON.stringify(data),
+            }
+          );
+          if (res.ok) {
+            alert("Automation added successfully!");
+            loadAutomationsForHome(homeId);
+          } else {
+            alert("Failed to add automation.");
+          }
+        } catch (err) {
+          alert("Error adding automation.");
         }
-      } catch (err) {
-        alert("Error deleting automation.");
       }
-    }
 
-    // Function to open all shutters
-    async function openAllShutters() {
-      const token = localStorage.getItem("jwt"); // Retrieve the JWT token from local storage
+      async function deleteAutomation(automationId, homeId) {
+        const token = localStorage.getItem("jwt");
+        if (!confirm("Are you sure you want to delete this automation?"))
+          return;
 
-      try {
-        // Fetch all devices
-        const res = await fetch(`${API}/api/entities/device/`, {
-          headers: { Authorization: "Bearer " + token } // Include the token in the request headers
-        });
+        try {
+          const res = await fetch(
+            `${API}/api/entities/automation/${automationId}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: "Bearer " + token },
+            }
+          );
 
-        if (!res.ok) throw new Error("Failed to load devices"); // Handle error if devices cannot be loaded
-
-        const devices = await res.json(); // Parse the response as JSON
-
-        // Send a request to each shutter to set its opening to 100%
-        await Promise.all(devices.map(device =>
-          fetch(`${API}/api/entities/device/updateOpening/${device.id}`, {
-            method: "PATCH", // Use PATCH method to update the opening
-            headers: {
-              "Content-Type": "application/json", // Specify the content type
-              Authorization: "Bearer " + token // Include the token in the request headers
-            },
-            body: JSON.stringify({ opening: 100 }) // Set the opening to 100%
-          })
-        ));
-
-        alert("All shutters opened!"); // Notify the user that all shutters are opened
-      } catch (err) {
-        console.error(err); // Log any errors to the console
-        alert("Error opening shutters."); // Notify the user of an error
+          if (res.ok) {
+            alert("Automation deleted successfully!");
+            loadAutomationsForHome(homeId);
+          } else {
+            alert("Failed to delete automation.");
+          }
+        } catch (err) {
+          alert("Error deleting automation.");
+        }
       }
-    }
 
-    // Function to close all shutters
-    async function closeAllShutters() {
-      const token = localStorage.getItem("jwt"); // Retrieve the JWT token from local storage
+      async function loadRollerShutters(homeId) {
+        const token = localStorage.getItem("jwt");
+        const rollerShutterList = document.getElementById(
+          "rollerShutter-list-items"
+        );
+        rollerShutterList.innerHTML = ""; // Pulisci la lista esistente
 
-      try {
-        // Fetch all devices
-        const res = await fetch(`${API}/api/entities/device/`, {
-          headers: { Authorization: "Bearer " + token } // Include the token in the request headers
-        });
+        try {
+          const res = await fetch(`${API}/api/entities/rollerShutter/`, {
+            headers: { Authorization: "Bearer " + token },
+          });
 
-        if (!res.ok) throw new Error("Failed to load devices"); // Handle error if devices cannot be loaded
-
-        const devices = await res.json(); // Parse the response as JSON
-
-        // Send a request to each shutter to set its opening to 0%
-        await Promise.all(devices.map(device =>
-          fetch(`${API}/api/entities/device/updateOpening/${device.id}`, {
-            method: "PATCH", // Use PATCH method to update the opening
-            headers: {
-              "Content-Type": "application/json", // Specify the content type
-              Authorization: "Bearer " + token // Include the token in the request headers
-            },
-            body: JSON.stringify({ opening: 0 }) // Set the opening to 0%
-          })
-        ));
-
-        alert("All shutters closed!"); // Notify the user that all shutters are closed
-      } catch (err) {
-        console.error(err); // Log any errors to the console
-        alert("Error closing shutters."); // Notify the user of an error
+          if (res.ok) {
+            const rollerShutters = await res.json();
+            rollerShutters.forEach((rollerShutter) => {
+              const li = document.createElement("li");
+              li.className = "list-group-item";
+              li.innerHTML = `${rollerShutter.name} - Opening: ${rollerShutter.percentageOpening}%`;
+              li.onclick = () =>
+                selectRollerShutter(
+                  rollerShutter.id,
+                  rollerShutter.name,
+                  rollerShutter.percentageOpening
+                );
+              rollerShutterList.appendChild(li);
+            });
+          } else {
+            alert("Failed to load roller shutters.");
+          }
+        } catch (err) {
+          alert("Error loading roller shutters.");
+        }
       }
-    }
-    window.onload = () => {
-      checkRoleAndDisplay();
-    };
-  </script>
-</body>
 
+      function selectRollerShutter(id, name, opening) {
+        // Memorizza l'ID del roller shutter selezionato
+        selectedRollerShutterId = id;
+        document.getElementById(
+          "rollerShutterStatus"
+        ).textContent = `Current Opening: ${opening}%`;
+        document.getElementById("rollerShutter-controls").style.display =
+          "block"; // Mostra il controllo
+      }
+      async function adjustRollerShutterOpening(increase) {
+        const token = localStorage.getItem("jwt");
+
+        // Ottieni l'apertura corrente
+        const currentOpening = parseInt(
+          document
+            .getElementById("rollerShutterStatus")
+            .textContent.split(" ")[2]
+            .replace("%", "")
+        );
+        let newOpening = increase ? currentOpening + 10 : currentOpening - 10;
+
+        // Limita l'apertura tra 0% e 100%
+        newOpening = Math.min(Math.max(newOpening, 0), 100);
+
+        const data = {
+          percentageOpening: newOpening,
+        };
+
+        try {
+          const res = await fetch(
+            `${API}/api/entities/rollerShutter/patch/opening/${selectedRollerShutterId}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token,
+              },
+              body: JSON.stringify(data),
+            }
+          );
+
+          if (res.ok) {
+            alert("Roller Shutter opening updated successfully!");
+            document.getElementById(
+              "rollerShutterStatus"
+            ).textContent = `Current Opening: ${newOpening}%`;
+          } else {
+            alert("Failed to update Roller Shutter opening.");
+          }
+        } catch (err) {
+          alert("Error updating Roller Shutter opening.");
+        }
+      }
+
+      // Function to open all shutters
+      async function openAllShutters() {
+        const token = localStorage.getItem("jwt"); // Retrieve the JWT token from local storage
+
+        try {
+          // Fetch all devices
+          const res = await fetch(`${API}/api/entities/device/`, {
+            headers: { Authorization: "Bearer " + token }, // Include the token in the request headers
+          });
+
+          if (!res.ok) throw new Error("Failed to load devices"); // Handle error if devices cannot be loaded
+
+          const devices = await res.json(); // Parse the response as JSON
+
+          // Send a request to each shutter to set its opening to 100%
+          await Promise.all(
+            devices.map((device) =>
+              fetch(`${API}/api/entities/device/updateOpening/${device.id}`, {
+                method: "PATCH", // Use PATCH method to update the opening
+                headers: {
+                  "Content-Type": "application/json", // Specify the content type
+                  Authorization: "Bearer " + token, // Include the token in the request headers
+                },
+                body: JSON.stringify({ opening: 100 }), // Set the opening to 100%
+              })
+            )
+          );
+
+          alert("All shutters opened!"); // Notify the user that all shutters are opened
+        } catch (err) {
+          console.error(err); // Log any errors to the console
+          alert("Error opening shutters."); // Notify the user of an error
+        }
+      }
+
+      // Function to close all shutters
+      async function closeAllShutters() {
+        const token = localStorage.getItem("jwt"); // Retrieve the JWT token from local storage
+
+        try {
+          // Fetch all devices
+          const res = await fetch(`${API}/api/entities/device/`, {
+            headers: { Authorization: "Bearer " + token }, // Include the token in the request headers
+          });
+
+          if (!res.ok) throw new Error("Failed to load devices"); // Handle error if devices cannot be loaded
+
+          const devices = await res.json(); // Parse the response as JSON
+
+          // Send a request to each shutter to set its opening to 0%
+          await Promise.all(
+            devices.map((device) =>
+              fetch(`${API}/api/entities/device/updateOpening/${device.id}`, {
+                method: "PATCH", // Use PATCH method to update the opening
+                headers: {
+                  "Content-Type": "application/json", // Specify the content type
+                  Authorization: "Bearer " + token, // Include the token in the request headers
+                },
+                body: JSON.stringify({ opening: 0 }), // Set the opening to 0%
+              })
+            )
+          );
+
+          alert("All shutters closed!"); // Notify the user that all shutters are closed
+        } catch (err) {
+          console.error(err); // Log any errors to the console
+          alert("Error closing shutters."); // Notify the user of an error
+        }
+      }
+      window.onload = () => {
+        checkRoleAndDisplay();
+      };
+    </script>
+  </body>
 </html>

@@ -53,7 +53,7 @@
       let userData = { username: username, password: hashedPassword };
 
       try {
-        let response = await fetch("http://84.220.36.142:8080/api/auth/register", {
+        let response = await fetch("http://localhost:8080/api/auth/register", {//"http://84.220.36.142:8080/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(userData),
