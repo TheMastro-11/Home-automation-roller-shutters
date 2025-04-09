@@ -1,7 +1,6 @@
-import auth, home, rollerShutter, lightSensor; 
+import auth, home, rollerShutter, lightSensor, routine; 
 import time   
 
-# Example usage
 if __name__ == "__main__":
     # Register a new user
     auth.register_user("ma", "aaaa")

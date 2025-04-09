@@ -2,39 +2,37 @@ import requests
 import sys
 
 # Base URL of your Spring Boot application
-BASE_URL = "http://localhost:8080/api/"
+BASE_URL = "http://localhost:8080/api/entities/routine"
 
 # Headers for the requests
 HEADERS = {
     "Content-Type": "application/json"
 }
 
-def getAllLightSensor(jwtToken):
+def getAllRoutines(jwtToken):
     HEADERS_BEARER = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {jwtToken}"
     }
 
-    url = f"{BASE_URL}entities/lightSensor/"
+    url = f"{BASE_URL}/"
 
     
     response = requests.get(url, headers=HEADERS_BEARER)
-    if response.status_code != 200: sys.exit(response.status_code)
     print("Authenticate User - Status Code:", response.status_code)
     print("Authenticate User - Raw Response:", response.text)
 
-def createLightSensor(jwtToken, name, homeName):
+def createRoutineActiontime(jwtToken, name, actionTime, rollerShutters):
     HEADERS_BEARER = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {jwtToken}"
     }
 
-    url = f"{BASE_URL}entities/lightSensor/create"
+    url = f"{BASE_URL}/create/actionTime"
     data = {
         "name": name,
-        "home" : {
-            "name" : homeName
-        }
+        "actionTime" : actionTime,
+        "rollerShutters" : rollerShutters
     }
 
     
@@ -43,26 +41,45 @@ def createLightSensor(jwtToken, name, homeName):
     print("Authenticate User - Status Code:", response.status_code)
     print("Authenticate User - Raw Response:", response.text)
     
-def deleteLightSensor(jwtToken, id):
+def createRoutineLightSensor(jwtToken, name, lightSensor, rollerShutters):
     HEADERS_BEARER = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {jwtToken}"
     }
 
-    url = f"{BASE_URL}entities/lightSensor/delete/{id}"
+    url = f"{BASE_URL}/create/lightSensor"
+    data = {
+        "name": name,
+        "lightSensor" : lightSensor,
+        "rollerShutters" : rollerShutters
+    }
+
+    
+    response = requests.post(url, json=data, headers=HEADERS_BEARER)
+    if response.status_code != 200: sys.exit(response.status_code)
+    print("Authenticate User - Status Code:", response.status_code)
+    print("Authenticate User - Raw Response:", response.text)
+    
+def deleteRoutine(jwtToken, id):
+    HEADERS_BEARER = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {jwtToken}"
+    }
+
+    url = f"{BASE_URL}/delete/{id}"
     
     response = requests.delete(url, headers=HEADERS_BEARER)
     if response.status_code != 200: sys.exit(response.status_code)
     print("Authenticate User - Status Code:", response.status_code)
     print("Authenticate User - Raw Response:", response.text)
     
-def patchNameLightSensor(jwtToken, id, name):
+def patchNameRoutine(jwtToken, id, name):
     HEADERS_BEARER = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {jwtToken}"
     }
 
-    url = f"{BASE_URL}entities/lightSensor/patch/name/{id}"
+    url = f"{BASE_URL}/patch/name/{id}"
     data = {
         "name" : name
     }
@@ -73,15 +90,32 @@ def patchNameLightSensor(jwtToken, id, name):
     print("Authenticate User - Status Code:", response.status_code)
     print("Authenticate User - Raw Response:", response.text)
     
-def patchValueLightSensor(jwtToken, id, lightValue):
+def patchActualTimeRoutine(jwtToken, id, actualTime):
     HEADERS_BEARER = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {jwtToken}"
     }
 
-    url = f"{BASE_URL}entities/lightSensor/patch/value/{id}"
+    url = f"{BASE_URL}/patch/lightSensor/{id}"
     data = {
-        "lightValue" : lightValue
+        "actualTime" : actualTime
+    }
+
+    
+    response = requests.patch(url, json=data, headers=HEADERS_BEARER)
+    if response.status_code != 200: sys.exit(response.status_code)
+    print("Authenticate User - Status Code:", response.status_code)
+    print("Authenticate User - Raw Response:", response.text)
+
+def patchLightSensorRoutine(jwtToken, id, lightSensor):
+    HEADERS_BEARER = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {jwtToken}"
+    }
+
+    url = f"{BASE_URL}/patch/lightSensor/{id}"
+    data = {
+        "lightSensor" : lightSensor
     }
 
     
@@ -90,16 +124,15 @@ def patchValueLightSensor(jwtToken, id, lightValue):
     print("Authenticate User - Status Code:", response.status_code)
     print("Authenticate User - Raw Response:", response.text)
     
-def patchHomeLightSensor(jwtToken, id, homeName):
+def patchRollerShutterRoutine(jwtToken, id, rollerShutters):
     HEADERS_BEARER = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {jwtToken}"
     }
 
-    url = f"{BASE_URL}entities/lightSensor/patch/home/{id}"
+    url = f"{BASE_URL}/patch/rollerShutters/{id}"
     data = {
-        "home" : {
-            "name" : homeName}
+        "rollerShutters" : rollerShutters
     }
 
     
