@@ -86,6 +86,12 @@ function displayDashboardBasedOnRole() {
 
     }
      // Nascondi form modifica casa admin e form automazione all'inizio
-    document.getElementById("edit-home-form")?.style.display = 'none';
-    document.getElementById("automation-form")?.style.display = 'none';
+     const editHomeForm = document.getElementById("edit-home-form");
+     if (editHomeForm) {
+         editHomeForm.style.display = 'none';
+     }
+     const automationFormElement = document.getElementById("automation-form"); // Uso nome diverso per evitare conflitti
+     if (automationFormElement) {
+         automationFormElement.style.display = 'none';
+     }
 }

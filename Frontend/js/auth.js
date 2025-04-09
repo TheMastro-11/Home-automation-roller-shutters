@@ -26,11 +26,11 @@ function isAdmin() {
 }
 
 function logout() {
-    localStorage.removeItem("jwt");
-    alert("You have been logged out!"); // Puoi sostituirlo con feedback in-page
-    window.location.href = "login.html";
+    console.log("Logout function called"); // Aggiungi per debug
+    localStorage.removeItem("jwt");       // Rimuove il token
+    alert("You have been logged out!");   // Mostra messaggio (puoi rimuoverlo se vuoi)
+    window.location.href = "login.html";  // Reindirizza alla pagina di login
 }
-
 function checkAuthentication() {
     const token = localStorage.getItem("jwt");
     if (!token) {
