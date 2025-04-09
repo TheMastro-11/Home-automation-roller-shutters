@@ -9,3 +9,5 @@ Backend/.DS_Store
 Backend/build/*
 
 Backend/.gradle/*
+
+Backend/bin
