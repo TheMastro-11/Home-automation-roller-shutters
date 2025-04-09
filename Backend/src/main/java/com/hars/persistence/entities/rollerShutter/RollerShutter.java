@@ -1,15 +1,10 @@
 package com.hars.persistence.entities.rollerShutter;
 
-import java.util.List;
-
-import com.hars.persistence.entities.routine.Routine;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -25,9 +20,6 @@ public class RollerShutter {
 
     @Column(name = "percentageOpening")
     private int percentageOpening = 0;
-
-    @ManyToMany(mappedBy = "rollerShutters")
-    private List<Routine> routines;
 
     //builder
     public RollerShutter(){}
@@ -48,11 +40,6 @@ public class RollerShutter {
     public int getPercentageOpening(){
         return this.percentageOpening;
     }
-
-    public List<Routine> getRoutines() {
-        return this.routines;
-    }
-
     //setter
     public void setId(Long id){
         this.id = id;
@@ -64,10 +51,6 @@ public class RollerShutter {
     
     public void setPercentageOpening(int percentage){
         this.percentageOpening = percentage;
-    }
-
-    public void setRoutines(List<Routine> routines) {
-        this.routines = routines;
     }
 
     //helpers
