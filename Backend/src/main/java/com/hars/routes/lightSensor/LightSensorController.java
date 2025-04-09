@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hars.persistence.entities.lightSensor.LightSensor;
+import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.services.lightSensor.LightSensorService;
 
 @RestController
@@ -31,13 +31,13 @@ public class LightSensorController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createLightSensor(@RequestBody LightSensor lightSensor) {
+    public ResponseEntity<String> createLightSensor(@RequestBody LightSensorDTO.nameInput lightSensor) {
         try {
-            if (lightSensorService.isPresentByName(lightSensor.getName())) {
+            if (lightSensorService.isPresentByName(lightSensor.name())) {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = lightSensorService.createLightSensor(lightSensor.getName()).toJson();
+            String result = lightSensorService.createLightSensor(lightSensor.name()).toJson();
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -59,13 +59,13 @@ public class LightSensorController {
     }
 
     @PatchMapping("/patch/name/{id}")
-    public ResponseEntity<String> patchNameLightSensor (@PathVariable Long id, @RequestBody LightSensor lightSensor) {
+    public ResponseEntity<String> patchNameLightSensor (@PathVariable Long id, @RequestBody LightSensorDTO.nameInput lightSensor) {
         try {
             if (!lightSensorService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newLightSensor = lightSensorService.patchNameLightSensor(id, lightSensor.getName() ).toJson();
+            String newLightSensor = lightSensorService.patchNameLightSensor(id, lightSensor.name() ).toJson();
             return ResponseEntity.ok(newLightSensor);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -73,13 +73,13 @@ public class LightSensorController {
     }
 
     @PatchMapping("/patch/value/{id}")
-    public ResponseEntity<String> patchValueLightSensor (@PathVariable Long id, @RequestBody LightSensor lightSensor) {
+    public ResponseEntity<String> patchValueLightSensor (@PathVariable Long id, @RequestBody LightSensorDTO.lightValueInput lightSensor) {
         try {
             if (!lightSensorService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newLightSensor = lightSensorService.patchValueLightSensor(id, lightSensor.getLightValue()).toJson();
+            String newLightSensor = lightSensorService.patchValueLightSensor(id, lightSensor.value()).toJson();
             return ResponseEntity.ok(newLightSensor);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify light value\" , \" StackTrace\" : \"" + e.getMessage() + "\"");

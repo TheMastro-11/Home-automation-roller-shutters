@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hars.persistence.entities.rollerShutter.RollerShutter;
+import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 import com.hars.services.rollerShutter.RollerShutterService;
 
 @RestController
@@ -31,13 +31,13 @@ public class RollerShutterController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createRollerShutter(@RequestBody RollerShutter rollerShutter) {
+    public ResponseEntity<String> createRollerShutter(@RequestBody RollerShutterDTO.nameInput rollerShutter) {
         try {
-            if (rollerShutterService.isPresentByName(rollerShutter.getName())) {
+            if (rollerShutterService.isPresentByName(rollerShutter.name())) {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = rollerShutterService.createRollerShutter(rollerShutter.getName());
+            String result = rollerShutterService.createRollerShutter(rollerShutter.name());
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -60,13 +60,13 @@ public class RollerShutterController {
     }
 
     @PatchMapping("/patch/name/{id}")
-    public ResponseEntity<String> patchNameRollerShutter (@PathVariable Long id, @RequestBody RollerShutter rollerShutter) {
+    public ResponseEntity<String> patchNameRollerShutter (@PathVariable Long id, @RequestBody RollerShutterDTO.nameInput rollerShutter) {
         try {
             if (!rollerShutterService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRollerShutter = rollerShutterService.patchNameRollerShutter(id, rollerShutter.getName() ).toJson();
+            String newRollerShutter = rollerShutterService.patchNameRollerShutter(id, rollerShutter.name() ).toJson();
             return ResponseEntity.ok(newRollerShutter);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -74,13 +74,13 @@ public class RollerShutterController {
     }
 
     @PatchMapping("/patch/opening/{id}")
-    public ResponseEntity<String> patchOpeningRollerShutter (@PathVariable Long id, @RequestBody RollerShutter rollerShutter) {
+    public ResponseEntity<String> patchOpeningRollerShutter (@PathVariable Long id, @RequestBody RollerShutterDTO.openingInput rollerShutter) {
         try {
             if (!rollerShutterService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRollerShutter = rollerShutterService.patchOpeningRollerShutter(id, rollerShutter.getPercentageOpening()).toJson();
+            String newRollerShutter = rollerShutterService.patchOpeningRollerShutter(id, rollerShutter.value()).toJson();
             return ResponseEntity.ok(newRollerShutter);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify opening percentage\" , \" StackTrace\" : \"" + e.getMessage() + "\"");

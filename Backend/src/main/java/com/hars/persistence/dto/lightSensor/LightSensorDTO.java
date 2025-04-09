@@ -2,6 +2,9 @@ package com.hars.persistence.dto.lightSensor;
 import com.hars.persistence.dto.home.HomeDTO;
 
 public class LightSensorDTO {
+    public record nameInput(String name) {}
+    public record lightValueInput(int value) {}
+
     private Long id;
     private String name;
     private int lightValue;

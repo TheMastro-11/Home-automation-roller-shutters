@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.home.HomeDTO;
-import com.hars.persistence.entities.home.Home;
 import com.hars.services.home.HomeService;
 
 
@@ -79,13 +78,13 @@ public class HomeController {
     }
 
     @PatchMapping("/patch/user/{id}")
-    public ResponseEntity<String> patchOwnerHome(@PathVariable Long id, @RequestBody Home home){
+    public ResponseEntity<String> patchOwnerHome(@PathVariable Long id, @RequestBody HomeDTO.userInput home){
         try {
             if (!homeService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newHome = homeService.patchOwnerHome(id, home.getOwner()).toJson();
+            String newHome = homeService.patchOwnerHome(id, home.user()).toJson();
 
             return ResponseEntity.ok(newHome);
         } catch (Exception e) {
@@ -95,13 +94,13 @@ public class HomeController {
     }
 
     @PatchMapping("/patch/rollerShutters/{id}")
-    public ResponseEntity<String> patchRollerShuttersHome(@PathVariable Long id, @RequestBody Home home){
+    public ResponseEntity<String> patchRollerShuttersHome(@PathVariable Long id, @RequestBody HomeDTO.rollerShutterInput home){
         try {
             if (!homeService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newHome = homeService.patchRollerShuttersHome(id, home.getRollerShutters()).toJson();
+            String newHome = homeService.patchRollerShuttersHome(id, home.rollerShutters()).toJson();
 
             return ResponseEntity.ok(newHome);
         } catch (Exception e) {
@@ -111,13 +110,13 @@ public class HomeController {
     }
 
     @PatchMapping("/patch/lightSensor/{id}")
-    public ResponseEntity<String> patchLightSensorHome(@PathVariable Long id, @RequestBody Home home){
+    public ResponseEntity<String> patchLightSensorHome(@PathVariable Long id, @RequestBody HomeDTO.lightSensorInput home){
         try {
             if (!homeService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newHome = homeService.patchLightSensorHome(id, home.getLightSensor()).toJson();
+            String newHome = homeService.patchLightSensorHome(id, home.lightSensor()).toJson();
 
             return ResponseEntity.ok(newHome);
         } catch (Exception e) {

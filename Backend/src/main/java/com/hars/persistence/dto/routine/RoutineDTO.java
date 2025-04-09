@@ -1,11 +1,21 @@
 package com.hars.persistence.dto.routine;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
+import com.hars.persistence.entities.lightSensor.LightSensor;
+import com.hars.persistence.entities.rollerShutter.RollerShutter;
 
 public class RoutineDTO {
+    public record actiontTimeCreateInput(String name, LocalTime time, List<RollerShutter> rollerShutters) {}
+    public record lightSensorCreateInput(String name, LightSensor lightSensor , List<RollerShutter> rollerShutters) {}
+    public record nameInput(String name) {}
+    public record actionTimeInput(LocalTime time) {}
+    public record lightSensorInput(LightSensor lightSensor) {}
+    public record rollerShutterInput(List<RollerShutter> rollerShutters) {}
+
     private Long id;
     private String name;
 

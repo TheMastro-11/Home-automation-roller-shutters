@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hars.persistence.entities.routine.Routine;
+import com.hars.persistence.dto.routine.RoutineDTO;
 import com.hars.services.routine.RoutineService;
 
 @RestController
@@ -31,13 +31,13 @@ public class RoutineController {
     }
 
     @PostMapping("/create/actionTime")
-    public ResponseEntity<String> createRoutinesTime(@RequestBody Routine routine) {
+    public ResponseEntity<String> createRoutinesTime(@RequestBody RoutineDTO.actiontTimeCreateInput routine) {
         try {
-            if (routineService.isPresentByName(routine.getName())) {
+            if (routineService.isPresentByName(routine.name())) {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = routineService.createRoutine(routine.getName(), routine.getActionTime(), routine.getRollerShutters());
+            String result = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters());
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -46,13 +46,13 @@ public class RoutineController {
     }
 
     @PostMapping("/create/lightSensor")
-    public ResponseEntity<String> createRoutineLight(@RequestBody Routine routine) {
+    public ResponseEntity<String> createRoutineLight(@RequestBody RoutineDTO.lightSensorCreateInput routine) {
         try {
-            if (routineService.isPresentByName(routine.getName())) {
+            if (routineService.isPresentByName(routine.name())) {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = routineService.createRoutine(routine.getName(), routine.getLightSensor(), routine.getRollerShutters());
+            String result = routineService.createRoutine(routine.name(), routine.lightSensor(), routine.rollerShutters());
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -75,13 +75,13 @@ public class RoutineController {
     }
 
     @PatchMapping("/patch/name/{id}")
-    public ResponseEntity<String> patchNameRoutine(@PathVariable Long id, @RequestBody Routine routine) {
+    public ResponseEntity<String> patchNameRoutine(@PathVariable Long id, @RequestBody RoutineDTO.nameInput routine) {
         try {
             if (!routineService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRoutine = routineService.patchNameRoutine(id, routine.getName()).toJson();
+            String newRoutine = routineService.patchNameRoutine(id, routine.name()).toJson();
             return ResponseEntity.ok(newRoutine);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -89,13 +89,13 @@ public class RoutineController {
     }
 
     @PatchMapping("/patch/actionTime/{id}")
-    public ResponseEntity<String> patchActionTimeRoutine(@PathVariable Long id, @RequestBody Routine routine) {
+    public ResponseEntity<String> patchActionTimeRoutine(@PathVariable Long id, @RequestBody RoutineDTO.actionTimeInput routine) {
         try {
             if (!routineService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRoutine = routineService.patchActionTimeRoutine(id, routine.getActionTime()).toJson();
+            String newRoutine = routineService.patchActionTimeRoutine(id, routine.time()).toJson();
             return ResponseEntity.ok(newRoutine);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify action time\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -103,13 +103,13 @@ public class RoutineController {
     }
 
     @PatchMapping("/patch/lightSensor/{id}")
-    public ResponseEntity<String> patchLightSensorRoutine(@PathVariable Long id, @RequestBody Routine routine) {
+    public ResponseEntity<String> patchLightSensorRoutine(@PathVariable Long id, @RequestBody RoutineDTO.lightSensorInput routine) {
         try {
             if (!routineService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRoutine = routineService.patchLightSensorRoutine(id, routine.getLightSensor()).toJson();
+            String newRoutine = routineService.patchLightSensorRoutine(id, routine.lightSensor()).toJson();
             return ResponseEntity.ok(newRoutine);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify light sensor\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -117,13 +117,13 @@ public class RoutineController {
     }
 
     @PatchMapping("/patch/rollerShutters/{id}")
-    public ResponseEntity<String> patchRollerShutterRoutine(@PathVariable Long id, @RequestBody Routine routine) {
+    public ResponseEntity<String> patchRollerShutterRoutine(@PathVariable Long id, @RequestBody RoutineDTO.rollerShutterInput routine) {
         try {
             if (!routineService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRoutine = routineService.patchRollerShuttersRoutine(id, routine.getRollerShutters()).toJson();
+            String newRoutine = routineService.patchRollerShuttersRoutine(id, routine.rollerShutters()).toJson();
             return ResponseEntity.ok(newRoutine);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify roller shutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");

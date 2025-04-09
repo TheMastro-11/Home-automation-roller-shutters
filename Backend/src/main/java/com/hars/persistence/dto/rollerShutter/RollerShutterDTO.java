@@ -2,6 +2,9 @@ package com.hars.persistence.dto.rollerShutter;
 import com.hars.persistence.dto.home.HomeDTO;
 
 public class RollerShutterDTO {
+    public record nameInput(String name) {}
+    public record openingInput (int value) {}
+
     private Long id;
     private String name;
     private int percentageOpening;

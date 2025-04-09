@@ -4,13 +4,17 @@ import java.util.List;
 
 import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
+import com.hars.persistence.entities.lightSensor.LightSensor;
+import com.hars.persistence.entities.rollerShutter.RollerShutter;
 import com.hars.persistence.entities.users.User;
 
 
 public class HomeDTO {
     public record nameInput (String name) {};
     public record userInput (User user) {}
-
+    public record rollerShutterInput (List<RollerShutter> rollerShutters) {}
+    public record lightSensorInput (LightSensor lightSensor) {};
+    
     private Long id;
     private String name;
     private User owner;
