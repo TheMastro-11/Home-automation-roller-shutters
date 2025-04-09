@@ -174,39 +174,136 @@ function cancelRoutines() {
 }
 
 // Salva una routine (CREAZIONE DA RIFARE!)
+
+
 async function saveRoutines(event) {
     event.preventDefault();
     const form = event.target;
     const saveButton = event.submitter;
-
-    // --- QUESTA FUNZIONE VA COMPLETAMENTE RISCRITTA ---
-    // --- IN BASE ALLE INFO MANCANTI DAL BACKEND      ---
-
-    alert("Save Routine function needs to be implemented based on backend API details!");
-
-    // 1. Recupera tutti i dati dal form (name, deviceId, triggerType, triggerValue, action, percentage)
-    // 2. Determina se il trigger è 'luminosity' o 'time'
-    // 3. Determina l'apiPath corretto:
-    //    - Se trigger è luminosity -> '/api/entities/routine/create/lightSensor'
-    //    - Se trigger è time -> '/api/entities/routine/create/actionTime'
-    // 4. Costruisci il JSON 'data' ESATTAMENTE come richiesto da quell'endpoint specifico (CHIEDI AL BACKEND DEV!)
-    // 5. Fai la chiamata: await fetchApi(apiPath, 'POST', data);
-    // 6. Gestisci successo/errore, ricarica lista, ecc.
-
-    // Esempio MOLTO IPOTETICO (NON USARE):
-    /*
-    const triggerType = document.getElementById("triggerType").value;
-    let apiPath = '';
-    let data = {}; // Da costruire correttamente!
-    if (triggerType === 'luminosity') {
-        apiPath = '/api/entities/routine/create/lightSensor';
-        // data = { name: ..., lightSensorId: ..., action: ... }; // COSA VUOLE IL BACKEND?
-    } else { // time
-        apiPath = '/api/entities/routine/create/actionTime';
-        // data = { name: ..., hour: ..., minute: ..., action: ... }; // COSA VUOLE IL BACKEND?
+    if(saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = 'Saving...';
     }
-    // ... try/catch con fetchApi(apiPath, 'POST', data) ...
-    */
+
+    // --- 1. Leggi i valori comuni dal form ---
+    const name = document.getElementById("RoutinesName").value.trim();
+    const triggerType = document.getElementById("triggerType").value;
+    // Azione
+    const actionType = document.getElementById("action").value; // 'open' or 'close'
+    const selectedPercentage = parseInt(document.getElementById("actionPercentage").value, 10); // 0, 25, 50, 75, 100
+    // Tapparelle Target
+    const targetShuttersCheckboxes = document.querySelectorAll('#routineTargetShuttersList input[type="checkbox"]:checked');
+    const targetShutterIds = Array.from(targetShuttersCheckboxes).map(cb => cb.value);
+
+    // --- NUOVO: Calcola il valore 'percentageOpening' da inviare ---
+    let valueToSend;
+    if (actionType === 'close') {
+        valueToSend = 100 - selectedPercentage;
+        console.log(`Action: Close, Target: ${selectedPercentage}%, Sending: ${valueToSend}`); // Debug
+    } else { // actionType === 'open'
+        valueToSend = selectedPercentage;
+        console.log(`Action: Open, Target: ${selectedPercentage}%, Sending: ${valueToSend}`); // Debug
+    }
+    // --------------------------------------------------------------
+
+    // Formatta le tapparelle come lista di oggetti {id} (OK da tua conferma)
+    const rollerShuttersData = targetShutterIds.map(id => ({ id: parseInt(id, 10) }));
+
+    // Variabili per path API e body base
+    let apiPath = '';
+    let data = {
+        name: name,
+        // --- IPOTESI STRUTTURA AZIONE (DA VERIFICARE!) ---
+        // Dove va inserito 'valueToSend'? Ipotizzo ancora in 'action.percentageOpening'
+        action: {
+            percentageOpening: valueToSend // Usa il valore calcolato
+        },
+        // --- FINE IPOTESI AZIONE ---
+        rollerShutters: rollerShuttersData
+    };
+
+    // --- Validazione Base ---
+    if (!name || targetShutterIds.length === 0 || isNaN(selectedPercentage)) { // Controllo validità percentuale
+        alert("Please provide a routine name, select target shutter(s), and set an action percentage.");
+         if(saveButton) { saveButton.disabled = false; saveButton.textContent = 'Save Routine'; }
+        return;
+    }
+
+    // --- 2. Leggi i dettagli specifici del trigger e imposta path/body ---
+    if (triggerType === 'time') {
+        apiPath = '/api/entities/routine/create/actionTime';
+        const timeValue = document.getElementById("triggerTime").value; // "HH:MM"
+        if (!timeValue) {
+            alert("Please select a trigger time.");
+             if(saveButton) { saveButton.disabled = false; saveButton.textContent = 'Save Routine'; }
+            return;
+        }
+        const [hourStr, minuteStr] = timeValue.split(':');
+        data.time = { // Usa 'time' come nel body API
+            hour: parseInt(hourStr, 10),
+            minute: parseInt(minuteStr, 10),
+            second: 0,
+            nano: 0
+        };
+        // L'oggetto 'data' ora contiene: name, time, action (ipotetico), rollerShutters
+
+    } else if (triggerType === 'luminosity') {
+        apiPath = '/api/entities/routine/create/lightSensor';
+        const sensorId = document.getElementById("triggerSensorId").value;
+        const condition = document.getElementById("triggerLuminosityCondition").value; // 'above' or 'below'
+        const thresholdStr = document.getElementById("triggerLuminosityValue").value;
+
+        if (!sensorId || !thresholdStr) {
+            alert("Please select a trigger sensor and enter a luminosity threshold.");
+             if(saveButton) { saveButton.disabled = false; saveButton.textContent = 'Save Routine'; }
+            return;
+        }
+        const thresholdValue = parseInt(thresholdStr, 10);
+        if (isNaN(thresholdValue) || thresholdValue < 0 || thresholdValue > 100) {
+             alert("Please enter a valid luminosity threshold (0-100).");
+             if(saveButton) { saveButton.disabled = false; saveButton.textContent = 'Save Routine'; }
+             return;
+        }
+
+        // Costruisci body - FORMATO DA CONFERMARE CON BACKEND!
+        data.lightSensor = { id: parseInt(sensorId, 10) }; // Invia solo ID
+
+        // --- IPOTESI CAMPI TRIGGER LUMINOSITÀ (DA VERIFICARE!) ---
+        data.triggerCondition = condition; // Campo ipotetico
+        data.triggerValue = thresholdValue; // Campo ipotetico
+        // --- FINE IPOTESI TRIGGER ---
+
+        // L'oggetto 'data' ora contiene: name, lightSensor, triggerCondition(ipotetico), triggerValue(ipotetico), action(ipotetico), rollerShutters
+
+    } else {
+        alert("Invalid trigger type selected.");
+         if(saveButton) { saveButton.disabled = false; saveButton.textContent = 'Save Routine'; }
+        return;
+    }
+
+    console.log("Attempting to save routine. Path:", apiPath, "Data:", JSON.stringify(data, null, 2));
+
+    // --- 3. Esegui chiamata API ---
+    try {
+        console.warn("Executing save routine API call - Final body format (action, luminosity trigger details) needs confirmation from backend!");
+        await fetchApi(apiPath, 'POST', data);
+
+        alert(`Routine created successfully!`);
+        cancelRoutines();
+
+        const homeIdForReload = document.getElementById("Routines-home-id-hidden")?.value || null;
+        loadRoutines(homeIdForReload);
+
+    } catch (error) {
+        console.error("Error saving routine:", error);
+        const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '';
+        alert(`Error saving routine: ${error.message}${errorDetails}`);
+    } finally {
+        if(saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Save Routine';
+        }
+    }
 }
 
 
