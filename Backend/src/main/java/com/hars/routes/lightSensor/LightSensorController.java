@@ -1,4 +1,4 @@
-package com.hars.routes.rollerShutter;
+package com.hars.routes.lightSensor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,33 +11,33 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hars.persistence.entities.rollerShutter.RollerShutter;
-import com.hars.services.rollerShutter.RollerShutterService;
+import com.hars.persistence.entities.lightSensor.LightSensor;
+import com.hars.services.lightSensor.LightSensorService;
 
 @RestController
-@RequestMapping("/api/entities/rollerShutter")
-public class RollerShutterController {
+@RequestMapping("/api/entities/lightSensor")
+public class LightSensorController {
 
     @Autowired
-    private RollerShutterService rollerShutterService;
+    private LightSensorService lightSensorService;
 
     @GetMapping("/")
-    public ResponseEntity<?> getAllRollerShutter() {
+    public ResponseEntity<?> getAllLightSensors() {
         try {
-            return ResponseEntity.ok(rollerShutterService.getAllRollerShutters());
+            return ResponseEntity.ok(lightSensorService.getAllLightSensors());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Get all RollerShutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createRollerShutter(@RequestBody RollerShutter rollerShutter) {
+    public ResponseEntity<String> createLightSensor(@RequestBody LightSensor lightSensor) {
         try {
-            if (rollerShutterService.isPresentByName(rollerShutter.getName())) {
+            if (lightSensorService.isPresentByName(lightSensor.getName())) {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = rollerShutterService.createRollerShutter(rollerShutter.getName());
+            String result = lightSensorService.createLightSensor(lightSensor.getName()).toJson();
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -46,44 +46,44 @@ public class RollerShutterController {
     }
 
     @DeleteMapping(("/delete/{id}"))
-    public ResponseEntity<String> deleteRollerShutter(@PathVariable Long id){
+    public ResponseEntity<String> deleteLightSensor(@PathVariable Long id){
         try {
-            if (!rollerShutterService.isPresentById(id)) {
+            if (!lightSensorService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
-            
-            rollerShutterService.deleteRollerShutter(id);
-            return ResponseEntity.ok("\"RollerShutter deleted successfully!\"");
+            lightSensorService.deleteLightSensor(id);
+            return ResponseEntity.ok("\"LightSensor deleted successfully!\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Delete\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
     }
 
     @PatchMapping("/patch/name/{id}")
-    public ResponseEntity<String> patchNameRollerShutter (@PathVariable Long id, @RequestBody RollerShutter rollerShutter) {
+    public ResponseEntity<String> patchNameLightSensor (@PathVariable Long id, @RequestBody LightSensor lightSensor) {
         try {
-            if (!rollerShutterService.isPresentById(id)) {
+            if (!lightSensorService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRollerShutter = rollerShutterService.patchNameRollerShutter(id, rollerShutter.getName() ).toJson();
-            return ResponseEntity.ok(newRollerShutter);
+            String newLightSensor = lightSensorService.patchNameLightSensor(id, lightSensor.getName() ).toJson();
+            return ResponseEntity.ok(newLightSensor);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
     }
 
-    @PatchMapping("/patch/opening/{id}")
-    public ResponseEntity<String> patchOpeningRollerShutter (@PathVariable Long id, @RequestBody RollerShutter rollerShutter) {
+    @PatchMapping("/patch/value/{id}")
+    public ResponseEntity<String> patchValueLightSensor (@PathVariable Long id, @RequestBody LightSensor lightSensor) {
         try {
-            if (!rollerShutterService.isPresentById(id)) {
+            if (!lightSensorService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRollerShutter = rollerShutterService.patchOpeningRollerShutter(id, rollerShutter.getPercentageOpening()).toJson();
-            return ResponseEntity.ok(newRollerShutter);
+            String newLightSensor = lightSensorService.patchValueLightSensor(id, lightSensor.getLightValue()).toJson();
+            return ResponseEntity.ok(newLightSensor);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify opening percentage\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify light value\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
     }
+
 }

@@ -1,10 +1,10 @@
-package com.hars.persistence.dto.rollerShutter;
+package com.hars.persistence.dto.lightSensor;
 import com.hars.persistence.dto.home.HomeDTO;
 
-public class RollerShutterDTO {
+public class LightSensorDTO {
     private Long id;
     private String name;
-    private int percentageOpening;
+    private int lightValue;
     private HomeDTO home;
 
     //Getters
@@ -16,8 +16,8 @@ public class RollerShutterDTO {
         return this.name;
     }
 
-    public int getPercentageOpening(){
-        return this.percentageOpening;
+    public int getLightValue(){
+        return this.lightValue;
     }
 
     public HomeDTO getHome(){
@@ -33,8 +33,8 @@ public class RollerShutterDTO {
         this.name = name;
     }
 
-    public void setPercentageOpening(int percentageOpening){
-        this.percentageOpening = percentageOpening;
+    public void setLightValue(int lightValue){
+        this.lightValue = lightValue;
     }
 
     public void setHome(HomeDTO home){

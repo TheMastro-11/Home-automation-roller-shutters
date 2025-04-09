@@ -1,14 +1,15 @@
 package com.hars.persistence.entities.rollerShutter;
 
-import com.hars.persistence.entities.home.Home;
+import java.util.List;
+
+import com.hars.persistence.entities.routine.Routine;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -16,22 +17,23 @@ import jakarta.persistence.Table;
 public class RollerShutter {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "roller_shutter_id")
+    @Column(name = "rollerShutter_id")
     private Long id;
 
+    @Column(name = "name")
     private String name;
-    private int percentage_opening = 0;
 
-    @ManyToOne
-    @JoinColumn(name = "home_id")
-    private Home home;
+    @Column(name = "percentageOpening")
+    private int percentageOpening = 0;
+
+    @ManyToMany(mappedBy = "rollerShutters")
+    private List<Routine> routines;
 
     //builder
     public RollerShutter(){}
 
-    public RollerShutter(String name, Home home) {
+    public RollerShutter(String name) {
         this.name = name;
-        this.home = home;
     }
 
     //getter
@@ -44,19 +46,36 @@ public class RollerShutter {
     }
 
     public int getPercentageOpening(){
-        return this.percentage_opening;
+        return this.percentageOpening;
     }
-    public Home getHome(){
-        return this.home;
+
+    public List<Routine> getRoutines() {
+        return this.routines;
     }
 
     //setter
+    public void setId(Long id){
+        this.id = id;
+    }
+
     public void setName(String name){
         this.name = name;
     }
     
     public void setPercentageOpening(int percentage){
-        this.percentage_opening = percentage;
+        this.percentageOpening = percentage;
     }
+
+    public void setRoutines(List<Routine> routines) {
+        this.routines = routines;
+    }
+
+    //helpers
+    public String toJson(){
+        return "\"Name\" : \"" + this.name + "\", " +
+            "\"PercentageOpening\" : \"" + this.percentageOpening + "\"";
+    }
+
+    
     
 }

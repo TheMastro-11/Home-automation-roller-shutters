@@ -1,19 +1,14 @@
-package com.hars.persistence.dto.home;
+package com.hars.persistence.dto.routine;
 
 import java.util.List;
 
 import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
-import com.hars.persistence.entities.users.User;
 
-
-public class HomeDTO {
-    public record nameInput (String name) {};
-    public record userInput (User user) {}
-
+public class RoutineDTO {
     private Long id;
     private String name;
-    private User owner;
+
     private List<RollerShutterDTO> rollerShutters;
     private LightSensorDTO lightSensor;
 
@@ -26,14 +21,10 @@ public class HomeDTO {
         return this.name;
     }
 
-    public User getOwner() {
-        return this.owner;
-    }
-
     public List<RollerShutterDTO> getRollerShutters() {
         return this.rollerShutters;
     }
-    
+
     public LightSensorDTO getLightSensor() {
         return this.lightSensor;
     }
@@ -43,18 +34,14 @@ public class HomeDTO {
         this.id = id;
     }
 
-    public void setName(String name) {
+    public void setName(String name){
         this.name = name;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
     }
 
     public void setRollerShutters(List<RollerShutterDTO> rollerShutters) {
         this.rollerShutters = rollerShutters;
     }
-
+    
     public void setLightSensor(LightSensorDTO lightSensor) {
         this.lightSensor = lightSensor;
     }

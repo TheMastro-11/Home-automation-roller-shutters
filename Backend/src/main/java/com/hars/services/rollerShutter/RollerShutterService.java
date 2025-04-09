@@ -1,17 +1,15 @@
 package com.hars.services.rollerShutter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.hars.persistence.entities.home.Home;
+import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
 import com.hars.persistence.repository.rollerShutter.RollerShutterRepository;
-import com.hars.services.home.HomeService;
-
-import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class RollerShutterService {
@@ -19,34 +17,89 @@ public class RollerShutterService {
     @Autowired
     private RollerShutterRepository rollerShutterRepository;
 
-    @Autowired
-    private HomeService homeService;
+    public List<RollerShutterDTO> getAllRollerShutters(){
+        try {
+            return rollerShutterRepository.findAll()
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+    
+    public String createRollerShutter(String name) {
+        try {
+            RollerShutter roller_shutter = new RollerShutter(name);
+            rollerShutterRepository.save(roller_shutter);
+            return "Roller shutter created successfully!";
+        } catch (Exception e) {
+            throw e;
+        }
+    }
 
-    public RollerShutter loadHomeByName(String name) throws UsernameNotFoundException {
+    public void deleteRollerShutter(Long id){
+        try {
+            RollerShutter rollerShutter = rollerShutterRepository.findById(id).get();
+            rollerShutterRepository.delete(rollerShutter);
+        } catch (Exception e) {
+            throw e;
+        }
+    }  
+
+    public RollerShutter patchNameRollerShutter(Long id, String name){
+        try {
+            RollerShutter rollerShutter = rollerShutterRepository.findById(id).get();
+            rollerShutter.setName(name);
+            rollerShutter = rollerShutterRepository.save(rollerShutter);
+            return rollerShutter;
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public RollerShutter patchOpeningRollerShutter(Long id, int increase_value){
+        try {
+            RollerShutter rollerShutter = rollerShutterRepository.findById(id).get();
+            int oldValue = rollerShutter.getPercentageOpening();
+            rollerShutter.setPercentageOpening(increase_value + oldValue);
+            rollerShutter = rollerShutterRepository.save(rollerShutter);
+            return rollerShutter;
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    //Helpers
+    private RollerShutterDTO convertToDTO(RollerShutter rollerShutter) {
+        RollerShutterDTO dto = new RollerShutterDTO();
+        dto.setId(rollerShutter.getID());
+        dto.setName(rollerShutter.getName());
+        dto.setPercentageOpening(rollerShutter.getPercentageOpening());
+    
+        return dto;
+    }
+
+    public RollerShutter loadRollerShutterByName(String name) throws UsernameNotFoundException {
         // Use orElseThrow to handle the Optional
         RollerShutter roller_shutter = rollerShutterRepository.findByName(name)
-                .orElseThrow(() -> new UsernameNotFoundException("Home not found with name: " + name));
+                .orElseThrow(() -> new UsernameNotFoundException("RollerShutter not found with name: " + name));
 
         return roller_shutter;
     }
 
-    public Boolean isPresent(RollerShutter rollerShutter){
-        return rollerShutterRepository.findByName(rollerShutter.getName()).isPresent();
+    public RollerShutter loadRollerShutterById(Long id) {
+        // Use orElseThrow to handle the Optional
+        RollerShutter roller_shutter = rollerShutterRepository.findById(id).get();
+        return roller_shutter;
     }
 
-    public String createRollerShutter(String name, String homeName) {
-        try {
-            Home validHome = homeService.loadHomeByName(homeName);
-            RollerShutter roller_shutter = new RollerShutter(name, validHome);
-            rollerShutterRepository.save(roller_shutter);
-            return "Roller shutter created successfully!";
-        } catch (EntityNotFoundException e) {
-            throw new IllegalArgumentException("This home does not exist: " + homeName);
-        }   
+    public Boolean isPresentByName(String name){
+        return rollerShutterRepository.findByName(name).isPresent();
     }
 
-    public List<RollerShutter> getAllRollerShutters(){
-        return rollerShutterRepository.findAll();
+    public Boolean isPresentById(Long id){
+        return rollerShutterRepository.findById(id).isPresent();
     }
     
 }

@@ -1,10 +1,11 @@
 package com.hars.routes.home;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import com.hars.persistence.dto.home.HomeDTO;
 import com.hars.persistence.entities.home.Home;
 import com.hars.services.home.HomeService;
 
+
 @RestController
 @RequestMapping("/api/entities/home")
 public class HomeController {
@@ -21,20 +23,109 @@ public class HomeController {
     @Autowired
     private HomeService homeService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createHome(@RequestBody Home home) {
-        if (homeService.isPresent(home)) {
-            return ResponseEntity.badRequest().body("Error: Name is already taken!");
-        }
-
-        homeService.createHome(home);
-
-        return ResponseEntity.ok("\"Home created successfully!\"");
-    }
-
     @GetMapping("/")
-    public List<HomeDTO> getAllHomes() {
-        return homeService.getAllHomes();
+    public ResponseEntity<?> getAllHomes() {
+        try {
+            return ResponseEntity.ok(homeService.getAllHomes());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Get all Homes\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
     }
+
+    @PostMapping("/create")
+    public ResponseEntity<String> createHome(@RequestBody HomeDTO.nameInput home) {
+    
+        try {
+            if (homeService.isPresentByName(home.name())) {
+                return ResponseEntity.badRequest().body("Error: Name is already taken!");
+            }
+
+            String newHome = homeService.createHome(home).toJson();
+            return ResponseEntity.ok("\"Response\" : \"Home created successfully!\" , \"Entity\" :" + newHome);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+        
+    }
+
+    @DeleteMapping(("/delete/{id}"))
+    public ResponseEntity<String> deleteHome(@PathVariable Long id){
+        try {
+            if (!homeService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            homeService.deleteHome(id);
+            return ResponseEntity.ok("\"Home deleted successfully!\"");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Delete\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+    }
+
+    @PatchMapping("/patch/name/{id}")
+    public ResponseEntity<String> patchNameHome(@PathVariable Long id, @RequestBody HomeDTO.nameInput home){
+        try {
+            if (!homeService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            String newHome = homeService.patchNameHome(id, home.name()).toJson();
+
+            return ResponseEntity.ok(newHome);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+        
+    }
+
+    @PatchMapping("/patch/user/{id}")
+    public ResponseEntity<String> patchOwnerHome(@PathVariable Long id, @RequestBody Home home){
+        try {
+            if (!homeService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            String newHome = homeService.patchOwnerHome(id, home.getOwner()).toJson();
+
+            return ResponseEntity.ok(newHome);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify user\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+        
+    }
+
+    @PatchMapping("/patch/rollerShutters/{id}")
+    public ResponseEntity<String> patchRollerShuttersHome(@PathVariable Long id, @RequestBody Home home){
+        try {
+            if (!homeService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            String newHome = homeService.patchRollerShuttersHome(id, home.getRollerShutters()).toJson();
+
+            return ResponseEntity.ok(newHome);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify roller shutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+        
+    }
+
+    @PatchMapping("/patch/lightSensor/{id}")
+    public ResponseEntity<String> patchLightSensorHome(@PathVariable Long id, @RequestBody Home home){
+        try {
+            if (!homeService.isPresentById(id)) {
+                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+            }
+
+            String newHome = homeService.patchLightSensorHome(id, home.getLightSensor()).toJson();
+
+            return ResponseEntity.ok(newHome);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify light sensor\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+        }
+        
+    }
+
+
 
 }

@@ -17,3 +17,30 @@
     - Gestire le abitazioni (elenco nome):
         - Selezionarne una e vedere elenco dispositivi e elenco utenti
             - Aggiungere o rimuovere
+
+
+TODO
+--HOME
+DELETE home !
+PUT home !
+--ROLLER SHUTTER
+DELETE roller shutter !
+PATCH roller shutter percentage ! 
+    <> MQTT command
+PATCH roller shutter name !
+PATCH roller shutter home !
+--HISTORY
+Entity
+CREATE 
+DELETE
+--LIGHT SENSOR
+Entity !
+CREATE !
+DELETE !
+PATCH name !
+PATCH value !
+PATCH home !
+--AUTOMATION
+CREATE
+DELETE
+PUT 
