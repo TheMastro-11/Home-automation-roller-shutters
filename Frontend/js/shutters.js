@@ -1,34 +1,39 @@
 let selectedRollerShutterId = null; // Variabile per tenere traccia della tapparella selezionata
 
 // Carica le tapparelle (possibilmente filtrate per homeId)
-async function loadRollerShutters(homeId = null) { // Accetta homeId opzionale
+async function loadRollerShutters(homeId = null) {
     const rollerShutterList = document.getElementById("rollerShutter-list-items");
     if (!rollerShutterList) return;
     rollerShutterList.innerHTML = "<li class='list-group-item'>Loading shutters...</li>";
-    document.getElementById("rollerShutter-controls").style.display = 'none'; // Nascondi controlli
+    document.getElementById("rollerShutter-controls").style.display = 'none';
 
-    // Modifica il path se l'API filtra per casa
-    const apiPath = homeId ? `/api/entities/home/${homeId}/rollerShutters` : '/api/entities/rollerShutter/';
-    // Oppure se l'endpoint è unico ma filtra lato server in base al token:
-    // const apiPath = '/api/entities/rollerShutter/';
+    // Usa SEMPRE il path base corretto
+    const apiPath = '/api/entities/rollerShutter/';
+
+    // !!! NOTA: Filtro per homeId NON implementato !!!
+    // Verranno caricate le tapparelle accessibili dall'utente/token.
+    // Se serve filtro specifico per homeId, chiedere al backend come fare.
+     if (homeId) {
+         console.warn(`Filtering shutters by homeId (${homeId}) is NOT YET IMPLEMENTED pending backend API details. Loading all accessible shutters from ${apiPath}`);
+         // Eventuale logica filtro: apiPath = `/api/entities/rollerShutter/?homeId=${homeId}`;
+    }
 
     try {
         const rollerShutters = await fetchApi(apiPath);
-        rollerShutterList.innerHTML = ""; // Pulisci
+        rollerShutterList.innerHTML = "";
 
         if (rollerShutters && rollerShutters.length > 0) {
             rollerShutters.forEach((shutter) => {
                 const li = document.createElement("li");
-                li.className = "list-group-item list-group-item-action"; // Rendi cliccabile
+                li.className = "list-group-item list-group-item-action"; // Action per stile hover/focus
                 li.style.cursor = "pointer";
                 li.innerHTML = `${shutter.name} - <span>Opening: ${shutter.percentageOpening}%</span>`;
                 li.onclick = () => selectRollerShutter(shutter.id, shutter.name, shutter.percentageOpening);
-                // Aggiungi un ID univoco a ogni elemento li per poterlo aggiornare facilmente
                 li.id = `shutter-item-${shutter.id}`;
                 rollerShutterList.appendChild(li);
             });
         } else {
-            rollerShutterList.innerHTML = "<li class='list-group-item'>No roller shutters found in this home.</li>";
+            rollerShutterList.innerHTML = "<li class='list-group-item'>No roller shutters found.</li>";
         }
     } catch (error) {
         rollerShutterList.innerHTML = `<li class='list-group-item text-danger'>Error loading shutters: ${error.message}</li>`;

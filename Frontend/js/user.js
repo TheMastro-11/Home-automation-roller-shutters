@@ -20,7 +20,7 @@ async function loadUserHomeDetails() {
       // Passiamo l'ID della casa se necessario alle funzioni di caricamento
       loadRollerShutters(userHome.id); // Passa homeId se l'API lo richiede per filtrare
       loadLightSensors(userHome.id); // Passa homeId se l'API lo richiede per filtrare
-      loadAutomations(userHome.id); // Carica/filtra automazioni per questa casa
+      loadRoutines(userHome.id); // Carica/filtra automazioni per questa casa
     } else {
       // Se non ci sono case (homes.length === 0)
       if (nameDisplay) nameDisplay.textContent = "No home assigned.";
@@ -38,12 +38,12 @@ async function loadUserHomeDetails() {
         lightSensorsSection.style.display = "none";
       }
 
-      // Nota: Potrebbe non essere necessario nascondere #automations-section qui
+      // Nota: Potrebbe non essere necessario nascondere #Routines-section qui
       // se vuoi che sia sempre visibile magari con un messaggio "Nessuna automazione".
       // Ma se vuoi nasconderla quando non c'è casa, fai così:
-      const automationsSection = document.getElementById("automations-section");
-      if (automationsSection) {
-        automationsSection.style.display = "none";
+      const RoutinesSection = document.getElementById("Routines-section");
+      if (RoutinesSection) {
+        RoutinesSection.style.display = "none";
       }
     } // Fine del blocco else
   } catch (error) {
