@@ -128,8 +128,8 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: #ffffff; 
 }
-
 #automations-list li button {
   padding: 5px 10px;
   background-color: #007bff;

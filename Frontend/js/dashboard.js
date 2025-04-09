@@ -56,7 +56,8 @@ function displayDashboardBasedOnRole() {
     const userSection = document.getElementById("user-section");
     const automationsSection = document.getElementById("automations-section"); // Assumiamo sia visibile a entrambi
 
-    if (isAdminUser) {
+    //if (isAdminUser) {
+    if (true) { // Per testare admin sempre 
         console.log("User is Admin");
         if(userSection) userSection.style.display = "none";
         if(adminSection) adminSection.style.display = "block";
@@ -67,7 +68,7 @@ function displayDashboardBasedOnRole() {
         // Potresti voler caricare le automazioni generali o nessuna inizialmente
         // loadAutomations(); // Carica tutte le automations? O aspetta selezione casa?
         // Nascondi lista automazioni finché non si seleziona una casa?
-        document.getElementById("automations-list").innerHTML = "<li class='list-group-item'>Select a home to view its automations.</li>";
+        document.getElementById("automations-list").innerHTML = "<li class='list-group-item'>Select a home to view its automations</li>";
         document.getElementById("automations-section-title").innerText = "Automations";
 
 
