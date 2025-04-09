@@ -37,7 +37,7 @@ public class LightSensorController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = lightSensorService.createLightSensor(lightSensor.getName(), lightSensor.getHome().getName()).toJson();
+            String result = lightSensorService.createLightSensor(lightSensor.getName()).toJson();
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -51,7 +51,6 @@ public class LightSensorController {
             if (!lightSensorService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
-            
             lightSensorService.deleteLightSensor(id);
             return ResponseEntity.ok("\"LightSensor deleted successfully!\"");
         } catch (Exception e) {
@@ -87,17 +86,4 @@ public class LightSensorController {
         }
     }
 
-    @PatchMapping("/patch/home/{id}")
-    public ResponseEntity<String> patchHomeLightSensor (@PathVariable Long id, @RequestBody LightSensor lightSensor) {
-        try {
-            if (!lightSensorService.isPresentById(id)) {
-                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
-            }
-
-            String newLightSensor = lightSensorService.patchHomeLightSensor(id, lightSensor.getHome().getName()).toJson();
-            return ResponseEntity.ok(newLightSensor);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify related home\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
-        }
-    }
 }
