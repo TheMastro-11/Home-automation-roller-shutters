@@ -28,11 +28,10 @@ public class RollerShutterService {
         }
     }
     
-    public String createRollerShutter(String name) {
+    public RollerShutter createRollerShutter(String name) {
         try {
             RollerShutter roller_shutter = new RollerShutter(name);
-            rollerShutterRepository.save(roller_shutter);
-            return "Roller shutter created successfully!";
+            return rollerShutterRepository.save(roller_shutter);
         } catch (Exception e) {
             throw e;
         }

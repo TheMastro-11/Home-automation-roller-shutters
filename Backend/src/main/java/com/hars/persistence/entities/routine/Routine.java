@@ -6,6 +6,7 @@ import java.util.List;
 import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -35,11 +36,12 @@ public class Routine {
     @JoinColumn(name = "lightSensor_id")
     private LightSensor lightSensor;
 
-    @ManyToMany
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
         name = "rollerShutter_routine",
-        joinColumns = @JoinColumn(name = "rollerShutterID"),
-        inverseJoinColumns = @JoinColumn(name = "routineID"))
+        joinColumns = @JoinColumn(name = "rolleShutterR_id"),
+        inverseJoinColumns = @JoinColumn(name = "routineR_id")
+    )
     private List<RollerShutter> rollerShutters;  
 
     //builder
@@ -101,6 +103,7 @@ public class Routine {
     
     //helpers
     public String toJson(){
-        return "\"Name\" : \"" + this.name + "\"";
+        return "\"ID\" : \"" + this.id + "\" ," +
+            "\"Name\" : \"" + this.name + "\"";
     }
 }

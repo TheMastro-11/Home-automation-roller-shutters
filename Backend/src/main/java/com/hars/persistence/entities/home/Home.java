@@ -7,8 +7,10 @@ import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
 import com.hars.persistence.entities.users.User;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,16 +30,20 @@ public class Home {
     @Column(name = "name")
     private String name;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "homeU_id", referencedColumnName = "user_id")
     private User owner;
 
-    @OneToMany()
-    @JoinColumn(name = "rollerShutter_id")
+    @OneToMany(
+        cascade = CascadeType.ALL, /*orphanRemoval = true,*/ fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "homeR_id", 
+        nullable = true 
+    )
     private List<RollerShutter> rollerShutters = new ArrayList<>();
 
-    @OneToOne() 
-    @JoinColumn(name = "lightSensor_id")
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "homeL_id", referencedColumnName = "lightSensor_id")
     private LightSensor lightSensor;
 
     //builder
@@ -91,7 +97,8 @@ public class Home {
 
     //helpers
     public String toJson(){
-        return "\"Name\" : \"" + this.name + "\"";
+        return "\"ID\" : \"" + this.id + "\" ," +
+            "\"Name\" : \"" + this.name + "\"";
     }
 
 }

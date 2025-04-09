@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 public class LightSensor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    @Column(name = "lightSensor_id")
     private Long id;
 
     @Column(name = "name")
@@ -55,7 +55,8 @@ public class LightSensor {
     }
 
     public String toJson(){
-        return "\"Name\" : \"" + this.name + "\" ," +
+        return "\"ID\" : \"" + this.id + "\" ," +
+            "\"Name\" : \"" + this.name + "\" ," +
             "\"LightValue\" : \"" + this.lightValue + "\"";
     }
 

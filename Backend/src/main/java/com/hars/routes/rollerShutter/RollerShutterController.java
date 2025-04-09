@@ -37,7 +37,7 @@ public class RollerShutterController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = rollerShutterService.createRollerShutter(rollerShutter.name());
+            String result = rollerShutterService.createRollerShutter(rollerShutter.name()).toJson();
             return ResponseEntity.ok("\""+result+"\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
