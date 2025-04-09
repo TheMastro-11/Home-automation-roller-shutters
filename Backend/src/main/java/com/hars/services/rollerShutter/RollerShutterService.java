@@ -7,21 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.hars.persistence.dto.home.HomeDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
-import com.hars.persistence.entities.home.Home;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
 import com.hars.persistence.repository.rollerShutter.RollerShutterRepository;
-import com.hars.services.home.HomeService;
 
 @Service
 public class RollerShutterService {
 
     @Autowired
     private RollerShutterRepository rollerShutterRepository;
-
-    @Autowired
-    private HomeService homeService;
 
     public List<RollerShutterDTO> getAllRollerShutters(){
         try {
@@ -34,10 +28,9 @@ public class RollerShutterService {
         }
     }
     
-    public String createRollerShutter(String name, String homeName) {
+    public String createRollerShutter(String name) {
         try {
-            Home validHome = homeService.loadHomeByName(homeName);
-            RollerShutter roller_shutter = new RollerShutter(name, validHome);
+            RollerShutter roller_shutter = new RollerShutter(name);
             rollerShutterRepository.save(roller_shutter);
             return "Roller shutter created successfully!";
         } catch (Exception e) {
@@ -77,18 +70,6 @@ public class RollerShutterService {
         }
     }
 
-    public RollerShutter patchHomeRollerShutter(Long id, String home){
-        try {
-            Home validHome = homeService.loadHomeByName(home);
-            RollerShutter rollerShutter = rollerShutterRepository.findById(id).get();
-            rollerShutter.setHome(validHome);
-            rollerShutter = rollerShutterRepository.save(rollerShutter);
-            return rollerShutter;
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
     //Helpers
     private RollerShutterDTO convertToDTO(RollerShutter rollerShutter) {
         RollerShutterDTO dto = new RollerShutterDTO();
@@ -96,21 +77,20 @@ public class RollerShutterService {
         dto.setName(rollerShutter.getName());
         dto.setPercentageOpening(rollerShutter.getPercentageOpening());
     
-        if (rollerShutter.getHome() != null) {
-            HomeDTO homeDto = new HomeDTO();
-            Home relatedHome = rollerShutter.getHome();
-            homeDto.setName(relatedHome.getName());
-            dto.setHome(homeDto);
-        }
-    
         return dto;
     }
 
-    public RollerShutter loadHomeByName(String name) throws UsernameNotFoundException {
+    public RollerShutter loadRollerShutterByName(String name) throws UsernameNotFoundException {
         // Use orElseThrow to handle the Optional
         RollerShutter roller_shutter = rollerShutterRepository.findByName(name)
-                .orElseThrow(() -> new UsernameNotFoundException("Home not found with name: " + name));
+                .orElseThrow(() -> new UsernameNotFoundException("RollerShutter not found with name: " + name));
 
+        return roller_shutter;
+    }
+
+    public RollerShutter loadRollerShutterById(Long id) {
+        // Use orElseThrow to handle the Optional
+        RollerShutter roller_shutter = rollerShutterRepository.findById(id).get();
         return roller_shutter;
     }
 

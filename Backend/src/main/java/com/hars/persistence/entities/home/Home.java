@@ -5,13 +5,14 @@ import java.util.List;
 
 import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
+import com.hars.persistence.entities.users.User;
 
-import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -21,14 +22,22 @@ import jakarta.persistence.Table;
 public class Home {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "home_id")
     private Long id;
 
+    @Column(name = "name")
     private String name;
 
-    @OneToMany(mappedBy = "home", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User owner;
+
+    @OneToMany()
+    @JoinColumn(name = "rollerShutter_id")
     private List<RollerShutter> rollerShutters = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne() 
+    @JoinColumn(name = "lightSensor_id")
     private LightSensor lightSensor;
 
     //builder
@@ -45,6 +54,10 @@ public class Home {
 
     public String getName() {
         return this.name;
+    }
+
+    public User getOwner() {
+        return this.owner;
     }
 
     public List<RollerShutter> getRollerShutters(){
@@ -64,16 +77,21 @@ public class Home {
         this.name = name;
     }
 
+    public void setOwner(User user) {
+        this.owner = user;
+    }
+
     public void setRollerShutters (List<RollerShutter> rollerShutters){
         this.rollerShutters = rollerShutters;
     }
 
-    public String toJson(){
-        return "\"Name\" : \"" + this.name + "\"";
-    }
-
     public void setLightSensor(LightSensor lightSensor) {
         this.lightSensor = lightSensor;
+    }
+
+    //helpers
+    public String toJson(){
+        return "\"Name\" : \"" + this.name + "\"";
     }
 
 }

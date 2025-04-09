@@ -4,10 +4,16 @@ import java.util.List;
 
 import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
+import com.hars.persistence.entities.users.User;
+
 
 public class HomeDTO {
+    public record nameInput (String name) {};
+    public record userInput (User user) {}
+
     private Long id;
     private String name;
+    private User owner;
     private List<RollerShutterDTO> rollerShutters;
     private LightSensorDTO lightSensor;
 
@@ -18,6 +24,10 @@ public class HomeDTO {
 
     public String getName() {
         return this.name;
+    }
+
+    public User getOwner() {
+        return this.owner;
     }
 
     public List<RollerShutterDTO> getRollerShutters() {
@@ -35,6 +45,10 @@ public class HomeDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 
     public void setRollerShutters(List<RollerShutterDTO> rollerShutters) {

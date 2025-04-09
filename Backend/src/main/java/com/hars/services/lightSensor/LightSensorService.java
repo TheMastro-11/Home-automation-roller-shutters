@@ -6,12 +6,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.hars.persistence.dto.home.HomeDTO;
 import com.hars.persistence.dto.lightSensor.LightSensorDTO;
-import com.hars.persistence.entities.home.Home;
 import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.repository.lightSensor.LightSensorRepository;
-import com.hars.services.home.HomeService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -20,9 +17,6 @@ public class LightSensorService {
 
     @Autowired
     private LightSensorRepository lightSensorRepository;
-
-    @Autowired
-    private HomeService homeService;
 
     public List<LightSensorDTO> getAllLightSensors() {
         try {
@@ -35,10 +29,9 @@ public class LightSensorService {
         }
     }
 
-    public LightSensor createLightSensor(String name, String homeName){
+    public LightSensor createLightSensor(String name){
         try {
-            Home validHome = homeService.loadHomeByName(homeName);
-            LightSensor lightSensor = new LightSensor(name, validHome);
+            LightSensor lightSensor = new LightSensor(name);
             return lightSensorRepository.save(lightSensor);
         } catch (Exception e) {
             throw e;
@@ -50,6 +43,7 @@ public class LightSensorService {
         try {
             LightSensor lightSensor = lightSensorRepository.findById(id).get();
             lightSensorRepository.delete(lightSensor);
+            //lightSensorRepository.deleteSQL(id);
         } catch (Exception e) {
             throw e;
         }
@@ -78,19 +72,6 @@ public class LightSensorService {
         }
     }
 
-    public LightSensor patchHomeLightSensor(Long id, String home){
-        try {
-            Home validHome = homeService.loadHomeByName(home);
-            LightSensor lightSensor = lightSensorRepository.findById(id).get();
-            lightSensor.setHome(validHome);
-            lightSensor = lightSensorRepository.save(lightSensor);
-            return lightSensor;
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-
     //helpers
     private LightSensorDTO convertToDTO(LightSensor lightSensor) {
         LightSensorDTO dto = new LightSensorDTO();
@@ -98,17 +79,10 @@ public class LightSensorService {
         dto.setName(lightSensor.getName());
         dto.setLightValue(lightSensor.getLightValue());
     
-        if (lightSensor.getHome() != null) {
-            HomeDTO homeDto = new HomeDTO();
-            Home relatedHome = lightSensor.getHome();
-            homeDto.setName(relatedHome.getName());
-            dto.setHome(homeDto);
-        }
-    
         return dto;
     }
 
-    public LightSensor loadLighSensorByName(String name) {
+    public LightSensor loadLightSensorByName(String name) {
     return lightSensorRepository.findByName(name)
             .orElseThrow(() -> new EntityNotFoundException("LightSensor not found with name: " + name));
     }

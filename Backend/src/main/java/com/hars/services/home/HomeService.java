@@ -1,5 +1,6 @@
 package com.hars.services.home;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,7 +12,12 @@ import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 import com.hars.persistence.entities.home.Home;
 import com.hars.persistence.entities.lightSensor.LightSensor;
+import com.hars.persistence.entities.rollerShutter.RollerShutter;
+import com.hars.persistence.entities.users.User;
 import com.hars.persistence.repository.home.HomeRepository;
+import com.hars.services.lightSensor.LightSensorService;
+import com.hars.services.rollerShutter.RollerShutterService;
+import com.hars.services.users.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -20,6 +26,15 @@ public class HomeService {
 
     @Autowired
     private HomeRepository homeRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired 
+    private RollerShutterService rollerShutterService;
+
+    @Autowired
+    private LightSensorService lightSensorService;
 
     public List<HomeDTO> getAllHomes() {
         try {
@@ -32,9 +47,11 @@ public class HomeService {
         }
     }
 
-    public Home createHome(Home home){
+    public Home createHome(HomeDTO.nameInput home){
+        Home newHome = new Home();
+        newHome.setName(home.name());
         try {
-            return homeRepository.save(home);
+            return homeRepository.save(newHome);
         } catch (Exception e) {
             throw e;
         }
@@ -50,12 +67,48 @@ public class HomeService {
         }
     }
 
-    public Home putHome(Long id, Home newHome){
+    public Home patchNameHome(Long id, String name){
         try {
             Home home = homeRepository.findById(id).get();
-            Long oldId = home.getID();
-            home = newHome;
-            home.setId(oldId);
+            home.setName(name);
+            return homeRepository.save(home);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public Home patchOwnerHome(Long id, User user){
+        try {
+            Home home = homeRepository.findById(id).get();
+            User validUser = userService.loadUserByUsername(user.getUsername());
+            home.setOwner(validUser);
+            
+            return homeRepository.save(home);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public Home patchRollerShuttersHome(Long id, List<RollerShutter> rollerShutters){
+        try {
+            Home home = homeRepository.findById(id).get();
+            List<RollerShutter> validRollerShutters = new ArrayList<>();
+            for (int i = 0; i < rollerShutters.size(); i++) {
+                validRollerShutters.add(rollerShutterService.loadRollerShutterByName(rollerShutters.get(i).getName()));
+            }
+            home.setRollerShutters(validRollerShutters);
+            
+            return homeRepository.save(home);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public Home patchLightSensorHome(Long id, LightSensor lightSensor){
+        try {
+            Home home = homeRepository.findById(id).get();
+            LightSensor validLightSensor = lightSensorService.loadLightSensorByName(lightSensor.getName());
+            home.setLightSensor(validLightSensor);
             return homeRepository.save(home);
         } catch (Exception e) {
             throw e;
