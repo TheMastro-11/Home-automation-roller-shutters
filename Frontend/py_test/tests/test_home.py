@@ -257,8 +257,8 @@ def test_patch_home_lightSensor(entities_url, auth_token, created_home, created_
             assert isinstance(linked_sensor_data, dict), "Linked 'lightSensor' should be a dictionary"
 
             # --- CORREZIONE: Verifica prima il NOME del sensore collegato ---
-            assert linked_sensor_data.get("Name") == sensor_name, \
-                   f"Expected linked lightSensor Name '{sensor_name}', got '{linked_sensor_data.get('Name')}'"
+            assert linked_sensor_data.get("name") == sensor_name, \
+                   f"Expected linked lightSensor Name '{sensor_name}', got '{linked_sensor_data.get('name')}'"
             # --- Verifica anche l'ID se presente e corretto ---
             # Questo assume che l'API, ricevendo il nome, restituisca l'oggetto completo con l'ID corretto.
             assert linked_sensor_data.get("ID") == sensor_id, \

@@ -30,8 +30,8 @@ def created_light_sensor(entities_url, auth_token):
         sensor_id = entity.get("ID")
         assert isinstance(sensor_id, str) and len(sensor_id) > 0, f"Invalid ID received: {sensor_id!r}"
 
-        assert entity.get("Name") == unique_sensor_name, \
-               f"Expected name '{unique_sensor_name}', got '{entity.get('Name')}'"
+        assert entity.get("name") == unique_sensor_name, \
+               f"Expected name '{unique_sensor_name}', got '{entity.get('name')}'"
 
         print(f"[Fixture Setup] Light Sensor '{unique_sensor_name}' created successfully with ID: {sensor_id}.")
         return {"id": sensor_id, "name": unique_sensor_name}
@@ -72,11 +72,11 @@ def test_create_light_sensor_success(entities_url, auth_token):
             sensor_id = entity.get("ID")
             assert isinstance(sensor_id, str) and len(sensor_id) > 0, f"Invalid ID received: {sensor_id!r}"
 
-            assert "Name" in entity, "Entity data missing 'Name' key"
-            assert entity.get("Name") == unique_sensor_name, \
-                   f"Expected name '{unique_sensor_name}', got '{entity.get('Name')}'"
+            assert "name" in entity, "Entity data missing 'name' key"
+            assert entity.get("name") == unique_sensor_name, \
+                   f"Expected name '{unique_sensor_name}', got '{entity.get('name')}'"
 
-            print(f"[Test] Light Sensor creation verified. ID: {sensor_id}, Name: {entity.get('Name')}")
+            print(f"[Test] Light Sensor creation verified. ID: {sensor_id}, Name: {entity.get('name')}")
 
         except ValueError:
             pytest.fail(f"Response is not valid JSON: {response.text}")
@@ -143,9 +143,9 @@ def test_patch_lightSensor_name(entities_url, auth_token, created_light_sensor):
             # Verifica ID corretto
             assert entity.get("ID") == sensor_id, f"Expected ID '{sensor_id}', got '{entity.get('ID')}'"
             # Verifica che il nome sia stato aggiornato
-            assert entity.get("Name") == new_name, f"Expected Name '{new_name}', got '{entity.get('Name')}'"
+            assert entity.get("name") == new_name, f"Expected Name '{new_name}', got '{entity.get('name')}'"
 
-            print(f"[Test] LightSensor name update verified. ID: {entity.get('ID')}, New Name: {entity.get('Name')}")
+            print(f"[Test] LightSensor name update verified. ID: {entity.get('ID')}, New Name: {entity.get('bame')}")
 
         except ValueError:
             pytest.fail(f"Response is not valid JSON: {response.text}")
@@ -186,8 +186,8 @@ def test_patch_lightSensor_value(entities_url, auth_token, created_light_sensor)
             assert entity.get("ID") == sensor_id, f"Expected ID '{sensor_id}', got '{entity.get('ID')}'"
 
             # Verifica che il valore sia stato aggiornato
-            assert "LightValue" in entity, "Entity data missing 'LightValue' key"
-            returned_value = entity["LightValue"]
+            assert "lightValue" in entity, "Entity data missing 'lightValue' key"
+            returned_value = entity["lightValue"]
             # Confronta i valori come stringhe per sicurezza contro differenze di tipo (es. API restituisce "789" invece di 789)
             assert str(returned_value) == str(new_value), \
                    f"Expected LightValue '{new_value}', got '{returned_value}' (type: {type(returned_value)})"
