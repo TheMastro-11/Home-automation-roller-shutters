@@ -1,7 +1,15 @@
-// ============== js/api.js ==============
+// const API_BASE_URL = "http://84.220.36.142:8080"; // Esempio produzione
+const API_BASE_URL = "http://localhost:8080"; // Sviluppo locale
 
-// Nota: Questo file dipende da config.js (per API_BASE_URL)
-// e deve essere caricato prima degli altri file che usano fetchApi.
+async function sha256(message) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    // Converti il buffer in una stringa esadecimale
+    return Array.from(new Uint8Array(hashBuffer))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+}
 
 async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, sendAuthToken = true) { // sendAuthToken aggiunto
     const headers = {
@@ -42,10 +50,10 @@ async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, se
                 const errorJson = await response.json();
                 // Usa il messaggio dal JSON se presente, altrimenti mantieni statusText
                 if (errorJson && errorJson.message) {
-                     errorData = errorJson; // Usa l'intero oggetto errore se ha una struttura definita
-                     errorData.message = errorJson.message; // Assicura che message sia presente
+                    errorData = errorJson; // Usa l'intero oggetto errore se ha una struttura definita
+                    errorData.message = errorJson.message; // Assicura che message sia presente
                 } else if (errorJson && errorJson.error) { // A volte l'errore è in 'error'
-                     errorData.message = errorJson.error;
+                    errorData.message = errorJson.error;
                 }
                 // Aggiungi status e path per contesto se non già presenti
                 if (!errorData.status) errorData.status = response.status;
@@ -53,7 +61,7 @@ async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, se
 
             } catch (e) {
                 // Se il corpo dell'errore non è JSON, va bene, usiamo statusText
-                 console.log("Response error body was not JSON.");
+                console.log("Response error body was not JSON.");
             }
             console.error(`API Error (${response.status} ${method} ${path}):`, errorData);
             // Crea un errore che contenga più dettagli possibili
@@ -71,23 +79,23 @@ async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, se
         // Gestione risposte con contenuto (JSON o testo)
         try {
             const contentType = response.headers.get("content-type");
-             if (contentType && contentType.indexOf("application/json") !== -1) {
-                 return await response.json(); // Parse JSON
-             } else {
-                 const textResponse = await response.text(); // Ottieni come testo
-                 // Se il testo è vuoto ma la risposta era OK (es. 200/201), ritorna null o un indicatore di successo
-                 if (response.ok && !textResponse) {
-                     return { success: true }; // O semplicemente null
-                 }
-                 return textResponse; // Altrimenti ritorna il testo
-             }
-        } catch(e) {
-             console.warn(`Could not parse API response body for ${method} ${path}:`, e);
-             // Se il parsing fallisce ma la risposta era OK, ritorna un indicatore di successo
-             if (response.ok) {
-                 return { success: true, message: "Response OK but body parsing failed." };
-             }
-             return null; // Altrimenti null
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return await response.json(); // Parse JSON
+            } else {
+                const textResponse = await response.text(); // Ottieni come testo
+                // Se il testo è vuoto ma la risposta era OK (es. 200/201), ritorna null o un indicatore di successo
+                if (response.ok && !textResponse) {
+                    return { success: true }; // O semplicemente null
+                }
+                return textResponse; // Altrimenti ritorna il testo
+            }
+        } catch (e) {
+            console.warn(`Could not parse API response body for ${method} ${path}:`, e);
+            // Se il parsing fallisce ma la risposta era OK, ritorna un indicatore di successo
+            if (response.ok) {
+                return { success: true, message: "Response OK but body parsing failed." };
+            }
+            return null; // Altrimenti null
         }
 
     } catch (error) {
@@ -97,4 +105,114 @@ async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, se
         // Assicurati che il messaggio sia utile
         throw new Error(error.message || "Network error or failed API call.");
     }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById("loginForm");
+
+    if (loginForm) {
+        loginForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const usernameInput = document.getElementById("loginname"); // ID corretto per login
+            const passwordInput = document.getElementById("loginPassword"); // ID corretto per login
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                alert("Please enter both username and password.");
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Logging in...';
+
+            try {
+                const hashedPassword = await sha256(password);
+                const loginData = {
+                    username: username,
+                    password: hashedPassword
+                };
+
+                // Chiama fetchApi specificando sendAuthToken = false
+                //                                                         vvvvv
+                const result = await fetchApi("/api/auth/authenticate", 'POST', loginData, {}, false); // << AGGIUNTO false ALLA FINE
+
+                if (result && result.jwt) {
+                    localStorage.setItem("jwt", result.jwt);
+                    window.location.href = "dashboard.html";
+                } else {
+                    throw new Error(result?.message || "Invalid credentials or missing token.");
+                }
+
+            } catch (error) {
+                console.error("Login failed:", error);
+                alert("Login failed: " + error.message);
+                submitButton.disabled = false;
+                submitButton.textContent = 'Login';
+            }
+        });
+    }
+});
+
+
+// Controlla se l'utente è autenticato (se esiste un token JWT)
+// Se non lo è, reindirizza alla pagina di login.
+function checkAuthentication() {
+    const token = localStorage.getItem("jwt");
+    if (!token) {
+        console.log("No JWT found, redirecting to login.");
+        window.location.href = "login.html"; // Assicurati che login.html sia nella stessa cartella o usa il path corretto
+        return false; // Non autenticato
+    }
+    // Nota: Qui non stiamo validando la *scadenza* o la *validità* del token,
+    // solo la sua presenza. Il backend rifiuterà le richieste con token scaduti/invalidi.
+    return true; // Autenticato (token presente)
+}
+
+// Legge il ruolo utente dal payload del token JWT
+function getUserRole() {
+    const token = localStorage.getItem("jwt");
+    if (token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                console.error("Invalid JWT structure");
+                // Se il token è malformato, consideralo invalido
+                // localStorage.removeItem("jwt"); // Potresti rimuoverlo qui
+                return null;
+            }
+            // Decodifica il payload (Base64Url)
+            const payloadDecoded = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+            const payload = JSON.parse(payloadDecoded);
+
+            // Restituisce il ruolo (o come si chiama il campo nel tuo token)
+            return payload.role || null;
+
+        } catch (error) {
+            console.error("Failed to parse JWT:", error);
+            // Se c'è un errore nel parsing (es. token invalido), consideralo non valido
+            // localStorage.removeItem("jwt"); // Potresti rimuoverlo qui
+            return null;
+        }
+    }
+    return null; // Nessun token trovato
+}
+
+// Verifica se l'utente ha il ruolo di admin
+function isAdmin() {
+    return getUserRole() === "admin";
+}
+
+// Esegue il logout: rimuove il token e reindirizza al login
+function logout() {
+    console.log("Logout function called"); // Messaggio per debug
+    localStorage.removeItem("jwt");
+    // Mostra un messaggio all'utente
+    // alert("You have been logged out!"); // Puoi rimuovere/modificare questo alert
+    console.log("JWT removed. Redirecting to login page...");
+    // Reindirizza alla pagina di login
+    window.location.href = "login.html";
 }

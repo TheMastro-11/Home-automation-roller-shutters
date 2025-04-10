@@ -1,5 +1,3 @@
-// ============== js/auth.js ==============
-
 // Controlla se l'utente è autenticato (se esiste un token JWT)
 // Se non lo è, reindirizza alla pagina di login.
 function checkAuthentication() {
