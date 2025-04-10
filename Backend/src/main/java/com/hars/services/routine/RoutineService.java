@@ -43,21 +43,20 @@ public class RoutineService {
         }
     }
     
-    public String createRoutine(String name, LocalTime actionTime, List<RollerShutter> rollerShutters) {
+    public Routine createRoutine(String name, LocalTime actionTime, List<RollerShutter> rollerShutters) {
         try {
             List<RollerShutter> validRollerShutter = new ArrayList<>();
             for (int i = 0; i < rollerShutters.size(); i++) {
                 validRollerShutter.add(rollerShutterService.loadRollerShutterByName(rollerShutters.get(i).getName()));
             }
             Routine routine = new Routine(name, actionTime, validRollerShutter);
-            routineRepository.save(routine);
-            return "Routine created successfully!";
+            return routineRepository.save(routine);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    public String createRoutine(String name, LightSensor lightSensor, List<RollerShutter> rollerShutters) {
+    public Routine createRoutine(String name, LightSensor lightSensor, List<RollerShutter> rollerShutters) {
         try {
             List<RollerShutter> validRollerShutter = new ArrayList<>();
             for (int i = 0; i < rollerShutters.size(); i++) {
@@ -65,8 +64,7 @@ public class RoutineService {
             }
             LightSensor validLightSensor = lightSensorService.loadLightSensorByName(lightSensor.getName());
             Routine routine = new Routine(name, validLightSensor, validRollerShutter);
-            routineRepository.save(routine);
-            return "Routine created successfully!";
+            return routineRepository.save(routine);
         } catch (Exception e) {
             throw e;
         }
@@ -104,10 +102,11 @@ public class RoutineService {
     }
 
     @Transactional
-    public Routine patchLightSensorRoutine(Long id, LightSensor lightSensors){
+    public Routine patchLightSensorRoutine(Long id, LightSensor lightSensor){
         try {
             Routine routine = routineRepository.findById(id).get();
-            routine.setLightSensor(lightSensors);
+            LightSensor validLightSensor = lightSensorService.loadLightSensorByName(lightSensor.getName());
+            routine.setLightSensor(validLightSensor);
             routine = routineRepository.save(routine);
             return routine;
         } catch (Exception e) {
@@ -120,7 +119,7 @@ public class RoutineService {
             Routine routine = routineRepository.findById(id).get();
             List<RollerShutter> validRollerShutters = new ArrayList<>();
             for (int i = 0; i < rollerShutters.size(); i++){
-                validRollerShutters.add(rollerShutterService.loadRollerShutterById(id));
+                validRollerShutters.add(rollerShutterService.loadRollerShutterByName(rollerShutters.get(i).getName()));
             }
             routine.setRollerShutters(validRollerShutters);
             routine = routineRepository.save(routine);

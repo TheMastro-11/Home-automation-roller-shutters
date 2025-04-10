@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.routine.RoutineDTO;
+import com.hars.persistence.entities.routine.Routine;
 import com.hars.services.routine.RoutineService;
 
 @RestController
@@ -37,8 +38,10 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters());
-            return ResponseEntity.ok("\""+result+"\"");
+            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters());
+            String newRoutine = newRoutine_.toJson(newRoutine_.getActionTime());
+
+            return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -52,8 +55,10 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = routineService.createRoutine(routine.name(), routine.lightSensor(), routine.rollerShutters());
-            return ResponseEntity.ok("\""+result+"\"");
+            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.lightSensor(), routine.rollerShutters());
+            String newRoutine = newRoutine_.toJson(newRoutine_.getLightSensor());
+
+            return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -82,7 +87,7 @@ public class RoutineController {
             }
 
             String newRoutine = routineService.patchNameRoutine(id, routine.name()).toJson();
-            return ResponseEntity.ok(newRoutine);
+            return ResponseEntity.ok("{ \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -95,8 +100,9 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRoutine = routineService.patchActionTimeRoutine(id, routine.time()).toJson();
-            return ResponseEntity.ok(newRoutine);
+            Routine newRoutine_ = routineService.patchActionTimeRoutine(id, routine.time());
+            String newRoutine = newRoutine_.toJson(newRoutine_.getActionTime());
+            return ResponseEntity.ok("{ \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify action time\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -109,8 +115,10 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRoutine = routineService.patchLightSensorRoutine(id, routine.lightSensor()).toJson();
-            return ResponseEntity.ok(newRoutine);
+            Routine newRoutine_ = routineService.patchLightSensorRoutine(id, routine.lightSensor());
+            String newRoutine = newRoutine_.toJson(newRoutine_.getLightSensor());
+            
+            return ResponseEntity.ok("{ \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify light sensor\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -123,8 +131,10 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
 
-            String newRoutine = routineService.patchRollerShuttersRoutine(id, routine.rollerShutters()).toJson();
-            return ResponseEntity.ok(newRoutine);
+            Routine newRoutine_ = routineService.patchRollerShuttersRoutine(id, routine.rollerShutters());
+            String newRoutine = newRoutine_.toJson(newRoutine_.getRollerShutters());
+            
+            return ResponseEntity.ok("{ \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify roller shutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }

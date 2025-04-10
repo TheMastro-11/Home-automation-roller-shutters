@@ -56,8 +56,8 @@ public class LightSensor {
 
     public String toJson(){
         return "\"ID\" : \"" + this.id + "\" ," +
-            "\"Name\" : \"" + this.name + "\" ," +
-            "\"LightValue\" : \"" + this.lightValue + "\"";
+            "\"name\" : \"" + this.name + "\" ," +
+            "\"lightValue\" : \"" + this.lightValue + "\"";
     }
 
 }

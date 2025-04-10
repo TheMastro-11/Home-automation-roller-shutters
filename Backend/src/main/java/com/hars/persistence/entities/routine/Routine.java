@@ -104,6 +104,38 @@ public class Routine {
     //helpers
     public String toJson(){
         return "\"ID\" : \"" + this.id + "\" ," +
-            "\"Name\" : \"" + this.name + "\"";
+            "\"name\" : \"" + this.name + "\"" ;
+    }
+
+    public String toJson(LocalTime actionTime){
+        String rollerShuttersString = "{" + rollerShutters.get(0).toJson() + "}";
+        for (int i = 1; i < rollerShutters.size(); i++) {
+            rollerShuttersString = rollerShuttersString + "," +  "{" + rollerShutters.get(i).toJson() + "}";
+        }
+        return "\"ID\" : \"" + this.id + "\" ," +
+            "\"name\" : \"" + this.name + "\" ," +
+            "\"actionTime\" : \"" + actionTime + "\" ," +
+            "\"rollerShutters\" : [" + rollerShuttersString + "]";
+    }
+
+    public String toJson(LightSensor lightSensor){
+        String rollerShuttersString = "{" + rollerShutters.get(0).toJson() + "}";
+        for (int i = 1; i < rollerShutters.size(); i++) {
+            rollerShuttersString = rollerShuttersString + "," +  "{" + rollerShutters.get(i).toJson() + "}";
+        }
+        return "\"ID\" : \"" + this.id + "\" ," +
+            "\"name\" : \"" + this.name + "\" ," +
+            "\"lightSensor\" : {" + lightSensor.toJson() + "}," +
+            "\"rollerShutters\" : [" + rollerShuttersString + "]";
+    }
+
+    public String toJson(List<RollerShutter> rollerShutters){
+        String rollerShuttersString = "{" + rollerShutters.get(0).toJson() + "}";
+        for (int i = 1; i < rollerShutters.size(); i++) {
+            rollerShuttersString = rollerShuttersString + "," +  "{" + rollerShutters.get(i).toJson() + "}";
+        }
+        return "\"ID\" : \"" + this.id + "\" ," +
+            "\"name\" : \"" + this.name + "\" ," + 
+            "\"rollerShutters\" : [" + rollerShuttersString + "]";
     }
 }
