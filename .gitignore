@@ -11,3 +11,7 @@ Backend/build/*
 Backend/.gradle/*
 
 Backend/bin
+
+Frontend/py_test/.py_test_cache
+
+Frontend/py_test/tests/__pycache__
