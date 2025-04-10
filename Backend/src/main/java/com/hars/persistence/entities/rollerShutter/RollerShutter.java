@@ -56,8 +56,8 @@ public class RollerShutter {
     //helpers
     public String toJson(){
         return "\"ID\" : \"" + this.id + "\" ," +
-            "\"Name\" : \"" + this.name + "\", " +
-            "\"PercentageOpening\" : \"" + this.percentageOpening + "\"";
+            "\"name\" : \"" + this.name + "\", " +
+            "\"percentageOpening\" : \"" + this.percentageOpening + "\"";
     }
 
     

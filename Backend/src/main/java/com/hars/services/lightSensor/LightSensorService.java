@@ -29,10 +29,11 @@ public class LightSensorService {
         }
     }
 
-    public LightSensor createLightSensor(String name){
+    public LightSensor createLightSensor(LightSensorDTO.nameInput lightSensor){
         try {
-            LightSensor lightSensor = new LightSensor(name);
-            return lightSensorRepository.save(lightSensor);
+            LightSensor newLightSensor = new LightSensor();
+            newLightSensor.setName(lightSensor.name());
+            return lightSensorRepository.save(newLightSensor);
         } catch (Exception e) {
             throw e;
         }

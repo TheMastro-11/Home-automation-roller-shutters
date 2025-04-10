@@ -37,8 +37,8 @@ public class LightSensorController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = lightSensorService.createLightSensor(lightSensor.name()).toJson();
-            return ResponseEntity.ok("\""+result+"\"");
+            String newLightSensor = lightSensorService.createLightSensor(lightSensor).toJson();
+            return ResponseEntity.ok("{" + "\"Response\" : \"LightSensor created successfully!\" , \"Entity\" : {" + newLightSensor + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -66,7 +66,7 @@ public class LightSensorController {
             }
 
             String newLightSensor = lightSensorService.patchNameLightSensor(id, lightSensor.name() ).toJson();
-            return ResponseEntity.ok(newLightSensor);
+            return ResponseEntity.ok("{ \"Entity\" : {" + newLightSensor + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -80,7 +80,7 @@ public class LightSensorController {
             }
 
             String newLightSensor = lightSensorService.patchValueLightSensor(id, lightSensor.value()).toJson();
-            return ResponseEntity.ok(newLightSensor);
+            return ResponseEntity.ok("{ \"Entity\" : {" + newLightSensor + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify light value\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }

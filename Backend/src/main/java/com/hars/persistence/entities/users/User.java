@@ -117,4 +117,10 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    //helpers
+    public String toJson(){
+        return "\"ID\" : \"" + this.id + "\" ," +
+            "\"name\" : \"" + this.username + "\"";
+    }
 }

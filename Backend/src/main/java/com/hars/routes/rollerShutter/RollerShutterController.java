@@ -37,8 +37,8 @@ public class RollerShutterController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String result = rollerShutterService.createRollerShutter(rollerShutter.name()).toJson();
-            return ResponseEntity.ok("\""+result+"\"");
+            String newRollerShutter = rollerShutterService.createRollerShutter(rollerShutter.name()).toJson();
+            return ResponseEntity.ok("{" + "\"Response\" : \"RollerShutter created successfully!\" , \"Entity\" : {" + newRollerShutter + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -67,7 +67,7 @@ public class RollerShutterController {
             }
 
             String newRollerShutter = rollerShutterService.patchNameRollerShutter(id, rollerShutter.name() ).toJson();
-            return ResponseEntity.ok(newRollerShutter);
+            return ResponseEntity.ok("{ \"Entity\" : {" + newRollerShutter + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -81,7 +81,7 @@ public class RollerShutterController {
             }
 
             String newRollerShutter = rollerShutterService.patchOpeningRollerShutter(id, rollerShutter.value()).toJson();
-            return ResponseEntity.ok(newRollerShutter);
+            return ResponseEntity.ok("{ \"Entity\" : {" + newRollerShutter + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify opening percentage\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }

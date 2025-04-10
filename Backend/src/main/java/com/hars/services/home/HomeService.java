@@ -85,7 +85,7 @@ public class HomeService {
             
             return homeRepository.save(home);
         } catch (Exception e) {
-            throw e;
+            throw new RuntimeException("User not found", e);
         }
     }
 
@@ -100,7 +100,7 @@ public class HomeService {
             
             return homeRepository.save(home);
         } catch (Exception e) {
-            throw e;
+            throw new RuntimeException("RollerShutter not found", e);
         }
     }
 
@@ -111,7 +111,7 @@ public class HomeService {
             home.setLightSensor(validLightSensor);
             return homeRepository.save(home);
         } catch (Exception e) {
-            throw e;
+            throw new RuntimeException("Light Sensor not found", e);
         }
     }
 
