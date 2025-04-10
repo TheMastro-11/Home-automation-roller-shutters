@@ -130,22 +130,13 @@ function toggleTriggerOptions() {
 
 // Mostra il form per creare/modificare una routine
 function showRoutinesForm() {
-    // Assicurati che l'ID HTML sia "Routines-form"
     const formContainer = document.getElementById("Routines-form");
-    if (!formContainer) {
-        console.error("Routines form container (#Routines-form) not found!");
-        return;
-    }
+    if (!formContainer) { /*...*/ return; }
     const actualForm = formContainer.querySelector("form");
-    if (!actualForm) {
-        console.error("Actual <form> element not found inside #Routines-form!");
-        return;
-    }
+    if (!actualForm) { /*...*/ return; }
 
     document.getElementById("form-title").innerText = "Create Routine";
     actualForm.reset();
-
-    // Assicurati che l'ID HTML sia "Routines-id-hidden" se lo usi per modifica
     document.getElementById("Routines-id-hidden")?.remove();
 
     // Imposta valori default
@@ -154,12 +145,13 @@ function showRoutinesForm() {
     document.getElementById("action").value = "open";
     document.getElementById("actionPercentage").value = "100";
 
-    // Carica dispositivi
-    loadDevicesForRoutinesForm();
+    // --- CHIAMATE AGGIUNTE ---
+    loadSensorsForRoutineForm(); // Chiama la funzione per caricare i sensori nel dropdown
+    loadShuttersForRoutineForm(); // Chiama la funzione per caricare le checkbox delle tapparelle
+    // -------------------------
 
     formContainer.style.display = "block";
 }
-
 // Nasconde e resetta il form routine
 function cancelRoutines() {
     // Assicurati che l'ID HTML sia "Routines-form"
@@ -326,12 +318,66 @@ async function deleteRoutines(routineId, homeId = null) {
    }
 }
 
-// --- Funzione Modifica Routine (Commentata, richiede info API GET by ID e PATCH) ---
-/*
-async function showEditRoutinesForm(RoutinesId) {
-    // ... (Logica simile a prima, ma usa path singolare 'routine' e verifica API)
-    // const RoutinesData = await fetchApi(`/api/entities/routine/${RoutinesId}`); // API GET by ID esiste?
-    // ... pre-compila form ...
-    // ... mostra form ...
+// In js/routines.js
+
+// NUOVA FUNZIONE SCHELETRO: Carica sensori per il form routine
+async function loadSensorsForRoutineForm() {
+    const select = document.getElementById("triggerSensorId"); // ID nel form routine
+    if (!select) return;
+    select.innerHTML = '<option value="">Loading sensors...</option>';
+
+    // --- API NECESSARIA DAL BACKEND ---
+    // const apiPath = '/api/entities/lightSensor/'; // O altro endpoint?
+    console.warn("TODO: Implement loadSensorsForRoutineForm() - Needs API endpoint from backend to get available light sensors.");
+    try {
+        // const sensors = await fetchApi(apiPath);
+        // // Popola la select...
+        select.innerHTML = '<option value="" disabled selected>Select Sensor (API missing)</option>'; // Messaggio Placeholder
+    } catch (error) {
+        console.error("Error loading sensors for routine form:", error);
+        select.innerHTML = '<option value="" disabled>Error loading sensors</option>';
+    }
 }
-*/
+
+// NUOVA FUNZIONE SCHELETRO: Carica tapparelle per il form routine
+async function loadShuttersForRoutineForm() {
+    const container = document.getElementById("routineTargetShuttersList"); // ID nel form routine
+    const loadingMsg = document.getElementById("routineTargetShuttersLoading");
+    if (!container) return;
+    if(loadingMsg) loadingMsg.textContent = "Loading available shutters...";
+
+    // --- API NECESSARIA DAL BACKEND ---
+    // Quale API restituisce le tapparelle disponibili da associare?
+    // const apiPath = '/api/entities/rollerShutter/'; // Ipotesi? Serve conferma!
+    console.warn("TODO: Implement loadShuttersForRoutineForm() - Needs API endpoint from backend to get available roller shutters.");
+    try {
+        // const shutters = await fetchApi(apiPath);
+        if(loadingMsg) loadingMsg.remove(); // Rimuovi messaggio caricamento
+        container.innerHTML = ""; // Pulisci
+
+        // Esempio se l'API funzionasse:
+        /*
+        if (shutters && shutters.length > 0) {
+            shutters.forEach(shutter => {
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.innerHTML = `
+                    <input class="form-check-input" type="checkbox" value="${shutter.id}" id="routine_shutter_${shutter.id}">
+                    <label class="form-check-label" for="routine_shutter_${shutter.id}">
+                        ${shutter.name || 'Unnamed Shutter'}
+                    </label>
+                `;
+                container.appendChild(div);
+            });
+        } else {
+            container.innerHTML = '<p style="color: #ccc;">No available shutters found.</p>';
+        }
+        */
+       container.innerHTML = '<p style="color: #ccc;">(Shutter list API missing)</p>'; // Messaggio Placeholder
+
+    } catch (error) {
+         console.error("Error loading shutters for routine form:", error);
+         if(loadingMsg) loadingMsg.remove();
+         container.innerHTML = '<p class="text-danger">Error loading shutters.</p>';
+    }
+}

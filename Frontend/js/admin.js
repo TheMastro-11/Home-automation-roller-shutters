@@ -26,7 +26,7 @@ async function loadAdminHomes() {
                       <button type="button" class="btn btn-warning" onclick="showEditHomeForm('${home.id}', '${home.name}')">Edit</button>
                       <button type="button" class="btn btn-danger" onclick="deleteHome('${home.id}')">Delete</button>
                       <button type="button" class="btn btn-info" onclick="showRoutinesForHome('${home.id}', '${home.name}')">Routines</button>
-                      <button type="button" class="btn btn-success" onclick="showSensorsForHome('${home.id}', '${home.name}')">Sensors</button>
+                      <button type="button" class="btn btn-success" onclick="showSensorsForHome('${home.id}', '${home.name}')">Sensors and Users</button>
                   </div>
               `;
         homeList.appendChild(li);
@@ -71,39 +71,127 @@ async function addHome(event) {
 }
 
 // Mostra il form per modificare i dettagli di una casa (ATTUALMENTE SOLO NOME)
-// TODO: Espandere per caricare e pre-popolare dati Utente, Tapparelle, Sensore
-function showEditHomeForm(homeId, homeName) {
+async function showEditHomeForm(homeId, homeName) { // Rendi la funzione async
   console.log(`Showing edit form for Home ID: ${homeId}`);
-  // Nascondi lista e form aggiunta
+  // Nascondi altre sezioni
   const adminHomes = document.getElementById("admin-homes");
   if (adminHomes) adminHomes.style.display = "none";
   const addHomeForm = document.getElementById("add-home-form");
   if (addHomeForm) addHomeForm.style.display = "none";
-  // Nascondi anche gestione sensori se per caso è aperta
   const sensorSection = document.getElementById("admin-sensor-management");
-  if (sensorSection) sensorSection.style.display = "none";
+  if(sensorSection) sensorSection.style.display = 'none';
 
-  // Mostra il form di modifica
-  const editHomeForm = document.getElementById("edit-home-form");
-  if (editHomeForm) editHomeForm.style.display = "block";
-
-  // Popola i campi esistenti
+  // Popola campi base
   document.getElementById("editHomeId").value = homeId;
   document.getElementById("editHomeName").value = homeName;
 
-  // --- QUI VA AGGIUNTA LA LOGICA PER CARICARE E POPOLARE ---
-  // --- LE LISTE/SELECT DI UTENTI, TAPPARELLE, SENSORI  ---
-  // --- (Richiede API specifiche dal backend)           ---
-  console.warn(
-    "TODO: Implement fetching and populating Users, Shutters, Sensor lists in showEditHomeForm"
+  // Mostra il form di modifica PRIMA di caricare i dati asincroni
+  const editHomeForm = document.getElementById("edit-home-form");
+  if (editHomeForm) editHomeForm.style.display = "block";
+
+  // Resetta/Mostra loading state per i campi dinamici
+  document.getElementById("editHomeOwnerSelect").innerHTML = '<option value="" selected disabled>Loading users...</option>';
+  document.getElementById("editHomeShuttersList").innerHTML = '<p id="editHomeShuttersLoading" style="color: #ccc;">Loading shutters...</p>';
+  document.getElementById("editHomeSensorSelect").innerHTML = '<option value="" selected disabled>Loading sensors...</option><option value="NONE">-- None --</option>';
+
+  // --- CARICAMENTO DATI DINAMICI ---
+  let currentOwnerId = null;
+  try {
+      // ASSUNZIONE: Esiste API GET /home/{id} che ritorna { ..., owner: { id: ... }, ... }
+      console.log(`Workspaceing current details for home ${homeId}...`);
+      const homeDetails = await fetchApi(`/api/entities/home/${homeId}`); // GET per dettagli casa
+      currentOwnerId = homeDetails?.owner?.id || null; // Estrai ID owner attuale
+      console.log("Current owner ID:", currentOwnerId);
+
+      // TODO: Qui dovresti anche estrarre la lista attuale di shutters e l'ID del sensore
+      // const currentShutterIds = homeDetails?.rollerShutters?.map(rs => rs.id) || [];
+      // const currentSensorId = homeDetails?.lightSensor?.id || null;
+      console.warn("TODO: Extract current shutters and sensor from homeDetails response in showEditHomeForm");
+
+  } catch (error) {
+      console.error(`Failed to fetch current home details for ID ${homeId}:`, error);
+      // Non bloccare la visualizzazione del form, ma mostra un errore o stato default
+      // alert(`Could not load current details for home: ${error.message}`);
+  }
+
+  // Popola la select degli utenti, passando l'ID dell'owner attuale per pre-selezione
+  loadUsersForOwnerSelect('editHomeOwnerSelect', currentOwnerId);
+
+  // TODO: Chiamare funzioni simili per popolare shutters e sensor
+  // loadShuttersForEditHome('editHomeShuttersList', currentShutterIds); // Funzione da creare
+  // loadSensorsForEditHome('editHomeSensorSelect', currentSensorId); // Funzione da creare
+  console.warn("TODO: Call functions to populate Shutters and Sensor fields in showEditHomeForm");
+}
+
+
+async function submitEditHome(event) {
+  event.preventDefault();
+  const id = document.getElementById("editHomeId").value; // ID della Casa
+  const newNameInput = document.getElementById("editHomeName");
+  const saveButton = event.submitter;
+
+  // Leggi i valori dai campi del form
+  const newName = newNameInput.value.trim();
+  const selectedOwnerId = document.getElementById("editHomeOwnerSelect").value;
+  // TODO: Leggere valori selezionati per Shutters e Sensor qui
+  console.warn("TODO: Read selected Shutters and Sensor values in submitEditHome");
+
+  if (!newName) { // Potresti voler aggiungere validazione per altri campi
+      alert("Please enter the home name.");
+      return;
+  }
+
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving...";
+
+  // Prepara le chiamate API necessarie
+  const apiCalls = [];
+
+  // 1. Prepara PATCH per il nome (lo facciamo sempre per ora)
+  apiCalls.push(
+      fetchApi(`/api/entities/home/patch/name/${id}`, "PATCH", { name: newName })
   );
-  // Esempio placeholder:
-  document.getElementById("editHomeOwnerSelect").innerHTML =
-    "<option>Users loading...</option>";
-  document.getElementById("editHomeShuttersList").innerHTML =
-    "<p>Shutters loading...</p>";
-  document.getElementById("editHomeSensorSelect").innerHTML =
-    "<option>Sensors loading...</option>";
+
+  // 2. Prepara PATCH per l'owner
+  //    Costruisci il payload basato sull'ipotesi: { owner: { id: ... } }
+  //    Se l'utente ha selezionato "-- Select Owner --" (value=""), inviamo null per disassociare? Chiedi al backend!
+  //    Assumiamo che un valore vuoto significhi disassociare (owner: null).
+  const ownerPayload = selectedOwnerId
+                       ? { owner: { id: parseInt(selectedOwnerId, 10) } } // Invia oggetto con ID
+                       : { owner: null }; // Invia null se nessun owner selezionato (VERIFICARE!)
+  apiCalls.push(
+      fetchApi(`/api/entities/home/patch/user/${id}`, "PATCH", ownerPayload) // FORMATO BODY DA CONFERMARE!
+  );
+
+  // 3. TODO: Prepara PATCH per le tapparelle
+  //    Leggi le checkbox selezionate da #editHomeShuttersList
+  //    Costruisci il payload (es. { rollerShutters: [ { id: ... } ] } ?) - FORMATO BODY DA CONFERMARE!
+  //    Aggiungi la chiamata fetchApi a apiCalls
+  console.warn("TODO: Prepare PATCH call for Shutters in submitEditHome");
+
+  // 4. TODO: Prepara PATCH per il sensore
+  //    Leggi il valore da #editHomeSensorSelect
+  //    Costruisci il payload (es. { lightSensor: { id: ... } } o null se "None") - FORMATO BODY DA CONFERMARE!
+  //    Aggiungi la chiamata fetchApi a apiCalls
+  console.warn("TODO: Prepare PATCH call for Sensor in submitEditHome");
+
+  try {
+      // Esegui tutte le chiamate PATCH in parallelo
+      await Promise.all(apiCalls);
+
+      alert("Home details updated successfully!");
+      cancelEditHome(); // Torna alla lista
+      loadAdminHomes(); // Ricarica lista case
+
+  } catch (error) {
+      console.error("Error updating home details:", error);
+      // Mostra errore più dettagliato se possibile
+      const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '';
+      alert(`Failed to update home details: ${error.message}${errorDetails}`);
+  } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = "Save Changes";
+  }
 }
 
 // Annulla la modifica della casa e torna alla lista
@@ -116,6 +204,57 @@ function cancelEditHome() {
   if (adminHomes) adminHomes.style.display = "block";
   const addHomeForm = document.getElementById("add-home-form");
   if (addHomeForm) addHomeForm.style.display = "block";
+}
+
+// In js/admin.js (Aggiungi questa nuova funzione)
+
+// Carica la lista di utenti e popola un elemento <select>
+async function loadUsersForOwnerSelect(selectElementId, currentOwnerId) {
+  const selectElement = document.getElementById(selectElementId);
+  if (!selectElement) {
+      console.error(`Select element with ID '${selectElementId}' not found.`);
+      return;
+  }
+  // Salva temporaneamente il valore selezionato (se c'è)
+  // const previouslySelected = selectElement.value; // Non serve se popoliamo da zero
+
+  selectElement.innerHTML = '<option value="" selected disabled>Loading users...</option>'; // Messaggio caricamento
+
+  try {
+      // Chiama l'API per ottenere la lista utenti
+      const users = await fetchApi('/api/auth/users'); // Assumiamo GET
+
+      selectElement.innerHTML = ''; // Pulisci opzioni vecchie/loading
+
+      // Aggiungi un'opzione per "Nessun Proprietario" o selezione default
+      const defaultOption = document.createElement('option');
+      defaultOption.value = ""; // Valore vuoto per "nessuno"
+      defaultOption.textContent = "-- Select Owner --";
+      selectElement.appendChild(defaultOption);
+
+      // Popola con gli utenti ricevuti
+      if (users && Array.isArray(users) && users.length > 0) {
+          users.forEach(user => {
+              const option = document.createElement('option');
+              option.value = user.id; // Usa l'ID utente come valore
+              option.textContent = user.username || `User ID: ${user.id}`; // Mostra username (o ID se manca)
+
+              // Se l'ID utente corrisponde a currentOwnerId, selezionalo
+              if (currentOwnerId && String(user.id) === String(currentOwnerId)) {
+                  option.selected = true;
+                  console.log(`Pre-selected owner: ${user.username || user.id}`);
+              }
+              selectElement.appendChild(option);
+          });
+      } else {
+           // Se non ci sono utenti, lascia solo l'opzione default
+           console.log("No users found from API.");
+      }
+
+  } catch (error) {
+      console.error(`Error loading users into select #${selectElementId}:`, error);
+      selectElement.innerHTML = `<option value="" selected disabled>Error loading users!</option>`;
+  }
 }
 
 // Salva le modifiche della casa (ATTUALMENTE SOLO NOME)
@@ -384,19 +523,15 @@ async function adminLoadLightSensors(homeId) {
 
         li.innerHTML = `
                   <div style="margin-right: 10px;">
-                      <strong>${
-                        sensor.name || "Unnamed Sensor"
-                      }</strong> - Value: ${displayValue}%
+                      <strong>${sensor.name || "Unnamed Sensor"
+          }</strong> - Value: ${displayValue}%
                   </div>
                   <div class="mt-1 mt-sm-0">
-                      <button class="btn btn-sm btn-warning me-2" onclick="adminShowEditSensorForm('${
-                        sensor.id
-                      }', '${
-          sensor.name || ""
-        }', ${numericValue})">Edit</button>
-                      <button class="btn btn-sm btn-danger" onclick="adminDeleteLightSensor('${
-                        sensor.id
-                      }', '${homeId}')">Delete</button>
+                      <button class="btn btn-sm btn-warning me-2" onclick="adminShowEditSensorForm('${sensor.id
+          }', '${sensor.name || ""
+          }', ${numericValue})">Edit</button>
+                      <button class="btn btn-sm btn-danger" onclick="adminDeleteLightSensor('${sensor.id
+          }', '${homeId}')">Delete</button>
                   </div>
               `;
         sensorList.appendChild(li);
@@ -433,14 +568,14 @@ function adminShowEditSensorForm(id, name, currentValue) {
   if (adminEditForm) adminEditForm.style.display = "block";
 }
 
-// Aggiunge un nuovo sensore per la casa specificata (chiamata dal form admin)
+// Aggiunge un nuovo sensore E LO ASSOCIA ALLA CASA specificata (Admin)
 async function adminCreateLightSensor(event) {
   event.preventDefault();
   const nameInput = document.getElementById("admin-newSensorName");
   const homeIdInput = document.getElementById("admin-sensor-home-id");
   const addButton = event.submitter;
 
-  const name = nameInput.value.trim();
+  const name = nameInput.value.trim(); // Nome del nuovo sensore
   const homeId = homeIdInput ? homeIdInput.value : null;
 
   if (!name || !homeId) {
@@ -451,26 +586,52 @@ async function adminCreateLightSensor(event) {
 
   if (addButton) {
     addButton.disabled = true;
-    addButton.textContent = "Adding...";
+    addButton.textContent = 'Adding...'
   }
 
   try {
-    // Invia solo name e home ID (come da tua indicazione)
-    await fetchApi("/api/entities/lightSensor/create", "POST", {
+    // --- Chiamata 1: Crea il sensore ---
+    console.log(`Step 1: Creating sensor with name: ${name}, associated with homeId: ${homeId}`);
+    const createSensorPayload = {
       name: name,
-      home: homeId,
-    });
+      home: homeId
+    };
+    // Chiamiamo l'API per creare. Non ci serve necessariamente l'ID restituito ora.
+    // Potremmo voler verificare se la creazione ha successo prima di procedere.
+    const creationResponse = await fetchApi('/api/entities/lightSensor/create', 'POST', createSensorPayload);
 
-    alert("Light sensor created successfully for this home!");
-    nameInput.value = ""; // Pulisci
-    adminLoadLightSensors(homeId); // Ricarica lista
+    // Se l'API create restituisce un errore specifico (es. 4xx), fetchApi lo lancerà e andremo al catch.
+    // Se restituisce 2xx (OK, Created), procediamo.
+    console.log("Step 1 Success: Sensor creation request successful.", creationResponse);
+
+
+    // --- Chiamata 2: Associa il sensore alla casa usando il NOME ---
+    console.log(`Step 2: Associating sensor named "${name}" with home (ID: ${homeId})`);
+    // Costruisci il payload usando il NOME del sensore appena creato
+    const associateSensorPayload = {
+      lightSensor: {
+        name: name // Usa il nome invece dell'ID
+      }
+    };
+    await fetchApi(`/api/entities/home/patch/lightSensor/${homeId}`, 'PATCH', associateSensorPayload);
+
+    console.log(`Step 2 Success: Home ${homeId} updated to associate sensor named "${name}"`);
+
+    // Se entrambe le chiamate hanno successo:
+    alert("Light sensor created and associated successfully!");
+    nameInput.value = ""; // Pulisci campo nome
+    adminLoadLightSensors(homeId); // Ricarica la lista dei sensori admin per questa casa
+
   } catch (error) {
-    console.error("Error creating sensor via admin:", error);
-    alert(`Error creating sensor: ${error.message}`);
+    console.error("Error during sensor creation/association process:", error);
+    // Se la seconda chiamata fallisce dopo che la prima ha avuto successo,
+    // il sensore è creato ma non associato alla casa dal punto di vista della casa.
+    // Potrebbe servire logica aggiuntiva qui? Per ora mostriamo l'errore.
+    alert(`Error creating/associating sensor: ${error.message}`);
   } finally {
     if (addButton) {
       addButton.disabled = false;
-      addButton.textContent = "+ Add Sensor";
+      addButton.textContent = '+ Add Sensor';
     }
   }
 }
