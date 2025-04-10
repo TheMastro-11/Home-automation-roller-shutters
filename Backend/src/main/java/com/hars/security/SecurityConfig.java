@@ -30,11 +30,11 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/**").permitAll() // Allow access to authentication endpoints
-                .anyRequest().authenticated() // Secure all other endpoints
+                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll() 
+                .anyRequest().authenticated() 
             )
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Use stateless sessions
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) 
             );
 
         // Add JWT filter
