@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.messaging.Message;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -66,6 +68,16 @@ public class RollerShutterService {
             return rollerShutter;
         } catch (Exception e) {
             throw e;
+        }
+    }
+
+    @ServiceActivator(inputChannel = "mqttInboundChannel")
+    public void mqttUpdateRollerShutter(Message<String> message) {
+        //String topic = message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC, String.class);
+        String payload = message.getPayload();
+        long id = 1;
+        if (payload != null) {
+            this.patchOpeningRollerShutter(id, 1);
         }
     }
 

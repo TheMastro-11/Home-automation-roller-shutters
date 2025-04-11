@@ -1,0 +1,75 @@
+package com.hars.services.mqtt;
+
+import org.slf4j.Logger;// Percorso alla tua classe MqttConfig
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.hars.config.MqttConfig;
+
+@Service
+public class MqttPublisherService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MqttPublisherService.class);
+
+    @Autowired
+    private MqttConfig.MqttGateway mqttGateway; // Inietta il gateway definito in MqttConfig
+
+    @Value("${mqtt.topics.publish}") // Recupera il topic di default dalla configurazione
+    private String defaultTopic;
+
+    /**
+     * Pubblica un messaggio sul topic di default con QoS 1.
+     *
+     * @param payload Il messaggio da inviare.
+     */
+    public void publishToDefaultTopic(String payload) {
+        try {
+            logger.info("Invio messaggio al topic di default [{}]: {}", defaultTopic, payload);
+            // Chiama il metodo del gateway che non richiede topic esplicito (usa il default dell'handler)
+            mqttGateway.sendToMqtt(payload);
+            logger.debug("Messaggio inviato con successo al topic di default.");
+        } catch (Exception e) {
+            logger.error("Errore durante l'invio al topic di default [{}]: {}", defaultTopic, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Pubblica un messaggio su un topic specifico con QoS specificato.
+     *
+     * @param topic   Il topic MQTT su cui pubblicare.
+     * @param payload Il messaggio da inviare.
+     * @param qos     Il Quality of Service (0, 1, o 2).
+     */
+    public void publish(String topic, String payload, int qos) {
+        if (topic == null || topic.trim().isEmpty()) {
+            topic = defaultTopic;
+            logger.warn("Topic non specificato, utilizzo il topic di default: {}", topic);
+        }
+        // Valida QoS (opzionale, ma buona pratica)
+        int effectiveQos = (qos < 0 || qos > 2) ? 1 : qos; // Default a 1 se QoS non valido
+        if (effectiveQos != qos) {
+            logger.warn("QoS specificato ({}) non valido, utilizzo QoS {}", qos, effectiveQos);
+        }
+
+        try {
+            logger.info("Invio messaggio al topic [{}] con QoS [{}]: {}", topic, effectiveQos, payload);
+            // Chiama il metodo del gateway che accetta topic e QoS
+            mqttGateway.sendToMqtt(payload, topic, effectiveQos);
+            logger.debug("Messaggio inviato con successo al topic [{}].", topic);
+        } catch (Exception e) {
+            logger.error("Errore durante l'invio al topic [{}] con QoS [{}]: {}", topic, effectiveQos, e.getMessage(), e);
+        }
+    }
+
+     /**
+     * Pubblica un messaggio su un topic specifico con QoS 1 (default).
+     *
+     * @param topic   Il topic MQTT su cui pubblicare.
+     * @param payload Il messaggio da inviare.
+     */
+    public void publish(String topic, String payload) {
+        publish(topic, payload, 1); // Usa QoS 1 come default
+    }
+}

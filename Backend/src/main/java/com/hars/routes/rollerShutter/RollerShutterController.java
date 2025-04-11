@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
+import com.hars.services.mqtt.MqttPublisherService;
 import com.hars.services.rollerShutter.RollerShutterService;
 
 @RestController
@@ -20,6 +21,9 @@ public class RollerShutterController {
 
     @Autowired
     private RollerShutterService rollerShutterService;
+
+    @Autowired
+    private MqttPublisherService mqttPublisherService;
 
     @GetMapping("/")
     public ResponseEntity<?> getAllRollerShutter() {
@@ -75,11 +79,18 @@ public class RollerShutterController {
 
     @PatchMapping("/patch/opening/{id}")
     public ResponseEntity<String> patchOpeningRollerShutter (@PathVariable Long id, @RequestBody RollerShutterDTO.openingInput rollerShutter) {
+        
+        if (!rollerShutterService.isPresentById(id)) {
+            return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+        }
+        
         try {
-            if (!rollerShutterService.isPresentById(id)) {
-                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
-            }
-
+            mqttPublisherService.publish("$aws/things/roller_shutter/shadow/sendControl", "{ \"message\" : \"ciao\"}");
+        } catch (Exception e) {
+            throw new RuntimeException("Publish Error", e);
+        }
+        
+        try {
             String newRollerShutter = rollerShutterService.patchOpeningRollerShutter(id, rollerShutter.value()).toJson();
             return ResponseEntity.ok("{ \"Entity\" : {" + newRollerShutter + "}}");
         } catch (Exception e) {
