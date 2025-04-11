@@ -2,6 +2,8 @@
 
 .DS_Store
 
+.py_test_cache
+
 Backend/src/main/resources/application-secrets.yml
 
 Backend/.DS_Store
