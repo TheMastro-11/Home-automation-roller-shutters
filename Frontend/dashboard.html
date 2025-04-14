@@ -1,499 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link href="css/styles.css" rel="stylesheet" />
-  </head>
 
-  <body class="d-flex justify-content-center align-items-center vh-100">
-    <div class="container py-4">
-      <div class="text-end mb-3">
-        <button id="logoutBtn" class="btn btn-danger">Logout</button>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/styles.css" rel="stylesheet" />
+</head>
 
-      <h2 class="mb-4 text-center">Dashboard</h2>
-
-      <div id="admin-section" style="display: none">
-        <h4>Admin Panel: Manage Homes</h4>
-
-        <div id="admin-homes">
-          <h5>Homes</h5>
-          <ul class="list-group" id="admin-homes-list"></ul>
-        </div>
-
-        <div id="loadingSpinner" class="spinner" style="display: none">
-          Loading...
-        </div>
-
-        <div id="add-home-form" class="mt-4">
-          <h5>Add New Home</h5>
-          <form>
-            <div class="mb-2">
-              <label class="form-label">Home Name</label>
-              <input
-                type="text"
-                id="newHomeName"
-                class="form-control"
-                required
-              />
-            </div>
-            <button type="submit" class="btn btn-outline-success">
-              Add Home
-            </button>
-          </form>
-        </div>
-        <div id="edit-home-form" class="mt-4" style="display: none">
-          <h5>Manage Home Details</h5>
-          <form>
-            <input type="hidden" id="editHomeId" />
-
-            <div class="mb-3">
-              <label for="editHomeName" class="form-label">Home Name</label>
-              <input
-                type="text"
-                id="editHomeName"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <hr style="border-color: #555" />
-
-            <div class="mb-3">
-              <label for="editHomeOwnerSelect" class="form-label"
-                >Assign Owner (User)</label
-              >
-              <select id="editHomeOwnerSelect" class="form-select">
-                <option value="" selected disabled>Loading users...</option>
-              </select>
-              <small class="form-text" style="color: #ccc"
-                >Select the primary user for this home.</small
-              >
-            </div>
-
-            <hr style="border-color: #555" />
-
-            <div class="mb-3">
-              <label class="form-label">Assign Roller Shutters</label>
-              <div
-                id="editHomeShuttersList"
-                style="
-                  max-height: 150px;
-                  overflow-y: auto;
-                  border: 1px solid #666;
-                  padding: 10px;
-                  border-radius: 6px;
-                  background-color: #444;
-                "
-              >
-                <p id="editHomeShuttersLoading" style="color: #ccc">
-                  Loading shutters...
-                </p>
-              </div>
-              <small class="form-text" style="color: #ccc"
-                >Check the shutters to associate with this home.</small
-              >
-            </div>
-
-            <hr style="border-color: #555" />
-
-            <div class="mb-3">
-              <label for="editHomeSensorSelect" class="form-label"
-                >Assign Light Sensor</label
-              >
-              <select id="editHomeSensorSelect" class="form-select">
-                <option value="" selected disabled>Loading sensors...</option>
-                <option value="NONE">-- None --</option>
-              </select>
-              <small class="form-text" style="color: #ccc"
-                >Select the light sensor for this home (optional).</small
-              >
-            </div>
-
-            <hr style="border-color: #555" />
-
-            <div class="d-flex gap-2 mt-4">
-              <button type="submit" class="btn btn-primary">
-                Save Changes
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="cancelEditHome()"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div id="admin-sensor-management" class="mt-5" style="display: none">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 id="admin-sensor-home-title">Sensors for: Loading...</h4>
-            <button
-              type="button"
-              class="btn btn-sm btn-secondary"
-              onclick="hideSensorsForHome()"
-            >
-              Back to Homes
-            </button>
-          </div>
-
-          <div class="mb-4">
-            <h5>Assigned Sensors</h5>
-            <ul class="list-group" id="admin-sensor-list">
-              <li class="list-group-item">Loading sensors...</li>
-            </ul>
-          </div>
-
-          <div class="mt-3">
-            <h6>Add New Sensor to this Home</h6>
-            <form id="admin-add-sensor-form">
-              <input type="hidden" id="admin-sensor-home-id" />
-              <div class="row g-2 align-items-center">
-                <div class="col">
-                  <input
-                    type="text"
-                    class="form-control form-control-sm"
-                    id="admin-newSensorName"
-                    placeholder="Name"
-                    required
-                  />
-                </div>
-                <div class="col-auto">
-                  <button class="btn btn-sm btn-outline-primary" type="submit">
-                    + Add Sensor
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-          <div id="admin-edit-light-sensor" class="mt-4" style="display: none">
-            <h5>Edit Light Sensor</h5>
-            <form id="admin-edit-sensor-form">
-              <input type="hidden" id="admin-sensorEditId" />
-              <div class="mb-2">
-                <label class="form-label">New Name</label>
-                <input
-                  type="text"
-                  id="admin-editSensorName"
-                  class="form-control"
-                />
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Value (%)</label>
-                <input
-                  type="number"
-                  id="admin-editSensorValue"
-                  class="form-control"
-                  min="0"
-                  max="100"
-                />
-              </div>
-              <button type="submit" class="btn btn-primary">
-                Save Changes
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="cancelAdminEditSensor()"
-              >
-                Cancel
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-      <div id="user-section" style="display: none">
-        <h4 id="user-home-title"></h4>
-        <div id="home-details">
-          <p><strong id="selected-home-name">Loading...</strong></p>
-        </div>
-
-        <div id="rollerShutter-list" class="mt-4">
-          <h5>Roller Shutters</h5>
-          <ul class="list-group" id="rollerShutter-list-items"></ul>
-        </div>
-
-        <div id="rollerShutter-controls" class="mt-4" style="display: none">
-          <h6>Adjust Selected Shutter</h6>
-          <div id="rollerShutterStatus" class="mb-2">
-            Select a shutter from the list
-          </div>
-          <div>
-            <button
-              class="btn btn-sm btn-primary"
-              onclick="adjustRollerShutterOpening(true)"
-            >
-              Increase +10%
-            </button>
-            <button
-              class="btn btn-sm btn-danger"
-              onclick="adjustRollerShutterOpening(false)"
-            >
-              Decrease -10%
-            </button>
-          </div>
-        </div>
-
-        <div id="shutter-general-controls" class="mt-4">
-          <h6>General Shutter Control</h6>
-          <div class="mt-2">
-            <button class="btn btn-primary" onclick="openAllShutters()">
-              Open All Shutters
-            </button>
-            <button class="btn btn-danger" onclick="closeAllShutters()">
-              Close All Shutters
-            </button>
-          </div>
-        </div>
-        <div id="light-sensors-section" class="mt-4" style="display: none">
-          <h5>Light Sensors</h5>
-          <ul class="list-group" id="light-sensors-list"></ul>
-
-          <div class="mt-3">
-            <h6>Add New Sensor</h6>
-            <form>
-              <div class="row g-2 align-items-center">
-                <div class="col">
-                  <input
-                    type="text"
-                    class="form-control form-control-sm"
-                    id="newSensorName"
-                    placeholder="Name"
-                    required
-                  />
-                </div>
-                <div class="col">
-                  <input type="hidden" id="newSensorHomeId" />
-                </div>
-                <div class="col-auto">
-                  <button class="btn btn-sm btn-outline-primary" type="submit">
-                    + Add Sensor
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div id="edit-light-sensor" class="mt-4" style="display: none">
-          <h5>Edit Light Sensor</h5>
-          <form>
-            <input type="hidden" id="sensorEditId" />
-            <div class="mb-2">
-              <label class="form-label">New Name</label>
-              <input type="text" id="editSensorName" class="form-control" />
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Value (%)</label>
-              <input
-                type="number"
-                id="editSensorOpening"
-                class="form-control"
-                min="0"
-                max="100"
-              />
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Home ID (Readonly)</label>
-              <input
-                type="text"
-                id="editSensorHome"
-                class="form-control"
-                readonly
-              />
-            </div>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              onclick="cancelEditSensor()"
-            >
-              Cancel
-            </button>
-          </form>
-        </div>
-      </div>
-      <div id="Routines-section" class="mt-5" style="display: none">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h4 id="Routines-section-title">Routines</h4>
-          <button
-            class="btn btn-sm btn-outline-success"
-            onclick="showRoutinesForm()"
-          >
-            + Add Routine
-          </button>
-        </div>
-
-        <input type="hidden" id="Routines-home-id-hidden" />
-
-        <ul class="list-group" id="Routines-list"></ul>
-        <div id="Routines-form" class="mt-4" style="display: none">
-          <h5 id="form-title">Create Routine</h5>
-          <form>
-            <input type="hidden" id="Routines-id-hidden" />
-            <div class="mb-3">
-              <label for="RoutinesName" class="form-label">Routine Name</label>
-              <input
-                type="text"
-                id="RoutinesName"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <hr style="border-color: #555" />
-            <div class="mb-3">
-              <label for="triggerType" class="form-label">Trigger Type</label>
-              <select
-                id="triggerType"
-                class="form-select"
-                onchange="toggleTriggerOptions()"
-                required
-              >
-                <option value="luminosity" selected>Luminosity</option>
-                <option value="time">Time</option>
-              </select>
-            </div>
-
-            <div
-              id="triggerLuminositySection"
-              class="mb-3 border p-3 rounded"
-              style="border-color: #555 !important"
-            >
-              <label class="form-label mb-2">Luminosity Condition:</label>
-              <div class="mb-2">
-                <label for="triggerSensorId" class="form-label-sm"
-                  >Triggering Sensor</label
-                >
-                <select id="triggerSensorId" class="form-select form-select-sm">
-                  <option value="" selected disabled>Loading sensors...</option>
-                </select>
-              </div>
-              <div class="row g-2 align-items-center">
-                <div class="col-auto">
-                  <label
-                    for="triggerLuminosityCondition"
-                    class="form-label-sm mb-0"
-                    >When luminosity is</label
-                  >
-                </div>
-                <div class="col-auto">
-                  <select
-                    id="triggerLuminosityCondition"
-                    class="form-select form-select-sm"
-                  >
-                    <option value="below">Below</option>
-                    <option value="above">Above</option>
-                  </select>
-                </div>
-                <div class="col">
-                  <label for="triggerLuminosityValue" class="form-label-sm"
-                    >Threshold (%)</label
-                  >
-                  <input
-                    type="number"
-                    id="triggerLuminosityValue"
-                    class="form-control form-control-sm"
-                    min="0"
-                    max="100"
-                    placeholder="e.g., 50"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div
-              id="triggerTimeSection"
-              class="mb-3 border p-3 rounded"
-              style="border-color: #555 !important; display: none"
-            >
-              <label for="triggerTime" class="form-label"
-                >Time Condition:</label
-              >
-              <input type="time" id="triggerTime" class="form-control" />
-            </div>
-
-            <hr style="border-color: #555" />
-
-            <div class="mb-3">
-              <label class="form-label">Target Roller Shutters</label>
-              <div
-                id="routineTargetShuttersList"
-                style="
-                  max-height: 150px;
-                  overflow-y: auto;
-                  border: 1px solid #666;
-                  padding: 10px;
-                  border-radius: 6px;
-                  background-color: #444;
-                "
-              >
-                <p id="routineTargetShuttersLoading" style="color: #ccc">
-                  Loading available shutters...
-                </p>
-              </div>
-              <small class="form-text" style="color: #ccc"
-                >Select one or more shutters for the action.</small
-              >
-            </div>
-
-            <hr style="border-color: #555" />
-
-            <div class="mb-3">
-              <label class="form-label">Action</label>
-              <div class="row g-2">
-                <div class="col">
-                  <label for="action" class="form-label-sm">Action Type</label>
-                  <select id="action" class="form-select" required>
-                    <option value="open" selected>Open (Raise)</option>
-                    <option value="close">Close (Lower)</option>
-                  </select>
-                </div>
-                <div class="col">
-                  <label for="actionPercentage" class="form-label-sm"
-                    >To Percentage</label
-                  >
-                  <select id="actionPercentage" class="form-select" required>
-                    <option value="0">0% (Closed)</option>
-                    <option value="25">25%</option>
-                    <option value="50">50%</option>
-                    <option value="75">75%</option>
-                    <option value="100" selected>100% (Open)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="d-flex gap-2 mt-4">
-              <button type="submit" class="btn btn-primary">
-                Save Routine
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="cancelRoutines()"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+<body class="d-flex justify-content-center align-items-center vh-100">
+  <div class="container py-4">
+    <div class="text-end mb-3">
+      <button id="logoutBtn" class="btn btn-danger">Logout</button>
     </div>
-    <script src="js/api.js"></script>
-    <script src="js/admin.js"></script>
-    <script src="js/user.js"></script>
-    <script src="js/shutters.js"></script>
-    <script src="js/sensors.js"></script>
-    <script src="js/routines.js"></script>
-    <script src="js/dashboard.js"></script>
-  </body>
+    <h2 class="mb-4 text-center">Dashboard</h2>
+
+    <div id="admin-section" style="display: none;">
+      <h4>Admin Panel</h4>
+      <div id="admin-homes">
+        <h5>Manage Homes</h5>
+        <ul class="list-group" id="admin-homes-list"></ul>
+      </div>
+      <div id="loadingSpinner" class="spinner" style="display: none">Loading...</div>
+      <div id="add-home-form" class="mt-4">
+        <h6>Add New Home</h6>
+        <form>
+          <div class="mb-2">
+            <input type="text" id="newHomeName" class="form-control form-control-sm" placeholder="New Home Name"
+              required />
+          </div>
+          <button type="submit" class="btn btn-sm btn-outline-success w-100">Add Home</button>
+        </form>
+      </div>
+      <hr style="border-color: #777; margin-top: 30px;">
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div id="admin-global-add-sensor">
+            <h6>Add New Sensor (Globally)</h6>
+            <form id="global-add-sensor-form">
+              <div class="row g-2 align-items-center">
+                <div class="col"><input type="text" id="global-newSensorName" class="form-control form-control-sm"
+                    placeholder="New Sensor Name" required /></div>
+                <div class="col-auto"><button type="submit" class="btn btn-sm btn-outline-primary">+ Add Sensor</button>
+                </div>
+              </div>
+            </form>
+            <small class="form-text" style="color: #ccc; font-size: 0.8em;">Associate via 'Edit Home'.</small>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div id="admin-global-add-shutter">
+            <h6>Add New Roller Shutter (Globally)</h6>
+            <form id="global-add-shutter-form">
+              <div class="row g-2 align-items-center">
+                <div class="col"><input type="text" id="global-newShutterName" class="form-control form-control-sm"
+                    placeholder="New Shutter Name" required /></div>
+                <div class="col-auto"><button type="submit" class="btn btn-sm btn-outline-primary">+ Add
+                    Shutter</button></div>
+              </div>
+            </form>
+            <small class="form-text" style="color: #ccc; font-size: 0.8em;">Associate via 'Edit Home'.</small>
+          </div>
+        </div>
+      </div>
+      <hr style="border-color: #777; margin-bottom: 30px;">
+      <div id="edit-home-form" class="mt-4" style="display: none;">
+        <h5>Manage Home Details</h5>
+        <form> <input type="hidden" id="editHomeId" /> <div class="mb-3"><label for="editHomeName"
+              class="form-label">Home Name</label><input type="text" id="editHomeName" class="form-control" required />
+          </div>
+          <hr style="border-color: #555;"> <div class="mb-3"><label for="editHomeOwnerSelect"
+              class="form-label">Assign Owner</label><select id="editHomeOwnerSelect" class="form-select">
+              <option>Loading...</option>
+            </select></div>
+          <hr style="border-color: #555;"> <div class="mb-3"><label class="form-label">Assign
+              Shutters</label>
+            <div id="editHomeShuttersList" class="dynamic-list-container">
+              <p id="editHomeShuttersLoading">Loading...</p>
+            </div>
+          </div>
+          <hr style="border-color: #555;"><div class="mb-3"><label for="editHomeSensorSelect"
+              class="form-label">Assign Sensor</label><select id="editHomeSensorSelect" class="form-select">
+              <option>Loading...</option>
+              <option value="NONE">-- None --</option>
+            </select></div>
+          <hr style="border-color: #555;"> <div class="d-flex gap-2 mt-4"><button type="submit"
+              class="btn btn-primary">Save Changes</button><button type="button" class="btn btn-secondary"
+              onclick="cancelEditHome()">Cancel</button></div>
+        </form>
+      </div>
+      <div id="admin-sensor-management" class="mt-5" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 id="admin-sensor-home-title">Sensors for: Loading...</h4>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="hideSensorsForHome()">Back to Homes</button>
+        </div>
+        <div class="mb-4">
+          <h5>Associated Sensors</h5>
+          <ul class="list-group" id="admin-sensor-list"> </ul>
+          <small class="form-text" style="color: #ccc;">Edit/Delete sensors assigned to this home.</small>
+        </div>
+        <div id="admin-edit-light-sensor" class="mt-4" style="display: none;">
+          <h5>Edit Light Sensor</h5>
+          <form id="admin-edit-sensor-form"> <input type="hidden" id="admin-sensorEditId" />
+            <div class="mb-2"><label class="form-label">New Name</label><input type="text" id="admin-editSensorName"
+                class="form-control" /></div>
+            <div class="mb-2"><label class="form-label">Value (%)</label><input type="number" id="admin-editSensorValue"
+                class="form-control" min="0" max="100" /></div><button type="submit" class="btn btn-primary">Save
+              Changes</button><button type="button" class="btn btn-secondary"
+              onclick="cancelAdminEditSensor()">Cancel</button>
+          </form>
+        </div>
+      </div>
+      <div id="admin-shutter-management" class="mt-5" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 id="admin-shutter-home-title">Roller Shutters for: Loading...</h4>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="hideShuttersForHome()">Back to Homes</button>
+        </div>
+        <div class="mb-4">
+          <h5>Associated Shutters</h5>
+          <ul class="list-group" id="admin-shutter-list"> </ul>
+          <small class="form-text" style="color: #ccc;">Manage associated shutters via 'Edit Home'.</small>
+        </div>
+      </div>
+      <div id="Routines-section" class="mt-5" style="display: none;">
+      </div>
+
+    </div>
+    <div id="user-section" style="display: none;">
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/user.js"></script>
+  <script src="js/shutters.js"></script>
+  <script src="js/sensors.js"></script>
+  <script src="js/routines.js"></script>
+  <script src="js/dashboard.js"></script>
+
+</body>
+
 </html>

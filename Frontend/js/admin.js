@@ -1,38 +1,47 @@
 // ========================================
-//        js/admin.js (COMPLETO v. 11/04/25)
+//        js/admin.js (COMPLETO Riga per Riga v. 14/04/25)
 // ========================================
 
-// Nota: Assicurati che questo file sia caricato DOPO api.js e auth.js
-// e PRIMA di dashboard.js
+// Nota: Caricare DOPO api.js, utils.js, auth.js e PRIMA di dashboard.js
 
 // ========================================
 // GESTIONE CASE (Homes)
 // ========================================
 
-// Carica la lista delle case per l'admin
+// Carica la lista delle case per l'admin e imposta la vista iniziale
 async function loadAdminHomes() {
     const homeList = document.getElementById("admin-homes-list");
-    if (!homeList) { console.error("Element '#admin-homes-list' not found."); return; }
+    if (!homeList) {
+        console.error("Element '#admin-homes-list' not found.");
+        return;
+    }
     homeList.innerHTML = "<li class='list-group-item'>Loading homes...</li>";
 
-    // Mostra/Nascondi sezioni di default per la vista admin
-    const adminHomesSection = document.getElementById("admin-homes"); if (adminHomesSection) adminHomesSection.style.display = "block";
-    const addHomeForm = document.getElementById("add-home-form"); if (addHomeForm) addHomeForm.style.display = "block";
-    const editHomeForm = document.getElementById("edit-home-form"); if (editHomeForm) editHomeForm.style.display = "none";
-    const sensorSection = document.getElementById("admin-sensor-management"); if (sensorSection) sensorSection.style.display = "none";
-    const routinesSection = document.getElementById("Routines-section"); if (routinesSection) routinesSection.style.display = "block"; // Mostra anche le routine inizialmente
+    // --- VISIBILITÀ INIZIALE CORRETTA ---
+    const adminHomesEl = document.getElementById("admin-homes"); if (adminHomesEl) adminHomesEl.style.display = "block";
+    const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "block";
+    const globalAddSensorEl = document.getElementById("admin-global-add-sensor"); if(globalAddSensorEl) globalAddSensorEl.style.display = 'block';
+    const globalAddShutterEl = document.getElementById("admin-global-add-shutter"); if(globalAddShutterEl) globalAddShutterEl.style.display = 'block';
+    const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = "none";
+    const sensorSectionEl = document.getElementById("admin-sensor-management"); if (sensorSectionEl) sensorSectionEl.style.display = "none";
+    const shutterSectionEl = document.getElementById("admin-shutter-management"); if (shutterSectionEl) shutterSectionEl.style.display = "none";
+    const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = "block";
+
+    // Resetta titolo/lista routine
+    const routineTitle = document.getElementById("Routines-section-title"); if(routineTitle) routineTitle.innerText = "Routines";
+    const routineList = document.getElementById("Routines-list"); if(routineList) routineList.innerHTML = "<li class='list-group-item list-group-item-placeholder'>Select a home to view its Routines.</li>";
+    // --- FINE BLOCCO VISIBILITÀ ---
 
     try {
-        const homes = await fetchApi("/api/entities/home/"); // GET all homes (admin)
-        homeList.innerHTML = ""; // Pulisci
+        const homes = await fetchApi("/api/entities/home/");
+        homeList.innerHTML = "";
 
         if (homes && Array.isArray(homes) && homes.length > 0) {
             homes.forEach((home) => {
-                if(!home || !home.id) return; // Salta case invalide
+                if(!home || !home.id) return;
                 const li = document.createElement("li");
                 li.className = "list-group-item d-flex justify-content-between align-items-center";
                 const homeIdStr = String(home.id);
-                // Gestisce apici singoli e doppi nel nome per sicurezza nell'HTML onclick
                 const homeNameStr = String(home.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                 li.innerHTML = `
@@ -42,6 +51,7 @@ async function loadAdminHomes() {
                         <button type="button" class="btn btn-danger" onclick="deleteHome('${homeIdStr}')">Delete</button>
                         <button type="button" class="btn btn-info" onclick="showRoutinesForHome('${homeIdStr}', '${homeNameStr}')">Routines</button>
                         <button type="button" class="btn btn-success" onclick="showSensorsForHome('${homeIdStr}', '${homeNameStr}')">Sensors</button>
+                        <button type="button" class="btn btn-primary" onclick="showShuttersForHome('${homeIdStr}', '${homeNameStr}')">Shutters</button>
                     </div>
                 `;
                 homeList.appendChild(li);
@@ -64,22 +74,26 @@ async function addHome(event) {
     const addButton = event.submitter;
 
     if (!homeName) { alert("Please enter a home name."); return; }
-    if (spinner) spinner.style.display = "block";
+    const spinnerEl = document.getElementById("loadingSpinner"); if(spinnerEl) spinnerEl.style.display = "block";
     if (addButton) addButton.disabled = true;
 
     try {
         await fetchApi("/api/entities/home/create", "POST", { name: homeName });
         alert("Home added successfully!");
         homeNameInput.value = "";
-        loadAdminHomes(); // Ricarica lista
+        loadAdminHomes();
     } catch (error) {
          console.error("Error adding home:", error);
         alert(`Failed to add home: ${error.message}`);
     } finally {
-        if (spinner) spinner.style.display = "none";
+        if (spinnerEl) spinnerEl.style.display = "none";
         if (addButton) addButton.disabled = false;
     }
 }
+
+// ========================================
+// FUNZIONI PER FORM "EDIT HOME DETAILS"
+// ========================================
 
 // Carica la lista di utenti e popola un elemento <select> (USA ID COME VALUE)
 async function loadUsersForOwnerSelect(selectElementId, currentOwnerId) {
@@ -88,11 +102,11 @@ async function loadUsersForOwnerSelect(selectElementId, currentOwnerId) {
     selectElement.innerHTML = '<option value="" selected disabled>Loading users...</option>';
 
     try {
-        const users = await fetchApi('/api/users/'); // Path API corretto per lista utenti
-        selectElement.innerHTML = '';
+        const users = await fetchApi('/api/users/');
+        selectElement.innerHTML = ''; // Pulisci
 
         const defaultOption = document.createElement('option');
-        defaultOption.value = ""; // Valore vuoto per "nessuno" / non selezionato
+        defaultOption.value = "";
         defaultOption.textContent = "-- Select Owner --";
         selectElement.appendChild(defaultOption);
 
@@ -101,35 +115,32 @@ async function loadUsersForOwnerSelect(selectElementId, currentOwnerId) {
                 if (user && user.id && user.username) {
                     const option = document.createElement('option');
                     option.value = user.id; // <-- USA ID COME VALUE
-                    option.textContent = user.username; // Mostra username
-
+                    option.textContent = user.username;
                     if (currentOwnerId && String(user.id) === String(currentOwnerId)) {
                         option.selected = true;
-                        console.log(`Pre-selected owner: ${user.username} (ID: ${user.id})`);
                     }
                     selectElement.appendChild(option);
                 }
             });
         } else { console.log("No users found from API."); }
-
     } catch (error) {
         console.error(`Error loading users into select #${selectElementId}:`, error);
         selectElement.innerHTML = `<option value="" selected disabled>Error loading users!</option>`;
     }
 }
 
-// Carica i sensori disponibili e popola la select nel form Edit Home (USA NOME COME VALUE)
+// Carica i sensori disponibili e popola la select (USA NOME COME VALUE)
 async function loadAvailableSensorsForEditHome(selectElementId, currentSensorName) {
-    const selectElement = document.getElementById(selectElementId);
+     const selectElement = document.getElementById(selectElementId);
     if (!selectElement) { console.error(`Select element with ID '${selectElementId}' not found.`); return; }
     selectElement.innerHTML = '<option value="" selected disabled>Loading sensors...</option>';
 
     try {
-        const sensors = await fetchApi('/api/entities/lightSensor/'); // GET tutti i sensori
+        const sensors = await fetchApi('/api/entities/lightSensor/');
         selectElement.innerHTML = ''; // Pulisci
 
         const noneOption = document.createElement('option');
-        noneOption.value = "NONE"; // Valore speciale per "nessuno"
+        noneOption.value = "NONE";
         noneOption.textContent = "-- None --";
         selectElement.appendChild(noneOption);
 
@@ -138,265 +149,241 @@ async function loadAvailableSensorsForEditHome(selectElementId, currentSensorNam
                 if (sensor && sensor.id && sensor.name) {
                     const option = document.createElement('option');
                     option.value = sensor.name; // <-- USA NOME COME VALUE
-                    option.textContent = sensor.name; // Mostra nome
+                    option.textContent = sensor.name;
                     if (currentSensorName && sensor.name === currentSensorName) {
                         option.selected = true;
-                        noneOption.selected = false; // Deseleziona "None"
+                        noneOption.selected = false;
                     }
                     selectElement.appendChild(option);
                 }
             });
-            // Se nessun sensore attuale è stato passato O se l'originale era null/NONE, seleziona "NONE"
-            if (!currentSensorName || currentSensorName === "NONE") {
-                 selectElement.value = "NONE";
-            }
+            if (!currentSensorName) { selectElement.value = "NONE"; }
         } else {
              console.log("No available light sensors found.");
-             selectElement.value = "NONE"; // Seleziona "None" se non ci sono sensori
+             selectElement.value = "NONE";
         }
     } catch (error) {
-        console.error(`Error loading available sensors into select #${selectElementId}:`, error);
+        console.error(`Error loading sensors into select #${selectElementId}:`, error);
         selectElement.innerHTML = `<option value="" selected disabled>Error!</option>`;
         const noneOptionErr = document.createElement('option');
         noneOptionErr.value = "NONE"; noneOptionErr.textContent = "-- None --";
-        selectElement.appendChild(noneOptionErr); // Aggiungi comunque None
+        selectElement.appendChild(noneOptionErr);
     }
 }
 
-// Carica tapparelle disponibili e popola checkbox nel form Edit Home (USA NOME COME VALUE)
+// Carica tapparelle disponibili e popola checkbox (USA NOME COME VALUE)
 async function loadAvailableShuttersForEditHome(containerElementId, originalShutterNames = []) {
      const container = document.getElementById(containerElementId);
      const loadingMsg = document.getElementById("editHomeShuttersLoading");
      if (!container) { console.error(`Container element with ID '${containerElementId}' not found.`); return; }
-     // Pulisci contenitore e rimuovi messaggio loading (se esiste)
-     container.innerHTML = '';
-     if (loadingMsg && loadingMsg.parentNode === container) loadingMsg.remove(); // Rimuovi solo se è figlio diretto
-
-     // === API DA CONFERMARE ===
-     const apiPath = '/api/entities/rollerShutter/'; // Prendiamo tutte le tapparelle per ora
-     console.warn("API path for loading available shutters needs confirmation. Using:", apiPath);
-
-     // Messaggio temporaneo se l'API è lenta
-     container.innerHTML = '<p id="editHomeShuttersLoading" style="color: #ccc;">Loading available shutters...</p>';
+     if (loadingMsg) loadingMsg.textContent = "Loading..."; else container.innerHTML = "";
+     const apiPath = '/api/entities/rollerShutter/'; // Ipotesi API
+     if (!loadingMsg) { container.innerHTML = '<p id="editHomeShuttersLoading" style="color: #ccc;">Loading...</p>'; }
 
      try {
         const allShutters = await fetchApi(apiPath);
-        // Rimuovi di nuovo il messaggio loading (se la chiamata è stata veloce)
-        document.getElementById("editHomeShuttersLoading")?.remove();
-        container.innerHTML = ''; // Pulisci di nuovo per sicurezza
+        document.getElementById("editHomeShuttersLoading")?.remove(); container.innerHTML = '';
 
          if (allShutters && Array.isArray(allShutters) && allShutters.length > 0) {
              const originalNamesSet = new Set(originalShutterNames);
              allShutters.forEach(shutter => {
                  if (shutter && shutter.id && shutter.name) {
-                     const div = document.createElement('div');
-                     div.className = 'form-check';
+                     const div = document.createElement('div'); div.className = 'form-check';
                      const isChecked = originalNamesSet.has(shutter.name);
                      const checkId = `edit_shutter_check_${shutter.id}`;
-                     const safeName = shutter.name.replace(/"/g, '&quot;'); // Escape double quotes
-
-                     div.innerHTML = `
-                         <input class="form-check-input" type="checkbox" value="${safeName}" id="${checkId}" ${isChecked ? 'checked' : ''}>
-                         <label class="form-check-label" for="${checkId}">
-                             ${shutter.name}
-                         </label>
-                     `;
+                     const safeName = shutter.name.replace(/"/g, '&quot;');
+                     div.innerHTML = `<input class="form-check-input" type="checkbox" value="${safeName}" id="${checkId}" ${isChecked ? 'checked' : ''}><label class="form-check-label" for="${checkId}">${shutter.name}</label>`;
                      container.appendChild(div);
                  }
              });
-         } else {
-             container.innerHTML = '<p style="color: #ccc;">No available shutters found.</p>';
-         }
-
+         } else { container.innerHTML = '<p style="color: #ccc;">No shutters found.</p>'; }
      } catch(error) {
          console.error("Error loading shutters for Edit Home form:", error);
-         document.getElementById("editHomeShuttersLoading")?.remove(); // Rimuovi loading anche in caso di errore
+         document.getElementById("editHomeShuttersLoading")?.remove();
          container.innerHTML = '<p class="text-danger">Error loading shutters.</p>';
      }
 }
-
 
 // Mostra il form per modificare i dettagli di una casa
 async function showEditHomeForm(homeId, homeName) {
     console.log(`Showing edit form for Home ID: ${homeId}`);
     // Nascondi altre sezioni admin...
-    const adminHomes = document.getElementById("admin-homes"); if (adminHomes) adminHomes.style.display = "none";
-    const addHomeForm = document.getElementById("add-home-form"); if (addHomeForm) addHomeForm.style.display = "none";
-    const sensorSection = document.getElementById("admin-sensor-management"); if(sensorSection) sensorSection.style.display = 'none';
-    const routinesSection = document.getElementById("Routines-section"); if(routinesSection) routinesSection.style.display = 'none';
+    const adminHomesEl = document.getElementById("admin-homes"); if (adminHomesEl) adminHomesEl.style.display = "none";
+    const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
+    const sensorSectionEl = document.getElementById("admin-sensor-management"); if(sensorSectionEl) sensorSectionEl.style.display = 'none';
+    const shutterSectionEl = document.getElementById("admin-shutter-management"); if(shutterSectionEl) shutterSectionEl.style.display = 'none';
+    const routinesSectionEl = document.getElementById("Routines-section"); if(routinesSectionEl) routinesSectionEl.style.display = 'none';
+    const globalAddSensorEl = document.getElementById("admin-global-add-sensor"); if(globalAddSensorEl) globalAddSensorEl.style.display = 'none';
+    const globalAddShutterEl = document.getElementById("admin-global-add-shutter"); if(globalAddShutterEl) globalAddShutterEl.style.display = 'none';
 
-    // Trova il form
-    const editHomeForm = document.getElementById("edit-home-form"); if (!editHomeForm) return;
+    // Trova il DIV contenitore E il FORM interno
+    const editHomeDiv = document.getElementById("edit-home-form"); if (!editHomeDiv) return;
+    const editHomeInnerForm = editHomeDiv.querySelector('form'); // <-- Trova il form interno
+    if (!editHomeInnerForm) { console.error("Inner form not found in #edit-home-form"); return;}
 
     // Popola campi base
     document.getElementById("editHomeId").value = homeId;
     document.getElementById("editHomeName").value = homeName;
 
-    // Mostra il form di modifica
-    editHomeForm.style.display = "block";
+    // Mostra il DIV contenitore
+    editHomeDiv.style.display = "block";
 
-    // Reset/Loading state per campi dinamici
-    document.getElementById("editHomeOwnerSelect").innerHTML = '<option value="" selected disabled>Loading details...</option>';
-    document.getElementById("editHomeShuttersList").innerHTML = '<p id="editHomeShuttersLoading" style="color: #ccc;">Loading details...</p>';
-    document.getElementById("editHomeSensorSelect").innerHTML = '<option value="" selected disabled>Loading details...</option><option value="NONE">-- None --</option>';
+    // Reset/Loading state
+    document.getElementById("editHomeOwnerSelect").innerHTML = '<option>Loading...</option>';
+    document.getElementById("editHomeShuttersList").innerHTML = '<p id="editHomeShuttersLoading">Loading...</p>';
+    document.getElementById("editHomeSensorSelect").innerHTML = '<option>Loading...</option><option value="NONE">-- None --</option>';
 
-    // --- CARICA DETTAGLI CASA ATTUALE ---
-    let currentOwnerId = null; // <-- Torniamo a usare ID per Owner per coerenza interna
-    let currentOwnerUsername = null; // Manteniamo anche username per il payload PATCH
-    let originalShutterNames = [];
-    let currentSensorName = null;
-
+    // Carica dettagli casa attuale
+    let currentOwnerId = null; let currentOwnerUsername = null;
+    let originalShutterNames = []; let currentSensorName = null;
     try {
-        // WORKAROUND: Carica tutte le case e filtra
-        console.log("Fetching home list to find details for homeId:", homeId);
-        const allHomes = await fetchApi('/api/entities/home/');
-        let homeDetails = null;
-        if (allHomes && Array.isArray(allHomes)) { homeDetails = allHomes.find(home => home && String(home.id) === String(homeId)); }
-
+        const allHomes = await fetchApi('/api/entities/home/'); let homeDetails = null;
+        if (allHomes && Array.isArray(allHomes)) { homeDetails = allHomes.find(h => h?.id == homeId); }
         if (homeDetails) {
-            console.log("Found home details:", homeDetails);
-            // Estrai dati ORIGINALI (ASSUMENDO che GET /home/ li ritorni!)
-            currentOwnerId = homeDetails.owner?.id || null; // Estrai ID
-            currentOwnerUsername = homeDetails.owner?.username || null; // Estrai anche Username
-            currentSensorName = homeDetails.lightSensor?.name || null; // Estrai NOME sensore
-            originalShutterNames = homeDetails.rollerShutters?.map(rs => rs.name).filter(name => name != null) || []; // Estrai NOMI tapparelle
+            currentOwnerId = homeDetails.owner?.id || null; currentOwnerUsername = homeDetails.owner?.username || null;
+            currentSensorName = homeDetails.lightSensor?.name || null;
+            originalShutterNames = homeDetails.rollerShutters?.map(rs => rs.name).filter(n => n != null) || [];
 
-            // Memorizza i valori originali nel dataset del form
-            editHomeForm.dataset.originalName = homeName;
-            editHomeForm.dataset.originalOwnerId = currentOwnerId || ""; // Usa ID nel dataset
-            editHomeForm.dataset.originalSensor = currentSensorName || "NONE";
-            editHomeForm.dataset.originalShutters = JSON.stringify(originalShutterNames.sort());
-
-            console.log("Stored Original Data:", editHomeForm.dataset);
+            // --- CORREZIONE: Memorizza valori originali sul FORM INTERNO ---
+            editHomeInnerForm.dataset.originalName = homeName;
+            editHomeInnerForm.dataset.originalOwnerId = currentOwnerId || "";
+            editHomeInnerForm.dataset.originalSensor = currentSensorName || "NONE";
+            editHomeInnerForm.dataset.originalShutters = JSON.stringify(originalShutterNames.sort());
+            // ---------------------------------------------------------------
+            console.log("Stored Original Data on form:", editHomeInnerForm.dataset);
 
         } else { console.error(`Home details for ID ${homeId} not found.`); }
     } catch (error) { console.error(`Failed to fetch home details for ID ${homeId}:`, error); }
 
-    // Popola i campi dinamici passando il valore attuale per pre-selezione
-    loadUsersForOwnerSelect('editHomeOwnerSelect', currentOwnerId); // <--- Passa ID a loadUsers...
+    // Popola i campi dinamici
+    loadUsersForOwnerSelect('editHomeOwnerSelect', currentOwnerId);
     loadAvailableSensorsForEditHome('editHomeSensorSelect', currentSensorName);
     loadAvailableShuttersForEditHome('editHomeShuttersList', originalShutterNames);
 }
 
 // Annulla la modifica della casa e torna alla lista
 function cancelEditHome() {
-    const editHomeForm = document.getElementById("edit-home-form"); if (editHomeForm) editHomeForm.style.display = "none";
-    loadAdminHomes(); // Ricarica la vista principale
+    const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = "none";
+    loadAdminHomes(); // Ricarica la vista principale admin
 }
 
-// Salva le modifiche della casa
+// Salva le modifiche della casa (con Change Detection e Skip Null/Empty)
 async function submitEditHome(event) {
     event.preventDefault();
     const form = event.target;
     const id = document.getElementById("editHomeId").value; // Home ID
     const saveButton = event.submitter;
 
-    // Leggi i valori ORIGINALI dal dataset del form
+    // Leggi valori ORIGINALI
     const originalName = form.dataset.originalName || '';
-    const originalOwnerId = form.dataset.originalOwnerId || ''; // Leggi ID originale
+    const originalOwnerId = form.dataset.originalOwnerId || ''; // Legge ID originale
     const originalSensorName = form.dataset.originalSensor || 'NONE';
     const originalShuttersJson = form.dataset.originalShutters || '[]';
+    console.log("Comparing against Original:", { name: originalName, ownerId: originalOwnerId, sensorName: originalSensorName, shuttersJson: originalShuttersJson });
 
-    // Leggi i valori NUOVI dai campi del form
+    // Leggi valori NUOVI
     const newName = document.getElementById("editHomeName").value.trim();
-    const selectedOwnerId = document.getElementById("editHomeOwnerSelect").value; // Legge l'ID dal value=""
+    const selectedOwnerId = document.getElementById("editHomeOwnerSelect").value; // Legge l'ID o ""
     const selectedSensorName = document.getElementById("editHomeSensorSelect").value; // Legge NOME o "NONE"
     const selectedShutterCheckboxes = document.querySelectorAll('#editHomeShuttersList input[type="checkbox"]:checked');
-    const selectedShutterNames = Array.from(selectedShutterCheckboxes).map(cb => cb.value).sort(); // Legge NOMI e ordina
+    const selectedShutterNames = Array.from(selectedShutterCheckboxes).map(cb => cb.value).sort();
     const selectedShuttersJson = JSON.stringify(selectedShutterNames);
+    console.log("New Values:", { name: newName, ownerId: selectedOwnerId, sensorName: selectedSensorName, shuttersJson: selectedShuttersJson });
 
-    if (!newName) { alert("Please enter the home name."); return; }
+    if (!newName) { alert("Please enter home name."); return; }
     if(saveButton) { saveButton.disabled = true; saveButton.textContent = "Saving..."; }
 
-    const apiCalls = []; // Array per le chiamate da fare
+    const apiCalls = [];
+    const callsInfo = [];
 
-    // 1. Confronta e prepara PATCH Nome
+    // 1. PATCH Nome (se cambiato)
     if (newName !== originalName) {
-        console.log("Change detected for Name");
-        apiCalls.push(
-            fetchApi(`/api/entities/home/patch/name/${id}`, "PATCH", { name: newName })
-                .catch(err => { console.error("Error patching name:", err); throw err; })
-        );
+        console.log("Change detected for Name. Preparing PATCH...");
+        const payload = { name: newName };
+        callsInfo.push({ path: `/patch/name/${id}`, payload: payload });
+        apiCalls.push(fetchApi(`/api/entities/home/patch/name/${id}`, "PATCH", payload).catch(err => { throw err; }));
     }
 
-    // 2. Confronta e prepara PATCH Owner
+    // 2. PATCH Owner (se cambiato E un owner effettivo è selezionato)
     if (selectedOwnerId !== originalOwnerId) {
-        console.log("Change detected for Owner");
-         // Trova lo username corrispondente all'ID selezionato per inviarlo (come da test backend)
-         const ownerSelect = document.getElementById("editHomeOwnerSelect");
-         const selectedOwnerOption = ownerSelect.options[ownerSelect.selectedIndex];
-         const selectedUsername = selectedOwnerOption ? selectedOwnerOption.text : null; // Prendi lo username dal testo dell'opzione
+        // --- CONTROLLO AGGIUNTIVO: Invia solo se un owner è selezionato ---
+        if (selectedOwnerId) { // selectedOwnerId non è vuoto ""
+            console.log("Change detected for Owner. Preparing PATCH...");
+            const ownerSelect = document.getElementById("editHomeOwnerSelect");
+            const selectedOption = ownerSelect.options[ownerSelect.selectedIndex];
+            const selectedUsername = selectedOption ? selectedOption.text : null; // Prendi username
 
-        // Costruisci payload: { user: { username: ... } } o { user: null }
-        const ownerPayload = selectedUsername ? { user: { username: selectedUsername } } : { user: null };
-        console.log(`Attempting PATCH /patch/owner/${id} with payload:`, JSON.stringify(ownerPayload, null, 2));
-        apiCalls.push(
-            fetchApi(`/api/entities/home/patch/owner/${id}`, 'PATCH', ownerPayload) // Path /owner/, payload {user:{username:...}}
-                .catch(err => { console.error("Error patching owner:", err); throw err; })
-        );
+            // Verifica ulteriore che lo username sia valido prima di creare il payload
+            if (selectedUsername) {
+                const ownerPayload = { user: { username: selectedUsername } }; // Payload come da test
+                console.log("Owner Payload:", ownerPayload);
+                callsInfo.push({ path: `/patch/owner/${id}`, payload: ownerPayload });
+                apiCalls.push(fetchApi(`/api/entities/home/patch/owner/${id}`, 'PATCH', ownerPayload).catch(err => { throw err; }));
+            } else {
+                 console.log("Owner ID selected but username not found in option text. Skipping PATCH.");
+            }
+        } else {
+            // Se selectedOwnerId è "" (cioè "-- Select Owner --") e diverso dall'originale
+            console.log("Owner changed to '-- Select Owner --'. Skipping PATCH request (disassociation not handled).");
+            // NON inviamo { user: null } per evitare errore backend (se presente)
+        }
+        // --------------------------------------------------------------------
     }
 
-    // 3. Confronta e prepara PATCH Sensore
+    // 3. PATCH Sensore (se cambiato E NON è "NONE")
     if (selectedSensorName !== originalSensorName) {
-        // Invia { name: "nome_sensore" } o { name: null } se selezionato "NONE" (come da tua info API)
-        // Ma per disassociare potremmo dover inviare { lightSensor: null } ? Chiedere al backend!
-        // Per ora, seguiamo l'info e non inviamo nulla se "NONE" è selezionato per evitare 500.
+        // La logica qui sotto già salta l'invio se è "NONE"
         if (selectedSensorName && selectedSensorName !== "NONE") {
-            console.log("Change detected for Sensor: Associating new sensor.");
-            sensorPayload = {
-                lightSensor: { // <-- Oggetto esterno "lightSensor"
-                    name: selectedSensorName // <-- Nome interno
-                }
-            };
-            console.log(`Attempting PATCH /patch/lightSensor/${id} with payload:`, JSON.stringify(sensorPayload, null, 2));
-            apiCalls.push(
-                fetchApi(`/api/entities/home/patch/lightSensor/${id}`, 'PATCH', sensorPayload)
-                    .catch(err => { console.error("Error patching sensor:", err); throw err; })
-            );
+            console.log("Change detected for Sensor. Preparing PATCH...");
+            const sensorPayload = { name: selectedSensorName }; // Payload come da tua info API
+            console.log("Sensor Payload:", sensorPayload);
+            callsInfo.push({ path: `/patch/lightSensor/${id}`, payload: sensorPayload });
+            apiCalls.push(fetchApi(`/api/entities/home/patch/lightSensor/${id}`, 'PATCH', sensorPayload).catch(err => { throw err; }));
         } else {
-             // L'utente vuole disassociare, ma il backend dava errore 500. Non inviamo nulla.
-             console.log("Change detected for Sensor: '-- None --' selected. Skipping PATCH request.");
+             console.log("Sensor changed to 'None'. Skipping PATCH request.");
         }
     }
 
-    // 4. Confronta e prepara PATCH Tapparelle
+    // 4. PATCH Tapparelle (se cambiate E la lista selezionata NON è vuota)
     if (selectedShuttersJson !== originalShuttersJson) {
-         console.log("Change detected for Shutters");
-         const shuttersPayload = { rollerShutters: selectedShutterNames.map(name => ({ name: name })) }; // Usa nomi
-         console.log(`Attempting PATCH /patch/rollerShutters/${id} with payload:`, JSON.stringify(shuttersPayload, null, 2));
-         apiCalls.push(
-             fetchApi(`/api/entities/home/patch/rollerShutters/${id}`, 'PATCH', shuttersPayload)
-                 .catch(err => { console.error("Error patching shutters:", err); throw err; })
-         );
+         // --- CONTROLLO AGGIUNTIVO: Invia solo se almeno una tapparella è selezionata ---
+        if (selectedShutterNames.length > 0) {
+             console.log("Change detected for Shutters. Preparing PATCH...");
+             const shuttersPayload = { rollerShutters: selectedShutterNames.map(name => ({ name: name })) }; // Usa NOMI
+             console.log("Shutters Payload:", shuttersPayload);
+             callsInfo.push({ path: `/patch/rollerShutters/${id}`, payload: shuttersPayload });
+             apiCalls.push(fetchApi(`/api/entities/home/patch/rollerShutters/${id}`, 'PATCH', shuttersPayload).catch(err => { throw err; }));
+        } else {
+             // Se la lista selezionata è vuota [] (e diversa dall'originale)
+             console.log("Shutters changed to empty list. Skipping PATCH request (Backend fix needed for empty list).");
+             // NON inviamo { rollerShutters: [] } per evitare errore 500 backend
+        }
+        // -------------------------------------------------------------------------
     }
 
     // Se non ci sono chiamate
     if (apiCalls.length === 0) {
-         alert("No changes were detected.");
-         if(saveButton) { saveButton.disabled = false; saveButton.textContent = "Save Changes"; }
-         return;
+         alert("No changes were detected or only empty selections were made."); // Messaggio aggiornato
+         if(saveButton) { saveButton.disabled = false; saveButton.textContent = "Save Changes"; } return;
     }
 
-    // Esegui solo le chiamate necessarie
+    // Esegui chiamate
     try {
-        console.log(`Executing ${apiCalls.length} PATCH call(s)...`);
+        console.log(`Executing ${apiCalls.length} PATCH call(s):`, callsInfo);
         await Promise.all(apiCalls);
         alert("Home details updated successfully!");
-        cancelEditHome();
-        loadAdminHomes();
+        cancelEditHome(); loadAdminHomes();
     } catch (error) {
         console.error("Error updating home details:", error);
         const errorDetails = error.details ? `\nDetails: ${JSON.stringify(error.details)}` : '';
-        alert(`Failed to update home details: ${error.message}${errorDetails}`);
-    } finally {
-        if(saveButton) { saveButton.disabled = false; saveButton.textContent = "Save Changes"; }
-    }
+        alert(`Failed to update home details: <span class="math-inline">\{error\.message\}</span>{errorDetails}`);
+    } finally { if(saveButton) { saveButton.disabled = false; saveButton.textContent = "Save Changes"; } }
 }
 
 
 // Elimina una casa
 async function deleteHome(homeId) {
-    if (!confirm("Are you sure...?")) { return; }
+    if (!confirm("Are you sure you want to delete this home? This action might also delete associated devices and routines depending on backend logic.")) { return; }
     try {
         await fetchApi(`/api/entities/home/delete/${homeId}`, "DELETE");
         alert("Home deleted successfully!");
@@ -410,73 +397,77 @@ async function deleteHome(homeId) {
 // ========================================
 // GESTIONE ROUTINE (Solo Navigazione da Admin)
 // ========================================
-
 function showRoutinesForHome(homeId, homeName) {
     console.log(`Showing Routines for Home ID: ${homeId}, Name: ${homeName}`);
-    // Nascondi sezioni admin...
-    const adminHomes = document.getElementById("admin-homes"); if (adminHomes) adminHomes.style.display = "none";
-    const addHomeForm = document.getElementById("add-home-form"); if (addHomeForm) addHomeForm.style.display = "none";
-    const editHomeForm = document.getElementById("edit-home-form"); if(editHomeForm) editHomeForm.style.display = 'none';
-    const sensorSection = document.getElementById("admin-sensor-management"); if(sensorSection) sensorSection.style.display = 'none';
+    // Nascondi altre sezioni admin...
+    const adminHomesEl = document.getElementById("admin-homes"); if (adminHomesEl) adminHomesEl.style.display = "none";
+    const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
+    const editHomeFormEl = document.getElementById("edit-home-form"); if(editHomeFormEl) editHomeFormEl.style.display = 'none';
+    const sensorSectionEl = document.getElementById("admin-sensor-management"); if(sensorSectionEl) sensorSectionEl.style.display = 'none';
+    const shutterSectionEl = document.getElementById("admin-shutter-management"); if(shutterSectionEl) shutterSectionEl.style.display = 'none';
+    const globalAddSensorEl = document.getElementById("admin-global-add-sensor"); if(globalAddSensorEl) globalAddSensorEl.style.display = 'none';
+    const globalAddShutterEl = document.getElementById("admin-global-add-shutter"); if(globalAddShutterEl) globalAddShutterEl.style.display = 'none';
+
     // Mostra sezione routine
-    const routinesSection = document.getElementById("Routines-section"); if(routinesSection) routinesSection.style.display = 'block';
+    const routinesSectionEl = document.getElementById("Routines-section"); if(!routinesSectionEl) return; routinesSectionEl.style.display = 'block';
     // Imposta titolo e ID nascosto
-    const routineTitle = document.getElementById("Routines-section-title"); if(routineTitle) routineTitle.innerText = `Routines for: ${homeName}`;
-    const routineHomeIdHidden = document.getElementById("Routines-home-id-hidden"); if(routineHomeIdHidden) routineHomeIdHidden.value = homeId;
+    const routineTitleEl = document.getElementById("Routines-section-title"); if(routineTitleEl) routineTitleEl.innerText = `Routines for: ${homeName}`;
+    const routineHomeIdHiddenEl = document.getElementById("Routines-home-id-hidden"); if(routineHomeIdHiddenEl) routineHomeIdHiddenEl.value = homeId;
     // Chiama la funzione in routines.js
     if (typeof loadRoutines === "function") { loadRoutines(homeId); } else { console.error("loadRoutines function is not defined"); }
 }
 
 // ========================================
-// GESTIONE SENSORI (Specifica Admin)
+// GESTIONE SENSORI (Admin - Per Casa Specifica)
 // ========================================
 
 // Mostra la sezione gestione sensori per una casa specifica
 function showSensorsForHome(homeId, homeName) {
     console.log(`Showing sensors for Home ID: ${homeId}, Name: ${homeName}`);
-    // Nascondi sezioni admin...
-    const adminHomes = document.getElementById("admin-homes"); if (adminHomes) adminHomes.style.display = "none";
-    const addHomeForm = document.getElementById("add-home-form"); if (addHomeForm) addHomeForm.style.display = "none";
-    const editHomeForm = document.getElementById("edit-home-form"); if(editHomeForm) editHomeForm.style.display = 'none';
-    const routinesSection = document.getElementById("Routines-section"); if(routinesSection) routinesSection.style.display = 'none';
+    // Nascondi altre sezioni admin...
+    const adminHomesEl = document.getElementById("admin-homes"); if (adminHomesEl) adminHomesEl.style.display = "none";
+    const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
+    const editHomeFormEl = document.getElementById("edit-home-form"); if(editHomeFormEl) editHomeFormEl.style.display = 'none';
+    const routinesSectionEl = document.getElementById("Routines-section"); if(routinesSectionEl) routinesSectionEl.style.display = 'none';
+    const shutterSectionEl = document.getElementById("admin-shutter-management"); if(shutterSectionEl) shutterSectionEl.style.display = 'none';
+    const globalAddSensorEl = document.getElementById("admin-global-add-sensor"); if(globalAddSensorEl) globalAddSensorEl.style.display = 'none';
+    const globalAddShutterEl = document.getElementById("admin-global-add-shutter"); if(globalAddShutterEl) globalAddShutterEl.style.display = 'none';
+
     // Mostra la sezione gestione sensori
-    const sensorSection = document.getElementById("admin-sensor-management"); if (!sensorSection) return; sensorSection.style.display = 'block';
-    // Imposta titolo e ID nascosto
+    const sensorSectionEl = document.getElementById("admin-sensor-management"); if (!sensorSectionEl) return; sensorSectionEl.style.display = 'block';
+
+    // Imposta titolo e ID nascosto (per Edit/Delete)
     const titleElement = document.getElementById("admin-sensor-home-title"); if (titleElement) titleElement.textContent = `Sensors for: ${homeName}`;
     const sensorHomeIdHidden = document.getElementById("admin-sensor-home-id"); if (sensorHomeIdHidden) sensorHomeIdHidden.value = homeId;
+
     // Nascondi form modifica se era aperto
-    const adminEditSensorForm = document.getElementById("admin-edit-light-sensor"); if(adminEditSensorForm) adminEditSensorForm.style.display = 'none';
+     const adminEditSensorFormEl = document.getElementById("admin-edit-light-sensor"); if(adminEditSensorFormEl) adminEditSensorFormEl.style.display = 'none';
+
     // Chiama funzione per caricare i sensori
     adminLoadLightSensors(homeId);
 }
 
 // Nasconde la sezione sensori e torna alla lista case admin
 function hideSensorsForHome() {
-     const sensorSection = document.getElementById("admin-sensor-management"); if(sensorSection) sensorSection.style.display = 'none';
-     // Ricarica la vista principale
-     loadAdminHomes();
+     const sensorSectionEl = document.getElementById("admin-sensor-management"); if(sensorSectionEl) sensorSectionEl.style.display = 'none';
+     loadAdminHomes(); // Ricarica la vista principale
 }
 
 // Nasconde il form di modifica sensore admin
 function cancelAdminEditSensor() {
-    const adminEditSensorForm = document.getElementById("admin-edit-light-sensor"); if(adminEditSensorForm) adminEditSensorForm.style.display = "none";
+    const adminEditSensorFormEl = document.getElementById("admin-edit-light-sensor"); if(adminEditSensorFormEl) adminEditSensorFormEl.style.display = "none";
 }
 
-// Carica e visualizza i sensori per una specifica casa (Admin)
+// Carica e visualizza i sensori per una specifica casa (Admin - con bottoni)
 async function adminLoadLightSensors(homeId) {
     const sensorList = document.getElementById("admin-sensor-list"); if (!sensorList) return;
     sensorList.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
     const apiPath = '/api/entities/lightSensor/';
-    console.log(`adminLoadLightSensors: Fetching from ${apiPath}`);
-
     try {
         const allSensors = await fetchApi(apiPath);
         let filteredSensors = [];
         // Filtra lato client (ASSUMENDO sensor.home.id)
-        if (homeId && allSensors && Array.isArray(allSensors)) {
-            filteredSensors = allSensors.filter(sensor => sensor?.home?.id && String(sensor.home.id) === String(homeId));
-        }
-        console.log(`Found ${filteredSensors.length} sensors for homeId ${homeId}.`, filteredSensors);
+        if (homeId && allSensors && Array.isArray(allSensors)) { filteredSensors = allSensors.filter(sensor => sensor?.home?.id && String(sensor.home.id) === String(homeId)); }
 
         sensorList.innerHTML = "";
         if (filteredSensors.length > 0) {
@@ -485,7 +476,7 @@ async function adminLoadLightSensors(homeId) {
                 const li = document.createElement("li");
                 li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap";
                 li.id = `admin-sensor-item-${sensor.id}`;
-                const numericValue = sensor.value ?? sensor.opening ?? null; // VERIFICARE!
+                const numericValue = sensor.value ?? sensor.opening ?? null; // VERIFICARE campo valore!
                 const displayValue = numericValue !== null ? numericValue : 'N/A';
                 const safeName = (sensor.name || '').replace(/'/g, "\\'");
                 li.innerHTML = `
@@ -497,53 +488,22 @@ async function adminLoadLightSensors(homeId) {
                 `;
                 sensorList.appendChild(li);
             });
-        } else { sensorList.innerHTML = "<li class='list-group-item'>No sensors assigned to this home.</li>"; }
+        } else { sensorList.innerHTML = "<li class='list-group-item'>No sensors associated.</li>"; }
     } catch (error) {
-        console.error("adminLoadLightSensors Error:", error);
+        console.error("Error loading sensors for admin view:", error);
         sensorList.innerHTML = `<li class='list-group-item text-danger'>Error loading sensors: ${error.message}</li>`;
-     }
+    }
 }
 
 // Mostra il form di modifica specifico per admin
 function adminShowEditSensorForm(id, name, currentValue) {
-    console.log(`Editing sensor ID: ${id}, Name: ${name}, Value: ${currentValue}`);
     document.getElementById("admin-sensorEditId").value = id;
     document.getElementById("admin-editSensorName").value = name;
     document.getElementById("admin-editSensorValue").value = currentValue !== null ? currentValue : "";
-
-    const adminEditForm = document.getElementById("admin-edit-light-sensor"); if(adminEditForm) adminEditForm.style.display = "block";
+    const adminEditFormEl = document.getElementById("admin-edit-light-sensor"); if(adminEditFormEl) adminEditFormEl.style.display = "block";
 }
 
-// Aggiunge un nuovo sensore (SOLO CREAZIONE)
-async function adminCreateLightSensor(event) {
-    event.preventDefault();
-    const nameInput = document.getElementById("admin-newSensorName");
-    const homeId = document.getElementById("admin-sensor-home-id").value;
-    const addButton = event.submitter;
-    const name = nameInput.value.trim();
-
-    if (!name) { alert("Please enter sensor name."); return; }
-    if (!homeId) { console.error("Home ID missing in adminCreateLightSensor"); return; }
-    if(addButton) { addButton.disabled = true; addButton.textContent = 'Adding...'; }
-
-    try {
-        console.log(`Creating sensor with name: ${name}`);
-        await fetchApi('/api/entities/lightSensor/create', 'POST', { name: name }); // SOLO NOME
-
-        alert("Light sensor created successfully! Associate it via the 'Edit Home' form.");
-        nameInput.value = "";
-        adminLoadLightSensors(homeId); // Ricarica lista (ma non lo vedrai finché non associato)
-        console.warn("Newly created sensor needs association via 'Edit Home'.");
-
-    } catch (error) {
-        console.error("Error creating sensor via admin:", error);
-        alert(`Error creating sensor: ${error.message}`);
-     } finally {
-         if(addButton) { addButton.disabled = false; addButton.textContent = '+ Add Sensor'; }
-     }
-}
-
-// Salva le modifiche al sensore fatte nel form admin
+// Salva le modifiche al sensore fatte nel form admin (con change detection TODO)
 async function adminSubmitEditSensor(event) {
     event.preventDefault();
     const id = document.getElementById("admin-sensorEditId").value;
@@ -556,27 +516,24 @@ async function adminSubmitEditSensor(event) {
     const newValueStr = valueInput.value.trim();
     const apiPromises = [];
 
-    // TODO: Aggiungere confronto con valore originale prima di aggiungere a apiPromises
+    // TODO: Recuperare valori originali e confrontare prima di aggiungere a apiPromises
+    console.warn("TODO: Implement change detection in adminSubmitEditSensor");
 
-    // PATCH Nome
+    // PATCH Nome (se ha valore)
     if (newName) { // TODO: Confronta con originale
-        apiPromises.push(
-            fetchApi(`/api/entities/lightSensor/patch/name/${id}`, "PATCH", { name: newName })
-                .catch(err => { /*...*/ throw err; })
-        );
+        apiPromises.push( fetchApi(`/api/entities/lightSensor/patch/name/${id}`, "PATCH", { name: newName }).catch(err => { throw err; }) );
     }
-    // PATCH Valore
+    // PATCH Valore (se ha valore e valido)
     if (newValueStr) { // TODO: Confronta con originale
         const newValue = parseInt(newValueStr, 10);
         if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
-            apiPromises.push(
-                fetchApi(`/api/entities/lightSensor/patch/value/${id}`, "PATCH", { value: newValue }) // Usa /patch/value/ e campo 'value'
-                    .catch(err => { /*...*/ throw err; })
-            );
+             // ATTENZIONE: Il backend service SOMMA il valore invece di impostarlo! Serve fix backend.
+             console.warn("Backend patchValueLightSensor ADDS value instead of setting it! Needs fix.");
+            apiPromises.push( fetchApi(`/api/entities/lightSensor/patch/value/${id}`, "PATCH", { value: newValue }).catch(err => { throw err; }) ); // Usa /patch/value/
         } else { alert("Invalid value percentage (0-100). Value not updated."); }
     }
 
-    if (apiPromises.length === 0) { alert("No valid changes detected or fields were empty."); return; } // Modificato messaggio
+    if (apiPromises.length === 0) { alert("No valid changes detected."); return; }
     if(saveButton){ saveButton.disabled = true; saveButton.textContent = 'Saving...'; }
 
     try {
@@ -595,14 +552,106 @@ async function adminSubmitEditSensor(event) {
 // Elimina un sensore (versione admin)
 async function adminDeleteLightSensor(sensorId, homeId) {
     if (!confirm("Are you sure...?")) { return; }
+    try { await fetchApi(`/api/entities/lightSensor/delete/${sensorId}`, "DELETE"); alert("Deleted!"); adminLoadLightSensors(homeId); }
+    catch (error) { console.error(`Error deleting sensor (ID: ${sensorId}):`, error); alert(`Error: ${error.message}`); }
+}
+
+// ========================================
+// GESTIONE TAPPARELLE (Admin - Per Casa Specifica - SOLO VISTA)
+// ========================================
+
+// Mostra la sezione visualizzazione tapparelle per una casa specifica
+function showShuttersForHome(homeId, homeName) {
+    console.log(`Showing shutters for Home ID: ${homeId}, Name: ${homeName}`);
+    // Nascondi altre sezioni admin...
+    const adminHomesEl = document.getElementById("admin-homes"); if (adminHomesEl) adminHomesEl.style.display = "none";
+    const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
+    const editHomeFormEl = document.getElementById("edit-home-form"); if(editHomeFormEl) editHomeFormEl.style.display = 'none';
+    const sensorSectionEl = document.getElementById("admin-sensor-management"); if(sensorSectionEl) sensorSectionEl.style.display = 'none';
+    const routinesSectionEl = document.getElementById("Routines-section"); if(routinesSectionEl) routinesSectionEl.style.display = 'none';
+    const globalAddSensorEl = document.getElementById("admin-global-add-sensor"); if(globalAddSensorEl) globalAddSensorEl.style.display = 'none';
+    const globalAddShutterEl = document.getElementById("admin-global-add-shutter"); if(globalAddShutterEl) globalAddShutterEl.style.display = 'none';
+
+    // Mostra la sezione gestione tapparelle
+    const shutterSectionEl = document.getElementById("admin-shutter-management"); if (!shutterSectionEl) return; shutterSectionEl.style.display = 'block';
+
+    // Imposta titolo
+    const titleElement = document.getElementById("admin-shutter-home-title"); if (titleElement) titleElement.textContent = `Roller Shutters for: ${homeName}`;
+
+    // Chiama funzione per caricare le tapparelle
+    adminLoadRollerShutters(homeId);
+}
+
+// Nasconde la sezione tapparelle e torna alla lista case admin
+function hideShuttersForHome() {
+     const shutterSectionEl = document.getElementById("admin-shutter-management"); if(shutterSectionEl) shutterSectionEl.style.display = 'none';
+     loadAdminHomes(); // Ricarica vista principale
+}
+
+// Carica e visualizza le tapparelle ASSOCIATE a una specifica casa (Admin - SOLO VISTA)
+async function adminLoadRollerShutters(homeId) {
+    const shutterListUl = document.getElementById("admin-shutter-list"); if (!shutterListUl) return;
+    shutterListUl.innerHTML = "<li class='list-group-item'>Loading shutters...</li>";
+
     try {
-        await fetchApi(`/api/entities/lightSensor/delete/${sensorId}`, "DELETE");
-        alert("Sensor deleted successfully!");
-        adminLoadLightSensors(homeId);
+        // WORKAROUND: Carica tutte le case e filtra
+        const allHomes = await fetchApi('/api/entities/home/');
+        let homeDetails = null;
+        if (allHomes && Array.isArray(allHomes)) { homeDetails = allHomes.find(home => home && String(home.id) === String(homeId)); }
+
+        shutterListUl.innerHTML = ""; // Pulisci
+
+        // Estrai le tapparelle da homeDetails (ASSUMENDO homeDetails.rollerShutters[])
+        const filteredShutters = homeDetails?.rollerShutters || [];
+        console.log(`Found ${filteredShutters.length} associated shutters for homeId ${homeId}.`, filteredShutters);
+
+        if (filteredShutters.length > 0) {
+            filteredShutters.forEach((shutter) => {
+                 if (!shutter || !shutter.id) return;
+                const li = document.createElement("li"); li.className = "list-group-item";
+                li.id = `admin-view-shutter-item-${shutter.id}`;
+                li.innerHTML = `<strong>${shutter.name || 'Unnamed'}</strong> - Opening: ${shutter.percentageOpening ?? 'N/A'}%`;
+                shutterListUl.appendChild(li);
+            });
+        } else { shutterListUl.innerHTML = "<li class='list-group-item'>No shutters currently associated.</li>"; }
     } catch (error) {
-        console.error(`Error deleting sensor (ID: ${sensorId}):`, error);
-        alert(`Error deleting sensor: ${error.message}`);
+        console.error("Error loading associated shutters for admin view:", error);
+        shutterListUl.innerHTML = `<li class='list-group-item text-danger'>Error loading associated shutters: ${error.message}</li>`;
      }
+}
+
+// ========================================
+// FUNZIONI GLOBALI AGGIUNTA (Admin)
+// ========================================
+
+// Gestisce l'aggiunta GLOBALE di un nuovo sensore
+async function globalCreateLightSensor(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("global-newSensorName");
+    const name = nameInput.value.trim();
+    const addButton = event.submitter;
+    if (!name) { alert("Please enter sensor name."); return; }
+    if(addButton) { addButton.disabled = true; addButton.textContent = 'Adding...'; }
+    try {
+        await fetchApi('/api/entities/lightSensor/create', 'POST', { name: name }); // SOLO NOME
+        alert(`Sensor '${name}' created successfully! Associate it via the 'Edit Home' form.`); nameInput.value = "";
+    } catch (error) { console.error("Error creating global sensor:", error); alert(`Error: ${error.message}`); }
+    finally { if(addButton) { addButton.disabled = false; addButton.textContent = '+ Add Sensor'; } }
+}
+
+// Gestisce l'aggiunta GLOBALE di una nuova tapparella
+async function globalCreateRollerShutter(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("global-newShutterName");
+    const name = nameInput.value.trim();
+    const addButton = event.submitter;
+    if (!name) { alert("Please enter shutter name."); return; }
+    if(addButton) { addButton.disabled = true; addButton.textContent = 'Adding...'; }
+    try {
+        await fetchApi('/api/entities/rollerShutter/create', 'POST', { name: name }); // SOLO NOME
+        alert(`Roller shutter '${name}' created successfully! Associate it via the 'Edit Home' form.`); nameInput.value = "";
+    } catch (error) { console.error("Error creating global roller shutter:", error); alert(`Error: ${error.message}`); }
+    finally { if(addButton) { addButton.disabled = false; addButton.textContent = '+ Add Shutter'; } }
 }
 
 // ========================================

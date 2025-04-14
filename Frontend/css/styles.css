@@ -21,6 +21,15 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
+.dynamic-list-container {
+  max-height: 150px; /* O l'altezza che preferisci */
+  overflow-y: auto;
+  border: 1px solid #666; /* Colore dal tuo CSS */
+  padding: 10px;
+  border-radius: 6px; /* Colore dal tuo CSS */
+  background-color: #444; /* Colore dal tuo CSS */
+}
+
 /* Titoli (Bianchi e Grassetto) */
 h2, h4, h5, h6 {
   color: #ffffff;
