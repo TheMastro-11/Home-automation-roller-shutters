@@ -1,10 +1,4 @@
 // ========================================
-//        js/admin.js (COMPLETO Riga per Riga v. 14/04/25)
-// ========================================
-
-// Nota: Caricare DOPO api.js, utils.js, auth.js e PRIMA di dashboard.js
-
-// ========================================
 // GESTIONE CASE (Homes)
 // ========================================
 
@@ -25,7 +19,7 @@ async function loadAdminHomes() {
     const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = "none";
     const sensorSectionEl = document.getElementById("admin-sensor-management"); if (sensorSectionEl) sensorSectionEl.style.display = "none";
     const shutterSectionEl = document.getElementById("admin-shutter-management"); if (shutterSectionEl) shutterSectionEl.style.display = "none";
-    const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = "block";
+    const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = "none";
 
     // Resetta titolo/lista routine
     const routineTitle = document.getElementById("Routines-section-title"); if(routineTitle) routineTitle.innerText = "Routines";
