@@ -1,5 +1,5 @@
 // ========================================
-// GESTIONE CASE (Homes)
+// admin.js
 // ========================================
 
 // Carica la lista delle case per l'admin e imposta la vista iniziale
@@ -23,7 +23,7 @@ async function loadAdminHomes() {
 
     // Resetta titolo/lista routine
     const routineTitle = document.getElementById("Routines-section-title"); if (routineTitle) routineTitle.innerText = "Routines";
-    const routineList = document.getElementById("Routines-list"); if (routineList) routineList.innerHTML = "<li class='list-group-item ...'>Select a home...</li>";
+    const routineList = document.getElementById("Routines-list"); if (routineList) routineList.innerHTML = "<li class='list-group-item ...'></li>";
     // --- FINE BLOCCO CORRETTO ---
 
     // Il resto della funzione try...catch continua qui sotto...
@@ -428,42 +428,56 @@ function cancelAdminEditSensor() {
     const adminEditSensorFormEl = document.getElementById("admin-edit-light-sensor"); if (adminEditSensorFormEl) adminEditSensorFormEl.style.display = "none";
 }
 
-// Carica e visualizza i sensori per una specifica casa (Admin - con bottoni)
+// In js/admin.js (SOSTITUISCI QUESTA FUNZIONE)
+
+// Carica e visualizza il sensore ASSOCIATO a una specifica casa (Admin - con bottoni)
 async function adminLoadLightSensors(homeId) {
-    const sensorList = document.getElementById("admin-sensor-list"); if (!sensorList) return;
+    const sensorList = document.getElementById("admin-sensor-list");
     sensorList.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
-    const apiPath = '/api/entities/lightSensor/';
+
     try {
-        const allSensors = await fetchApi(apiPath);
-        let filteredSensors = [];
-        // Filtra lato client (ASSUMENDO sensor.home.id)
-        if (homeId && allSensors && Array.isArray(allSensors)) { filteredSensors = allSensors.filter(sensor => sensor?.home?.id && String(sensor.home.id) === String(homeId)); }
+        // 1) prova a filtrare direttamente dal server
+        let sensors = [];
+        try {
+            sensors = await fetchApi(`/api/entities/lightSensor/?homeId=${homeId}`);
+        } catch {
+            // fallback: prendi tutti e filtra client-side
+            const all = await fetchApi('/api/entities/lightSensor/');
+            sensors = all.filter(s => s.home?.id == homeId);
+        }
 
         sensorList.innerHTML = "";
-        if (filteredSensors.length > 0) {
-            filteredSensors.forEach((sensor) => {
-                if (!sensor || !sensor.id) return;
+
+        if (sensors.length > 0) {
+            sensors.forEach(sensor => {
                 const li = document.createElement("li");
-                li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap";
+                li.className = "list-group-item d-flex justify-content-between align-items-center";
                 li.id = `admin-sensor-item-${sensor.id}`;
-                const numericValue = sensor.value ?? sensor.opening ?? null; // VERIFICARE campo valore!
-                const displayValue = numericValue !== null ? numericValue : 'N/A';
-                const safeName = (sensor.name || '').replace(/'/g, "\\'");
+                const value = sensor.value ?? sensor.lightValue ?? 'N/A';
                 li.innerHTML = `
-                    <div style="margin-right: 10px;"><strong>${sensor.name || 'Unnamed'}</strong> - Value: ${displayValue}%</div>
-                    <div class="mt-1 mt-sm-0">
-                        <button class="btn btn-sm btn-warning me-2" onclick="adminShowEditSensorForm('${sensor.id}', '${safeName}', ${numericValue})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="adminDeleteLightSensor('${sensor.id}', '${homeId}')">Delete</button>
-                    </div>
-                `;
+                  <div><strong>${sensor.name}</strong> — Value: ${value}%</div>
+                  <div>
+                    <button class="btn btn-sm btn-warning me-2"
+                      onclick="adminShowEditSensorForm('${sensor.id}','${sensor.name}',${value})">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger"
+                      onclick="adminDeleteLightSensor('${sensor.id}','${homeId}')">
+                      Delete
+                    </button>
+                  </div>`;
                 sensorList.appendChild(li);
             });
-        } else { sensorList.innerHTML = "<li class='list-group-item'>No sensors associated.</li>"; }
-    } catch (error) {
-        console.error("Error loading sensors for admin view:", error);
-        sensorList.innerHTML = `<li class='list-group-item text-danger'>Error loading sensors: ${error.message}</li>`;
+        } else {
+            sensorList.innerHTML = "<li class='list-group-item'>No sensors associated to this home.</li>";
+        }
+
+    } catch (err) {
+        console.error("Error loading sensors for home:", err);
+        sensorList.innerHTML = `<li class='list-group-item text-danger'>Error: ${err.message}</li>`;
     }
 }
+
 
 // Mostra il form di modifica specifico per admin
 function adminShowEditSensorForm(id, name, currentValue) {
@@ -521,10 +535,37 @@ async function adminSubmitEditSensor(event) {
 
 // Elimina un sensore (versione admin)
 async function adminDeleteLightSensor(sensorId, homeId) {
-    if (!confirm("Are you sure...?")) { return; }
-    try { await fetchApi(`/api/entities/lightSensor/delete/${sensorId}`, "DELETE"); alert("Deleted!"); adminLoadLightSensors(homeId); }
-    catch (error) { console.error(`Error deleting sensor (ID: ${sensorId}):`, error); alert(`Error: ${error.message}`); }
-}
+    if (!confirm("Are you sure you want to delete this light sensor?")) return;
+  
+    const deleteBtn = document.querySelector(`#admin-sensor-item-${sensorId} button.btn-danger`);
+    deleteBtn?.setAttribute("disabled","true");
+  
+    try {
+      // 1) Dissocia il sensore impostando lightSensor a null
+      await fetchApi(
+        `/api/entities/home/patch/lightSensor/${homeId}`,
+        "PATCH",
+        { lightSensor: null }
+      );
+  
+      // 2) Elimina il sensore
+      await fetchApi(
+        `/api/entities/lightSensor/delete/${sensorId}`,
+        "DELETE"
+      );
+  
+      alert("Sensor deleted successfully!");
+      adminLoadLightSensors(homeId);
+  
+    } catch (err) {
+      console.error("Error deleting sensor:", err);
+      alert("Failed to delete sensor: " + err.message);
+    } finally {
+      deleteBtn?.removeAttribute("disabled");
+    }
+  }
+  
+  
 
 // ========================================
 // GESTIONE TAPPARELLE (Admin - Per Casa Specifica - SOLO VISTA)
@@ -560,35 +601,51 @@ function hideShuttersForHome() {
 
 // Carica e visualizza le tapparelle ASSOCIATE a una specifica casa (Admin - SOLO VISTA)
 async function adminLoadRollerShutters(homeId) {
-    const shutterListUl = document.getElementById("admin-shutter-list"); if (!shutterListUl) return;
+    const shutterListUl = document.getElementById("admin-shutter-list");
     shutterListUl.innerHTML = "<li class='list-group-item'>Loading shutters...</li>";
-
     try {
-        // WORKAROUND: Carica tutte le case e filtra
-        const allHomes = await fetchApi('/api/entities/home/');
-        let homeDetails = null;
-        if (allHomes && Array.isArray(allHomes)) { homeDetails = allHomes.find(home => home && String(home.id) === String(homeId)); }
-
-        shutterListUl.innerHTML = ""; // Pulisci
-
-        // Estrai le tapparelle da homeDetails (ASSUMENDO homeDetails.rollerShutters[])
-        const filteredShutters = homeDetails?.rollerShutters || [];
-        console.log(`Found ${filteredShutters.length} associated shutters for homeId ${homeId}.`, filteredShutters);
-
-        if (filteredShutters.length > 0) {
-            filteredShutters.forEach((shutter) => {
-                if (!shutter || !shutter.id) return;
-                const li = document.createElement("li"); li.className = "list-group-item";
-                li.id = `admin-view-shutter-item-${shutter.id}`;
-                li.innerHTML = `<strong>${shutter.name || 'Unnamed'}</strong> - Opening: ${shutter.percentageOpening ?? 'N/A'}%`;
-                shutterListUl.appendChild(li);
-            });
-        } else { shutterListUl.innerHTML = "<li class='list-group-item'>No shutters currently associated.</li>"; }
+      // prendi tutte le case e filtra
+      const allHomes = await fetchApi('/api/entities/home/');
+      const homeDetails = allHomes.find(h => String(h.id) === String(homeId));
+      const shutters = homeDetails?.rollerShutters || [];
+      shutterListUl.innerHTML = "";
+  
+      if (shutters.length > 0) {
+        shutters.forEach(shutter => {
+          if (!shutter || !shutter.id) return;
+          const li = document.createElement("li");
+          li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap";
+          li.id = `admin-shutter-item-${shutter.id}`;
+  
+          const name = shutter.name || 'Unnamed';
+          const opening = shutter.percentageOpening ?? 'N/A';
+  
+          li.innerHTML = `
+            <div style="margin-right:10px;">
+              <strong>${name}</strong> — Opening: ${opening}%
+            </div>
+            <div class="mt-1 mt-sm-0">
+              <button class="btn btn-sm btn-warning me-2"
+                onclick="adminShowEditShutterForm('${shutter.id}','${name}','${homeId}')">
+                Edit
+              </button>
+              <button class="btn btn-sm btn-danger"
+                onclick="adminDeleteRollerShutter('${shutter.id}','${homeId}')">
+                Delete
+              </button>
+            </div>
+          `;
+          shutterListUl.appendChild(li);
+        });
+      } else {
+        shutterListUl.innerHTML = "<li class='list-group-item'>No shutters currently associated.</li>";
+      }
     } catch (error) {
-        console.error("Error loading associated shutters for admin view:", error);
-        shutterListUl.innerHTML = `<li class='list-group-item text-danger'>Error loading associated shutters: ${error.message}</li>`;
+      console.error("Error loading shutters:", error);
+      shutterListUl.innerHTML = `<li class='list-group-item text-danger'>Error: ${error.message}</li>`;
     }
-}
+  }
+  
 
 // ========================================
 // FUNZIONI GLOBALI AGGIUNTA (Admin)
@@ -609,21 +666,154 @@ async function globalCreateLightSensor(event) {
     finally { if (addButton) { addButton.disabled = false; addButton.textContent = '+ Add Sensor'; } }
 }
 
-// Gestisce l'aggiunta GLOBALE di una nuova tapparella
+// Crea una nuova tapparella globale
 async function globalCreateRollerShutter(event) {
     event.preventDefault();
-    const nameInput = document.getElementById("global-newShutterName");
-    const name = nameInput.value.trim();
-    const addButton = event.submitter;
-    if (!name) { alert("Please enter shutter name."); return; }
-    if (addButton) { addButton.disabled = true; addButton.textContent = 'Adding...'; }
+    const nameInput = document.getElementById('global-newShutterName');
+    const shutterName = nameInput.value.trim();
+    if (!shutterName) { alert('Inserisci un nome per la tapparella'); return; }
+  
+    const submitBtn = event.submitter;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding...';
+  
     try {
-        await fetchApi('/api/entities/rollerShutter/create', 'POST', { name: name }); // SOLO NOME
-        alert(`Roller shutter '${name}' created successfully! Associate it via the 'Edit Home' form.`); nameInput.value = "";
-    } catch (error) { console.error("Error creating global roller shutter:", error); alert(`Error: ${error.message}`); }
-    finally { if (addButton) { addButton.disabled = false; addButton.textContent = '+ Add Shutter'; } }
+      await fetchApi('/api/entities/rollerShutter/create', 'POST', { name: shutterName });
+      alert('Roller shutter created successfully!');
+      nameInput.value = '';
+      await loadGlobalRollerShutters();
+    } catch (err) {
+      console.error('Error creating roller shutter:', err);
+      alert(`Errore: ${err.message}`);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '+ Add Shutter';
+    }
+  }
+  
+  // Elimina una tapparella globale
+  async function globalDeleteRollerShutter(id) {
+    if (!confirm('Sei sicuro di voler eliminare questa tapparella globale?')) return;
+    try {
+      await fetchApi(`/api/entities/rollerShutter/delete/${id}`, 'DELETE');
+      alert('Roller shutter deleted successfully!');
+      await loadGlobalRollerShutters();
+    } catch (err) {
+      console.error('Error deleting roller shutter:', err);
+      alert(`Errore: ${err.message}`);
+    }
+  }
+  
+  // Carica e mostra l’elenco delle tapparelle globali in Admin
+  async function loadGlobalRollerShutters() {
+    const container = document.getElementById('admin-global-list-shutters');
+    if (!container) return;
+    container.innerHTML = '<li class="list-group-item">Loading...</li>';
+    try {
+      const shutters = await fetchApi('/api/entities/rollerShutter/');
+      if (!Array.isArray(shutters) || shutters.length === 0) {
+        container.innerHTML = '<li class="list-group-item">No global shutters.</li>';
+        return;
+      }
+      container.innerHTML = '';
+      shutters.forEach(s => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+          <span>${s.name}</span>
+          <button class="btn btn-sm btn-danger" onclick="globalDeleteRollerShutter('${s.id}')">Delete</button>
+        `;
+        container.appendChild(li);
+      });
+    } catch (err) {
+      console.error('Error loading global shutters:', err);
+      container.innerHTML = `<li class="list-group-item text-danger">Error: ${err.message}</li>`;
+    }
+  }
+  
+
+// In js/admin.js (AGGIUNGI QUESTE FUNZIONI)
+
+// Mostra il form per modificare il nome della tapparella
+function adminShowEditShutterForm(shutterId, currentName, homeId) {
+    console.log(`Editing shutter ID: ${shutterId}, Current Name: ${currentName}`);
+    // Popola i campi del form
+    document.getElementById("admin-shutterEditId").value = shutterId;
+    document.getElementById("admin-editShutterName").value = currentName;
+    // Salva homeId per poter ricaricare la lista corretta dopo il salvataggio
+    document.getElementById("admin-shutterEditHomeId").value = homeId;
+
+    // Mostra il form
+    const editForm = document.getElementById("admin-edit-shutter-form");
+    if(editForm) editForm.style.display = "block";
 }
 
+// Nasconde il form di modifica nome tapparella
+function cancelAdminEditShutter() {
+    const editForm = document.getElementById("admin-edit-shutter-form");
+    if(editForm) editForm.style.display = "none";
+}
+
+// Gestisce l'invio del form di modifica nome tapparella
+async function adminSubmitEditShutter(event) {
+    event.preventDefault();
+    const shutterId = document.getElementById("admin-shutterEditId").value;
+    const homeId = document.getElementById("admin-shutterEditHomeId").value; // Recupera homeId per refresh
+    const newNameInput = document.getElementById("admin-editShutterName");
+    const newName = newNameInput.value.trim();
+    const saveButton = event.submitter;
+
+    if (!newName) {
+        alert("Please enter a new name for the shutter.");
+        return;
+    }
+    if (!shutterId || !homeId) {
+        console.error("Missing shutter ID or home ID for edit submission.");
+        alert("An error occurred. Cannot save changes.");
+        return;
+    }
+
+    if(saveButton) { saveButton.disabled = true; saveButton.textContent = "Saving..."; }
+
+    try {
+        // Chiama API PATCH per il nome
+        await fetchApi(`/api/entities/rollerShutter/patch/name/${shutterId}`, "PATCH", { name: newName });
+
+        alert("Shutter name updated successfully!");
+        cancelAdminEditShutter(); // Nascondi form
+        adminLoadRollerShutters(homeId); // Ricarica la lista tapparelle per questa casa
+
+    } catch (error) {
+        console.error("Error updating shutter name:", error);
+        alert(`Failed to update shutter name: ${error.message}`);
+    } finally {
+        if(saveButton) { saveButton.disabled = false; saveButton.textContent = "Save Name"; }
+    }
+}
+
+// Elimina una tapparella (versione admin)
+async function adminDeleteRollerShutter(shutterId, homeId) {
+    if (!confirm("Are you sure you want to delete this roller shutter PERMANENTLY? This cannot be undone and might affect routines.")) {
+        return;
+    }
+    if (!shutterId || !homeId) {
+        console.error("Missing shutter ID or home ID for deletion.");
+        alert("An error occurred. Cannot delete shutter.");
+        return;
+    }
+
+    try {
+        // Chiama API DELETE per la tapparella
+        await fetchApi(`/api/entities/rollerShutter/delete/${shutterId}`, "DELETE");
+
+        alert("Roller shutter deleted successfully!");
+        adminLoadRollerShutters(homeId); // Ricarica la lista tapparelle per questa casa
+
+    } catch (error) {
+        console.error(`Error deleting roller shutter (ID: ${shutterId}):`, error);
+        alert(`Error deleting shutter: ${error.message}`);
+    }
+}
 // ========================================
 // FINE js/admin.js
 // ========================================

@@ -65,6 +65,8 @@
               </div>
             </form>
             <small class="form-text" style="color: #ccc; font-size: 0.8em;">Associate via 'Edit Home'.</small>
+            <ul class="list-group mt-2" id="admin-global-list-shutters">
+            </ul>
           </div>
         </div>
       </div>
@@ -110,7 +112,9 @@
         </div>
         <div id="admin-edit-light-sensor" class="mt-4" style="display: none;">
           <h5>Edit Light Sensor</h5>
-          <form id="admin-edit-sensor-form"> <input type="hidden" id="admin-sensorEditId" />
+          <form id="admin-edit-sensor-form"> 
+            <input type="hidden" id="admin-sensor-home-id" />
+            <input type="hidden" id="admin-sensorEditId" />
             <div class="mb-2"><label class="form-label">New Name</label><input type="text" id="admin-editSensorName"
                 class="form-control" /></div>
             <div class="mb-2"><label class="form-label">Value (%)</label><input type="number" id="admin-editSensorValue"
@@ -128,6 +132,22 @@
         <div class="mb-4">
           <h5>Associated Shutters</h5>
           <ul class="list-group" id="admin-shutter-list"> </ul>
+
+          <div id="admin-edit-shutter-form" class="mt-4 border-top pt-4" style="display: none; border-color: #555 !important;">
+            <h5>Edit Roller Shutter Name</h5>
+            <form>
+                <input type="hidden" id="admin-shutterEditId">
+                <input type="hidden" id="admin-shutterEditHomeId"> 
+                <div class="mb-3">
+                    <label for="admin-editShutterName" class="form-label">New Shutter Name</label>
+                    <input type="text" id="admin-editShutterName" class="form-control" required>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save Name</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelAdminEditShutter()">Cancel</button>
+                </div>
+            </form>
+        </div>
           <small class="form-text" style="color: #ccc;">Manage associated shutters via 'Edit Home'.</small>
         </div>
       </div>
