@@ -1,98 +1,74 @@
-// Esegui quando il DOM è pronto
+// ========================================
+//        js/dashboard.js (COMPLETO v. 12/04/25)
+// ========================================
+
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Controlla se l'utente è autenticato
-    if (!checkAuthentication()) {
-        // Se non lo è, checkAuthentication ha già rediretto al login
-        return;
-    }
+  // 1. Controlla Autenticazione
+  if (typeof checkAuthentication === "function") {
+      if (!checkAuthentication()) { return; }
+  } else { console.error("checkAuthentication function is missing!"); }
 
-    // 2. Aggiungi listener al pulsante logout globale
-    const logoutButton = document.getElementById("logoutBtn");
-    if (logoutButton) {
-        logoutButton.addEventListener("click", logout);
-    }
+  // 2. Listener Logout
+  const logoutButton = document.getElementById("logoutBtn");
+  if (logoutButton) {
+      if (typeof logout === "function") { logoutButton.addEventListener("click", logout); }
+      else { console.error("logout function is missing!"); }
+  } else { console.error("Logout button not found!"); }
 
-    // 3. Determina il ruolo e mostra la sezione appropriata
-    displayDashboardBasedOnRole();
+  // 3. Imposta UI iniziale
+  displayDashboardBasedOnRole();
 
-    // 4. Collega gli event listener ai form (se non usi onsubmit="" in HTML)
-    // Esempio:
-    // const addHomeForm = document.getElementById('add-home-form')?.querySelector('form');
-    // if(addHomeForm) addHomeForm.addEventListener('submit', addHome);
+  // 4. Collega listener form
+  attachFormListeners();
 
-    // const editHomeForm = document.getElementById('edit-home-form')?.querySelector('form');
-    // if(editHomeForm) editHomeForm.addEventListener('submit', submitEditHome);
+}); // Fine DOMContentLoaded
 
-    // ... collega altri listener per submit dei form ...
-    // Questo è un approccio più pulito rispetto agli onsubmit="" nell'HTML
+// Aggiunge listener ai form attivi
+function attachFormListeners() {
+  console.log("Attaching form listeners...");
 
-    // Collega il submit del form automazioni alla funzione saveAutomation
-    const automationForm = document.getElementById('automation-form')?.querySelector('form');
-     if(automationForm) automationForm.addEventListener('submit', saveAutomation);
+  // --- Form Admin ---
+  document.getElementById('add-home-form')?.querySelector('form')?.addEventListener('submit', addHome);
+  document.getElementById('edit-home-form')?.querySelector('form')?.addEventListener('submit', submitEditHome);
+  document.getElementById('global-add-sensor-form')?.addEventListener('submit', globalCreateLightSensor); // Listener per add globale sensore
+  document.getElementById('global-add-shutter-form')?.addEventListener('submit', globalCreateRollerShutter); // Listener per add globale tapparella
 
-     // Collega il submit del form per creare sensori
-     const createSensorForm = document.querySelector('#light-sensors-section form'); // Trova il form di creazione
-     if(createSensorForm) createSensorForm.addEventListener('submit', createLightSensor);
+  // --- Form Routine ---
+  document.getElementById('Routines-form')?.querySelector('form')?.addEventListener('submit', saveRoutines);
 
-     // Collega il submit del form per modificare sensori
-     const editSensorForm = document.getElementById('edit-light-sensor')?.querySelector('form');
-     if(editSensorForm) editSensorForm.addEventListener('submit', submitEditSensor);
+  // --- Form Utente ---
+  document.querySelector('#light-sensors-section form')?.addEventListener('submit', createLightSensor); // Da sensors.js
+  document.getElementById('edit-light-sensor')?.querySelector('form')?.addEventListener('submit', submitEditSensor); // Da sensors.js
 
-     // Collega submit admin add home form
-     const adminAddHomeForm = document.getElementById('add-home-form')?.querySelector('form');
-     if(adminAddHomeForm) adminAddHomeForm.addEventListener('submit', addHome);
-
-      // Collega submit admin edit home form
-     const adminEditHomeForm = document.getElementById('edit-home-form')?.querySelector('form');
-     if(adminEditHomeForm) adminEditHomeForm.addEventListener('submit', submitEditHome);
-
-
-});
-
-function displayDashboardBasedOnRole() {
-    const isAdminUser = isAdmin(); // Usa la funzione da auth.js
-
-    const adminSection = document.getElementById("admin-section");
-    const userSection = document.getElementById("user-section");
-    const automationsSection = document.getElementById("automations-section"); // Assumiamo sia visibile a entrambi
-
-    //if (isAdminUser) {
-    if (true) { // Per testare admin sempre 
-        console.log("User is Admin");
-        if(userSection) userSection.style.display = "none";
-        if(adminSection) adminSection.style.display = "block";
-        if(automationsSection) automationsSection.style.display = 'block'; // Mostra anche a admin?
-
-        // Carica dati specifici per admin
-        loadAdminHomes();
-        // Potresti voler caricare le automazioni generali o nessuna inizialmente
-        // loadAutomations(); // Carica tutte le automations? O aspetta selezione casa?
-        // Nascondi lista automazioni finché non si seleziona una casa?
-        document.getElementById("automations-list").innerHTML = "<li class='list-group-item'>Select a home to view its automations</li>";
-        document.getElementById("automations-section-title").innerText = "Automations";
-
-
-    } else {
-        console.log("User is Standard User");
-        if(adminSection) adminSection.style.display = "none";
-        if(userSection) userSection.style.display = "block";
-        if(automationsSection) automationsSection.style.display = 'block'; // Mostra anche a user
-
-        // Carica dati specifici per user
-        loadUserHomeDetails(); // Questa funzione ora carica casa, tapparelle, sensori, automazioni
-
-        // Nascondi la sezione aggiungi/modifica sensori se non serve subito
-        // document.getElementById("light-sensors-section").style.display = 'none'; // loadUserHomeDetails ora la gestisce
-         document.getElementById("edit-light-sensor").style.display = 'none'; // Nascondi form modifica sensore
-
-    }
-     // Nascondi form modifica casa admin e form automazione all'inizio
-     const editHomeForm = document.getElementById("edit-home-form");
-     if (editHomeForm) {
-         editHomeForm.style.display = 'none';
-     }
-     const automationFormElement = document.getElementById("automation-form"); // Uso nome diverso per evitare conflitti
-     if (automationFormElement) {
-         automationFormElement.style.display = 'none';
-     }
+  console.log("Form listeners attached.");
 }
+
+
+// Imposta UI iniziale in base al ruolo
+function displayDashboardBasedOnRole() {
+  let isAdminUser = false;
+  if (typeof isAdmin === "function") { isAdminUser = isAdmin(); }
+  else { console.error("isAdmin function is missing!"); }
+
+  const adminSection = document.getElementById("admin-section");
+  const userSection = document.getElementById("user-section");
+  if(!adminSection || !userSection) { console.error("Cannot find sections!"); return; }
+
+  // Lasciato if(true) come richiesto per test
+  if (true) {
+  // if (isAdminUser) { // <-- Ripristinare questo dopo i test
+      console.log("Displaying Admin View (Forced)");
+      userSection.style.display = "none";
+      adminSection.style.display = "block";
+      if(typeof loadAdminHomes === "function") { loadAdminHomes(); } else { console.error("loadAdminHomes function is missing!"); }
+  } else {
+      console.log("Displaying User View");
+      adminSection.style.display = "none";
+      userSection.style.display = "block";
+      if (typeof loadUserHomeDetails === "function") { loadUserHomeDetails(); } else { console.error("loadUserHomeDetails function is missing!"); }
+  }
+}
+
+// ========================================
+//      FINE js/dashboard.js
+// ========================================

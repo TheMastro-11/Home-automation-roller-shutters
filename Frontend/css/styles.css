@@ -1,8 +1,12 @@
-/* Stile generale */
+/* ======================================== */
+/* STILE GENERALE             */
+/* ======================================== */
+
 body {
   background-color: #1c1c1c;
-  color: white;
+  color: #ffffff; /* Default: Testo Bianco */
   font-family: "Arial", sans-serif;
+  font-weight: normal; /* Default: Peso Normale */
   margin: 0;
   padding: 0;
 }
@@ -17,176 +21,31 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* Titolo */
+.dynamic-list-container {
+  max-height: 150px; /* O l'altezza che preferisci */
+  overflow-y: auto;
+  border: 1px solid #666; /* Colore dal tuo CSS */
+  padding: 10px;
+  border-radius: 6px; /* Colore dal tuo CSS */
+  background-color: #444; /* Colore dal tuo CSS */
+}
+
+/* Titoli (Bianchi e Grassetto) */
+h2, h4, h5, h6 {
+  color: #ffffff;
+  font-weight: 700; /* Equivalente a bold */
+}
+/* Stile specifico per H2 se necessario */
 h2 {
-  color: white;
   font-size: 26px;
-  font-weight: 700;
   margin-bottom: 24px;
   text-align: center;
 }
 
-/* Bottone Logout */
-.btn-danger {
-  background: #ff4d4d;
-  border: none;
-  padding: 10px 20px;
-  font-weight: bold;
-  font-size: 16px;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
+/* ======================================== */
+/* FORMULARI               */
+/* ======================================== */
 
-.btn-danger:hover {
-  background: #ff1a1a;
-  transform: scale(1.05);
-}
-
-/* Bottone Aggiungi Casa */
-.btn-outline-success {
-  background: #28a745;
-  color: white;
-  border-radius: 5px;
-  border: none;
-  padding: 10px 20px;
-  font-weight: bold;
-  font-size: 16px;
-  transition: background 0.3s ease, transform 0.2s ease;
-  margin-top: 15px;
-}
-
-.btn-outline-success:hover {
-  background: #1e7e34;
-  transform: scale(1.05);
-}
-
-/* Spinner di caricamento */
-.spinner {
-  border: 4px solid #f3f3f3; /* Grigio chiaro */
-  border-top: 4px solid #3498db; /* Colore blu per la parte superiore */
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
-  margin: 0 auto;
-  display: none; /* Inizialmente nascosto */
-}
-
-/* Animazione di rotazione */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Lista case amministrate */
-#admin-homes-list {
-  margin-top: 20px;
-  padding: 0;
-  list-style-type: none;
-}
-
-.admin-home-item {
-  background-color: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
-  font-size: 18px;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.admin-home-item:hover {
-  background-color: #383838;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-  transform: scale(1.02);
-}
-
-.admin-home-item span {
-  font-weight: bold;
-  color: #1cb0ff;
-}
-
-/* Sezione Automazioni */
-#automations-list {
-  margin-top: 20px;
-}
-
-#automations-list li {
-  background-color: #333333;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  font-size: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #ffffff; 
-}
-#automations-list li button {
-  padding: 5px 10px;
-  background-color: #007bff;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  
-  transition: background-color 0.3s ease;
-}
-
-#automations-list li button:hover {
-  background-color: #0056b3;
-}
-
-/* Sezione Dispositivi */
-#devices-list {
-  margin-top: 20px;
-}
-
-#devices-list li {
-  background-color: #333333;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  font-size: 16px;
-}
-
-/* Sezione Shutter Control */
-#shutter-status {
-  margin-top: 20px;
-}
-
-#shutter-status li {
-  background-color: #333333;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  font-size: 16px;
-}
-
-/* Bottone per controllare le tapparelle */
-button {
-  background-color: #1cb0ff;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #40ff99;
-}
-
-/* Formulario Aggiungi Casa e Sensori */
 form {
   background-color: #2a2a2a;
   padding: 20px;
@@ -195,76 +54,325 @@ form {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Etichette Form (Bianche e Grassetto) */
+.form-label {
+  color: #ffffff !important; /* Sovrascrive Bootstrap */
+  font-weight: bold;
+}
+
+/* Input e Select (Testo bianco, sfondo scuro) */
 form input, form select {
   background-color: #444;
-  color: white;
+  color: #ffffff; /* Assicura testo bianco */
   border: 1px solid #666;
   padding: 10px;
   border-radius: 6px;
   margin-bottom: 15px;
   width: 100%;
+  font-weight: normal; /* Testo input non grassetto */
+}
+/* Stile specifico per select (Bootstrap 5 usa .form-select) */
+form select.form-select {
+   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cccccc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e"); /* Freccia grigio chiaro */
 }
 
-form button {
+/* Bottoni dentro i form (Prendono stile da .btn più sotto) */
+form button[type="submit"] {
   width: 100%;
   padding: 10px;
   font-size: 16px;
+  /* font-weight è gestito da .btn sotto */
+}
+
+/* ======================================== */
+/* BOTTONI                  */
+/* ======================================== */
+
+/* Stile base per i bottoni Bootstrap */
+.btn {
+    font-weight: bold; /* Tutti i bottoni bold */
+    font-size: 16px; /* Dimensione base */
+    padding: 10px 20px; /* Padding base */
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s ease, background 0.3s ease, border-color 0.3s ease;
+}
+.btn:hover {
+    transform: scale(1.05); /* Effetto hover comune */
+}
+
+/* Bottone Logout & Delete (Rosso) */
+.btn-danger {
+  background: #dc3545; /* Rosso Bootstrap */
+  color: white;
+}
+.btn-danger:hover {
+  background: #c82333; /* Rosso più scuro */
+}
+
+/* Bottone Add Home / Open All (Verde) */
+.btn-primary, /* Uso .btn-primary come bottone verde principale */
+.btn-outline-success { /* Sovrascrivo completamente l'outline */
+  background: #28a745; /* Verde Bootstrap */
+  color: white;
+}
+.btn-primary:hover,
+.btn-outline-success:hover {
+  background: #1e7e34; /* Verde più scuro */
+}
+
+/* Bottone Edit (Giallo) */
+.btn-warning {
+    background-color: #ffc107; /* Giallo Bootstrap */
+    color: #ffffff; /* Testo NERO per leggibilità */
+}
+.btn-warning:hover {
+    background-color: #e0a800; /* Giallo più scuro */
+    color: #ffffff;
+}
+
+/* Bottone Routines/Info (Azzurro/Blu) */
+.btn-info {
+    background-color: #0dcaf0; /* Azzurro Bootstrap */
+    color: #ffffff; /* Testo nero o bianco? Proviamo nero */
+    /* Se preferisci bianco: color: #ffffff; */
+}
+.btn-info:hover {
+     background-color: #0baccc;
+     color: #ffffff; 
+}
+
+/* Bottone Cancel/Secondario (Grigio) */
+.btn-secondary {
+    background-color: #6c757d; /* Grigio Bootstrap */
+    color: white;
+}
+.btn-secondary:hover {
+     background-color: #5a6268;
+}
+
+/* Stile per bottoni piccoli (usati in btn-group) */
+.btn-sm, .btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem; /* Padding ridotto */
+    font-size: 0.875rem; /* Dimensione font ridotta */
+    border-radius: 0.2rem; /* Bordo arrotondato leggermente più piccolo */
+}
+
+/* ======================================== */
+/* LISTE DATI                 */
+/* ======================================== */
+
+/* Stile comune per gli item delle liste principali */
+.list-group-item {
+    background-color: #333333;
+    border: 1px solid #444;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 12px 15px; /* Aumentato padding laterale */
+    color: #ffffff; /* Testo bianco di base */
+    display: flex; /* Usa flex per layout interno */
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Permetti wrap su schermi piccoli */
+}
+
+/* --- Lista Case Admin --- */
+#admin-homes-list {
+  margin-top: 20px;
+  padding: 0;
+  list-style-type: none;
+}
+.admin-home-item {
+  /* Eredita stile da .list-group-item ma con sfondo diverso */
+  background-color: #2a2a2a;
+  font-size: 18px;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.admin-home-item:hover {
+  background-color: #383838;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.02);
+}
+/* Nome Casa: Bianco e Grassetto */
+.admin-home-item span {
   font-weight: bold;
+  color: #ffffff; /* Bianco */
+  margin-right: 15px; /* Spazio prima dei bottoni */
+}
+/* Contenitore bottoni azioni admin */
+.list-group-item > .admin-home-actions {
+  flex-shrink: 0; /* Non farlo restringere */
+}
+/* Bottoni azioni admin (larghezza minima) */
+.admin-home-actions .btn {
+  text-align: center;
+  min-width: 80px; /* Larghezza minima per uniformità */
+  /* Se vuoi che si adattino: flex: 1 1 auto; */
 }
 
-form button:hover {
-  background-color: #28a745;
+/* --- Lista Routine (Routines) --- */
+#Routines-list {
+  margin-top: 20px;
+  padding: 0;
+  list-style: none;
+}
+#Routines-list li {
+  /* Eredita .list-group-item */
+  font-size: 16px;
+}
+/* Nome Routine (Grassetto) */
+#Routines-list li div:first-child strong {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 3px;
+}
+/* Dettagli Routine (più piccolo, grigio chiaro) */
+#Routines-list li small {
+    color: #cccccc;
+    font-size: 0.85em;
+    font-weight: normal;
+}
+/* Bottoni nella lista routine (se presenti, come il delete) */
+#Routines-list li .btn {
+    padding: 5px 10px; /* Rendi più piccoli i bottoni interni */
+    font-size: 0.8rem;
+}
+/* Placeholder routines */
+#Routines-list li.list-group-item-placeholder {
+    color: #ffffff;
+    display: block;
+    justify-content: initial;
+    align-items: initial;
+    font-style: italic;
+    background-color: #2a2a2a;
+    font-weight: normal;
 }
 
-/* Responsività */
+/* --- Lista Sensori --- */
+#light-sensors-list {
+    margin-top: 20px;
+    padding: 0;
+    list-style: none;
+}
+#light-sensors-list li {
+   /* Eredita .list-group-item */
+}
+/* Contenitore testo sensore */
+#light-sensors-list li div:first-child {
+    margin-right: 10px;
+    flex-grow: 1;
+}
+/* Nome Sensore (Grassetto) */
+#light-sensors-list li strong {
+   font-weight: bold;
+}
+/* Dettagli Sensore */
+#light-sensors-list li small {
+    color: #cccccc;
+    font-size: 0.85em;
+    font-weight: normal;
+    display: block;
+    margin-top: 4px;
+}
+/* Bottoni lista sensori */
+#light-sensors-list li .btn {
+    margin-top: 5px;
+    flex-shrink: 0;
+    padding: 5px 10px; /* Rendi più piccoli */
+    font-size: 0.8rem;
+}
+
+/* --- Lista Tapparelle --- */
+#rollerShutter-list {
+    margin-top: 20px;
+}
+#rollerShutter-list-items {
+    padding: 0;
+    list-style: none;
+}
+#rollerShutter-list-items li {
+   /* Eredita .list-group-item */
+   font-size: 16px;
+   font-weight: bold; /* Grassetto */
+   cursor: pointer;
+}
+#rollerShutter-list-items li.active { /* Tapparella selezionata */
+    background-color: #1cb0ff; /* Il tuo blu personalizzato */
+    border-color: #1cb0ff;
+    color: white;
+}
+
+
+/* ======================================== */
+/* ELEMENTI SPECIFICI            */
+/* ======================================== */
+
+/* Testo nome casa e stato tapparella selezionata (Bianco e Grassetto) */
+#selected-home-name,
+#rollerShutterStatus {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* Spinner di caricamento */
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+  margin: 20px auto; /* Aggiunto margine */
+  display: none;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+/* ======================================== */
+/* RESPONSIVITA              */
+/* ======================================== */
+
 @media screen and (max-width: 768px) {
   .container {
     padding: 20px;
   }
-
   h2 {
     font-size: 22px;
   }
-
   .admin-home-item {
     font-size: 16px;
+    /* Potrebbe servire flex-direction: column qui? */
   }
-
-  button {
+  .admin-home-item span {
+     margin-right: 0; /* Rimuovi margine su mobile */
+     margin-bottom: 10px; /* Aggiungi spazio sotto */
+  }
+  .list-group-item {
+      padding: 10px;
+  }
+  .btn { /* Riduci dimensione bottoni su mobile */
     font-size: 14px;
+    padding: 8px 15px;
   }
-}
+  .btn-sm, .btn-group-sm > .btn { /* Riduci ulteriormente i bottoni piccoli */
+     padding: 0.2rem 0.4rem;
+     font-size: 0.8rem;
+  }
+  .admin-home-actions .btn { /* Riduci min-width su mobile */
+     min-width: 65px;
+  }
+  #light-sensors-list li { /* Assicura che i bottoni vadano sotto */
+      justify-content: center; /* Centra quando va a capo */
+  }
+   #light-sensors-list li div:first-child {
+       margin-right: 0; /* Rimuovi margine su mobile */
+       text-align: center; /* Centra testo sensore */
+       width: 100%; /* Occupa tutta larghezza */
+       margin-bottom: 10px;
+   }
 
-/* Pulsante "Open All" (verde) */
-button.btn-primary {
-  background-color: #28a745; /* Verde */
-  border: none;
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
-  padding: 10px 20px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-button.btn-primary:hover {
-  background-color: #1e7e34; /* Verde scuro per l'hover */
-  transform: scale(1.05);
-}
-
-/* Pulsante "Close All" (rosso) */
-button.btn-danger {
-  background-color: #dc3545; /* Rosso */
-  border: none;
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
-  padding: 10px 20px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-button.btn-danger:hover {
-  background-color: #c82333; /* Rosso scuro per l'hover */
-  transform: scale(1.05);
 }

@@ -1,195 +1,200 @@
-let selectedRollerShutterId = null; // Variabile per tenere traccia della tapparella selezionata
+// ========================================
+//        js/shutters.js (COMPLETO v. 14/04/25)
+// ========================================
 
-// Carica le tapparelle (possibilmente filtrate per homeId)
-async function loadRollerShutters(homeId = null) { // Accetta homeId opzionale
+// Nota: Assicurati che questo file sia caricato DOPO api.js e PRIMA di user.js/dashboard.js
+
+let selectedRollerShutterId = null; // Variabile globale per ID tapparella selezionata
+
+// Carica le tapparelle (per utente loggato)
+async function loadRollerShutters(homeId = null) { // homeId qui probabilmente non serve per la vista utente
     const rollerShutterList = document.getElementById("rollerShutter-list-items");
-    if (!rollerShutterList) return;
+    if (!rollerShutterList) { console.error("Element '#rollerShutter-list-items' not found."); return; }
     rollerShutterList.innerHTML = "<li class='list-group-item'>Loading shutters...</li>";
-    document.getElementById("rollerShutter-controls").style.display = 'none'; // Nascondi controlli
 
-    // Modifica il path se l'API filtra per casa
-    const apiPath = homeId ? `/api/entities/home/${homeId}/rollerShutters` : '/api/entities/rollerShutter/';
-    // Oppure se l'endpoint è unico ma filtra lato server in base al token:
-    // const apiPath = '/api/entities/rollerShutter/';
+    const controls = document.getElementById("rollerShutter-controls"); if(controls) controls.style.display = 'none';
+    selectedRollerShutterId = null;
+
+    // Usa l'API base, il backend dovrebbe filtrare per l'utente autenticato
+    const apiPath = '/api/entities/rollerShutter/';
+    console.log("Loading user's roller shutters from:", apiPath);
 
     try {
-        const rollerShutters = await fetchApi(apiPath);
-        rollerShutterList.innerHTML = ""; // Pulisci
+        const rollerShutters = await fetchApi(apiPath); // GET shutters for user
+        rollerShutterList.innerHTML = "";
 
-        if (rollerShutters && rollerShutters.length > 0) {
+        if (rollerShutters && Array.isArray(rollerShutters) && rollerShutters.length > 0) {
             rollerShutters.forEach((shutter) => {
+                if (!shutter || !shutter.id) return;
                 const li = document.createElement("li");
-                li.className = "list-group-item list-group-item-action"; // Rendi cliccabile
+                li.className = "list-group-item list-group-item-action"; // Action per stile hover/focus
                 li.style.cursor = "pointer";
-                li.innerHTML = `${shutter.name} - <span>Opening: ${shutter.percentageOpening}%</span>`;
-                li.onclick = () => selectRollerShutter(shutter.id, shutter.name, shutter.percentageOpening);
-                // Aggiungi un ID univoco a ogni elemento li per poterlo aggiornare facilmente
-                li.id = `shutter-item-${shutter.id}`;
+                // Assumiamo che l'API GET ritorni 'percentageOpening'
+                const opening = shutter.percentageOpening ?? 'N/A';
+                li.innerHTML = `${shutter.name || 'Unnamed Shutter'} - <span>Opening: ${opening}%</span>`;
+                // Passa l'opening attuale alla funzione select
+                li.onclick = () => selectRollerShutter(shutter.id, shutter.name, opening);
+                li.id = `shutter-item-${shutter.id}`; // ID univoco
                 rollerShutterList.appendChild(li);
             });
         } else {
-            rollerShutterList.innerHTML = "<li class='list-group-item'>No roller shutters found in this home.</li>";
+            rollerShutterList.innerHTML = "<li class='list-group-item'>No roller shutters found in your home.</li>";
         }
     } catch (error) {
+        console.error("Error loading roller shutters:", error);
         rollerShutterList.innerHTML = `<li class='list-group-item text-danger'>Error loading shutters: ${error.message}</li>`;
     }
 }
 
+// Seleziona una tapparella dalla lista
 function selectRollerShutter(id, name, opening) {
+    if (id === null || id === undefined) return;
     selectedRollerShutterId = id;
-    document.getElementById("rollerShutterStatus").textContent = `Selected: ${name} (Opening: ${opening}%)`;
-    document.getElementById("rollerShutter-controls").style.display = "block";
+    const statusElement = document.getElementById("rollerShutterStatus");
+    if (statusElement) { statusElement.textContent = `Selected: ${name || 'Unnamed'} (Opening: ${opening ?? 'N/A'}%)`; }
+    const controls = document.getElementById("rollerShutter-controls"); if (controls) controls.style.display = "block"; // Mostra controlli +/-
 
-    // Deseleziona visivamente gli altri elementi e seleziona questo
-    document.querySelectorAll('#rollerShutter-list-items li').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.getElementById(`shutter-item-${id}`)?.classList.add('active');
+    // Evidenzia l'elemento selezionato nella lista
+    document.querySelectorAll('#rollerShutter-list-items li').forEach(item => item.classList.remove('active'));
+    const listItem = document.getElementById(`shutter-item-${id}`); if(listItem) listItem.classList.add('active');
 }
 
+// Modifica l'apertura della tapparella selezionata (+/- 10%)
 async function adjustRollerShutterOpening(increase) {
-    if (!selectedRollerShutterId) {
-        alert("Please select a roller shutter first.");
-        return;
-    }
+    if (!selectedRollerShutterId) { alert("Please select a roller shutter first."); return; }
 
     const statusElement = document.getElementById("rollerShutterStatus");
-    const currentOpeningText = statusElement.textContent;
+    const currentOpeningText = statusElement ? statusElement.textContent : '';
     let currentOpening = 0;
 
-    // Estrai l'apertura corrente dal testo (più robusto)
     const match = currentOpeningText.match(/Opening: (\d+)%/);
-    if (match && match[1]) {
-        currentOpening = parseInt(match[1], 10);
-    } else {
-        console.error("Could not parse current opening from text:", currentOpeningText);
-        alert("Error reading current shutter status.");
-        return;
+    if (match && match[1]) { currentOpening = parseInt(match[1], 10); }
+    else {
+        const listItem = document.getElementById(`shutter-item-${selectedRollerShutterId}`);
+        const span = listItem ? listItem.querySelector('span') : null;
+        const listMatch = span ? span.textContent.match(/Opening: (\d+)%/) : null;
+        if (listMatch && listMatch[1]) { currentOpening = parseInt(listMatch[1], 10); }
+        else { console.error("Could not parse current opening."); alert("Error reading current status."); return; }
     }
 
     let newOpening = increase ? currentOpening + 10 : currentOpening - 10;
     newOpening = Math.min(Math.max(newOpening, 0), 100); // Clamp 0-100
 
-    const data = { percentageOpening: newOpening };
-    const button = increase ? document.querySelector('#rollerShutter-controls button.btn-primary') : document.querySelector('#rollerShutter-controls button.btn-danger');
-    if(button) button.disabled = true;
+    // --- USA "value" NEL PAYLOAD ---
+    const data = { value: newOpening };
+    // -------------------------------
+
+    const btnIncrease = document.querySelector('#rollerShutter-controls button.btn-primary');
+    const btnDecrease = document.querySelector('#rollerShutter-controls button.btn-danger');
+    if(btnIncrease) btnIncrease.disabled = true; if(btnDecrease) btnDecrease.disabled = true;
 
     try {
-        // Assicurati che l'endpoint PATCH esista e accetti questo formato
-        const updatedShutter = await fetchApi(
-            `/api/entities/rollerShutter/patch/opening/${selectedRollerShutterId}`,
-            'PATCH',
-            data
-        );
+        // Chiama l'endpoint /patch/opening/ ma invia { "value": ... }
+        // !!! ATTENZIONE: BACKEND BUG NOTO !!!
+        // Il servizio backend patchOpeningRollerShutter(id, value) attualmente
+        // SOMMA il 'value' inviato al valore esistente, invece di IMPOSTARLO.
+        // Questo causerà un comportamento errato finché il backend non viene corretto.
+        console.warn("Calling PATCH opening - Backend service might ADD the value instead of SETTING it!");
+        await fetchApi( `/api/entities/rollerShutter/patch/opening/${selectedRollerShutterId}`, 'PATCH', data );
 
-        // Aggiorna lo stato visualizzato
+        // Aggiorna UI (ipotizzando che la PATCH abbia funzionato come previsto SETTANDO il valore)
         const shutterNameMatch = currentOpeningText.match(/Selected: (.*?)\s+\(/);
         const shutterName = shutterNameMatch ? shutterNameMatch[1] : 'Shutter';
-        statusElement.textContent = `Selected: ${shutterName} (Opening: ${newOpening}%)`;
-
-        // Aggiorna anche la lista
+        if (statusElement) statusElement.textContent = `Selected: ${shutterName} (Opening: ${newOpening}%)`;
         const listItem = document.getElementById(`shutter-item-${selectedRollerShutterId}`);
         if (listItem) {
              const openingSpan = listItem.querySelector('span');
              if(openingSpan) openingSpan.textContent = `Opening: ${newOpening}%`;
         }
-
-        // alert("Roller Shutter opening updated successfully!"); // Forse non serve alert qui
     } catch (error) {
+        console.error("Error adjusting shutter opening:", error);
         alert(`Failed to update Roller Shutter opening: ${error.message}`);
     } finally {
-        if(button) button.disabled = false;
+        if(btnIncrease) btnIncrease.disabled = false;
+        if(btnDecrease) btnDecrease.disabled = false;
     }
 }
 
-// Funzioni Open/Close All - Verifica endpoint!
+// Apre tutte le tapparelle (le imposta a 100)
 async function openAllShutters() {
-    // Verifica qual è l'endpoint corretto:
-    // 1. Uno specifico per la casa? Es. /api/entities/home/{homeId}/shutters/openAll
-    // 2. Quello generico /device/updateOpening/ per ogni tapparella? (come nel codice originale)
-
-    // Assumiamo l'approccio originale per ora, ma è da verificare col backend
-    alert("Opening all shutters... (Check API endpoint implementation)");
-    const token = localStorage.getItem("jwt"); // fetchApi lo aggiunge, ma qui serve per la logica originale
+    console.log("Attempting to open all shutters...");
+    const openBtn = document.querySelector('#shutter-general-controls button.btn-primary');
+    const closeBtn = document.querySelector('#shutter-general-controls button.btn-danger');
+    if(openBtn) openBtn.disabled = true; if(closeBtn) closeBtn.disabled = true;
 
     try {
-        // Dovremmo ottenere solo le tapparelle dell'utente, non tutti i device
-        const rollerShutters = await fetchApi('/api/entities/rollerShutter/'); // O l'endpoint filtrato per casa
-
-        if (!rollerShutters || rollerShutters.length === 0) {
-            alert("No shutters found to open.");
-            return;
+        const rollerShutters = await fetchApi('/api/entities/rollerShutter/');
+        if (!rollerShutters || !Array.isArray(rollerShutters) || rollerShutters.length === 0) {
+            alert("No shutters found to open."); return;
         }
 
-        // Crea un array di promesse per le chiamate PATCH
-        const updatePromises = rollerShutters.map(shutter =>
-            fetchApi(
-                `/api/entities/rollerShutter/patch/opening/${shutter.id}`, // Usa l'endpoint specifico per tapparelle se esiste
-                'PATCH',
-                { percentageOpening: 100 }
-            ).catch(err => { // Gestisci errori per singola tapparella se vuoi
-                console.error(`Failed to open shutter ${shutter.id}: ${err.message}`);
-                // Potresti voler continuare anche se una fallisce
-                return null; // O lanciare errore per Promise.all
-            })
-        );
+        const updatePromises = rollerShutters.map(shutter => {
+            if (!shutter || !shutter.id) return Promise.resolve();
+            // --- USA "value" NEL PAYLOAD ---
+            const payload = { value: 100 };
+            // -------------------------------
+            console.log(`Sending PATCH to open shutter ${shutter.id}`);
+            // !!! ATTENZIONE: BACKEND BUG NOTO !!! (Come sopra)
+            console.warn(`Shutter ${shutter.id}: Backend might ADD 100 instead of setting to 100!`);
+            return fetchApi( `/api/entities/rollerShutter/patch/opening/${shutter.id}`, 'PATCH', payload )
+                .catch(err => { console.error(`Failed to open shutter ${shutter.id}: ${err.message}`); }); // Non bloccare Promise.all
+        });
 
-        // Aspetta che tutte le chiamate siano completate
         await Promise.all(updatePromises);
+        alert("Request to open all shutters sent!");
+        loadRollerShutters(); // Ricarica lista
 
-        alert("All shutters opened (or request sent)!");
-        loadRollerShutters(); // Ricarica la lista per vedere lo stato aggiornato
-        // Aggiorna anche lo stato del controllo selezionato se una tapparella era selezionata
         if(selectedRollerShutterId) {
-            const selectedShutter = rollerShutters.find(rs => rs.id === selectedRollerShutterId);
-            if(selectedShutter) {
-                 selectRollerShutter(selectedShutterId, selectedShutter.name, 100);
-            }
+            const selectedShutter = rollerShutters.find(rs => rs?.id === selectedRollerShutterId);
+            if(selectedShutter) { selectRollerShutter(selectedRollerShutterId, selectedShutter.name, 100); }
         }
-
-
     } catch (error) {
         console.error("Error opening all shutters:", error);
         alert(`Error opening shutters: ${error.message}`);
-    }
+     }
+    finally { if(openBtn) openBtn.disabled = false; if(closeBtn) closeBtn.disabled = false; }
 }
 
+// Chiude tutte le tapparelle (le imposta a 0)
 async function closeAllShutters() {
-    // Simile a openAllShutters, ma imposta percentageOpening a 0
-    alert("Closing all shutters... (Check API endpoint implementation)");
-     const token = localStorage.getItem("jwt");
+    console.log("Attempting to close all shutters...");
+    const openBtn = document.querySelector('#shutter-general-controls button.btn-primary');
+    const closeBtn = document.querySelector('#shutter-general-controls button.btn-danger');
+    if(openBtn) openBtn.disabled = true; if(closeBtn) closeBtn.disabled = true;
 
     try {
-        const rollerShutters = await fetchApi('/api/entities/rollerShutter/'); // O l'endpoint filtrato per casa
-
-         if (!rollerShutters || rollerShutters.length === 0) {
-            alert("No shutters found to close.");
-            return;
+        const rollerShutters = await fetchApi('/api/entities/rollerShutter/');
+        if (!rollerShutters || !Array.isArray(rollerShutters) || rollerShutters.length === 0) {
+            alert("No shutters found to close."); return;
         }
 
-        const updatePromises = rollerShutters.map(shutter =>
-            fetchApi(
-                `/api/entities/rollerShutter/patch/opening/${shutter.id}`,
-                'PATCH',
-                { percentageOpening: 0 }
-            ).catch(err => {
-                console.error(`Failed to close shutter ${shutter.id}: ${err.message}`);
-                return null;
-            })
-        );
+        const updatePromises = rollerShutters.map(shutter => {
+             if (!shutter || !shutter.id) return Promise.resolve();
+             // --- USA "value" NEL PAYLOAD ---
+             const payload = { value: 0 };
+             // -------------------------------
+             console.log(`Sending PATCH to close shutter ${shutter.id}`);
+             // !!! ATTENZIONE: BACKEND BUG NOTO !!! (Come sopra)
+             console.warn(`Shutter ${shutter.id}: Backend might ADD 0 instead of setting to 0!`);
+             return fetchApi( `/api/entities/rollerShutter/patch/opening/${shutter.id}`, 'PATCH', payload)
+                 .catch(err => { console.error(`Failed to close shutter ${shutter.id}: ${err.message}`); });
+        });
 
         await Promise.all(updatePromises);
+        alert("Request to close all shutters sent!");
+        loadRollerShutters(); // Ricarica lista
 
-        alert("All shutters closed (or request sent)!");
-        loadRollerShutters();
-         if(selectedRollerShutterId) {
-            const selectedShutter = rollerShutters.find(rs => rs.id === selectedRollerShutterId);
-            if(selectedShutter) {
-                 selectRollerShutter(selectedRollerShutterId, selectedShutter.name, 0);
-            }
+        if(selectedRollerShutterId) {
+            const selectedShutter = rollerShutters.find(rs => rs?.id === selectedRollerShutterId);
+            if(selectedShutter) { selectRollerShutter(selectedRollerShutterId, selectedShutter.name, 0); }
         }
     } catch (error) {
         console.error("Error closing all shutters:", error);
         alert(`Error closing shutters: ${error.message}`);
-    }
+     }
+    finally { if(openBtn) openBtn.disabled = false; if(closeBtn) closeBtn.disabled = false; }
 }
+
+// ========================================
+//      FINE js/shutters.js
+// ========================================
