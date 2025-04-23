@@ -20,7 +20,7 @@ async function loadUserHomeDetails() {
       // Passiamo l'ID della casa se necessario alle funzioni di caricamento
       loadRollerShutters(userHome.id); // Passa homeId se l'API lo richiede per filtrare
       loadLightSensors(userHome.id); // Passa homeId se l'API lo richiede per filtrare
-      loadRoutines(userHome.id); // Carica/filtra automazioni per questa casa
+      loadRoutines();
     } else {
       // Se non ci sono case (homes.length === 0)
       if (nameDisplay) nameDisplay.textContent = "No home assigned.";
