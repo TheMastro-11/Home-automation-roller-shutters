@@ -86,10 +86,10 @@ function displayDashboardBasedOnRole() {
     console.log("Displaying Admin View (Forced)");
     userSection.style.display = "none";
     adminSection.style.display = "block";
-    if (typeof loadAdminHomes === "function") { loadAdminHomes(); } else { console.error("loadAdminHomes function is missing!"); }
-    if (typeof loadGlobalRollerShutters === 'function') {
-      loadGlobalRollerShutters();
-    }
+    loadAdminHomes();
+    loadGlobalRollerShutters();
+    loadGlobalLightSensors();
+
 
   } else {
     console.log("Displaying User View");
