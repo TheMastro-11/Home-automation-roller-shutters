@@ -60,7 +60,7 @@ public class Routine {
     }
 
     //getter
-    public Long getID() {
+    public Long getId() {
         return this.id;
     }
 
@@ -81,7 +81,7 @@ public class Routine {
     }
 
     //setter
-    public void setID(Long id) {
+    public void setId(Long id) {
         this.id  = id;
     }
 

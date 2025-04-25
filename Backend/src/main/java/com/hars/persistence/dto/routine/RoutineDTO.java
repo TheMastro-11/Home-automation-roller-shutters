@@ -21,6 +21,7 @@ public class RoutineDTO {
 
     private List<RollerShutterDTO> rollerShutters;
     private LightSensorDTO lightSensor;
+    private LocalTime actionTime;
 
     //Getters
     public Long getId(){
@@ -39,6 +40,10 @@ public class RoutineDTO {
         return this.lightSensor;
     }
 
+    public LocalTime getActionTime() {
+        return this.actionTime;
+    }
+
     //Setters
     public void setId(Long id){
         this.id = id;
@@ -54,5 +59,9 @@ public class RoutineDTO {
     
     public void setLightSensor(LightSensorDTO lightSensor) {
         this.lightSensor = lightSensor;
+    }
+
+    public void setActionTime(LocalTime actioTime) {
+        this.actionTime = actioTime;
     }
 }
