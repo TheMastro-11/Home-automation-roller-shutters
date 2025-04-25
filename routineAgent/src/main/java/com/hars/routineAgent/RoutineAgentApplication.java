@@ -1,6 +1,7 @@
 package com.hars.routineAgent;
 
 import java.time.Clock;
+import java.time.ZoneId;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,7 +18,7 @@ public class RoutineAgentApplication {
 
 	@Bean
     public Clock clock() {
-        return Clock.systemDefaultZone();
+        return Clock.system(ZoneId.of("Europe/Rome"));
     }
 
 }

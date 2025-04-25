@@ -42,7 +42,7 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters());
+            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters(), routine.rollerShutterValue());
             String newRoutine = newRoutine_.toJson(newRoutine_.getActionTime());
 
             //agent Update
@@ -62,7 +62,7 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.lightSensor(), routine.rollerShutters());
+            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.lightSensor(), routine.lightSensorValue(), routine.rollerShutters(), routine.rollerShutterValue());
             String newRoutine = newRoutine_.toJson(newRoutine_.getLightSensor());
 
             return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutine + "}}");
@@ -167,4 +167,15 @@ public class RoutineController {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify roller shutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
     }
+
+    @PostMapping("/activate/{id}")
+    public ResponseEntity<?> activateRoutine(@PathVariable Long id) {
+            try {
+                routineService.activateRoutine(id);
+                return ResponseEntity.ok("ok");
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Activate routine\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
+            }
+    }
+    
 }

@@ -9,8 +9,8 @@ import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
 
 public class RoutineDTO {
-    public record actiontTimeCreateInput(String name, LocalTime time, List<RollerShutter> rollerShutters) {}
-    public record lightSensorCreateInput(String name, LightSensor lightSensor , List<RollerShutter> rollerShutters) {}
+    public record actiontTimeCreateInput(String name, LocalTime time, List<RollerShutter> rollerShutters, int rollerShutterValue) {}
+    public record lightSensorCreateInput(String name, LightSensor lightSensor, int lightSensorValue , List<RollerShutter> rollerShutters, int rollerShutterValue) {}
     public record nameInput(String name) {}
     public record actionTimeInput(LocalTime time) {}
     public record lightSensorInput(LightSensor lightSensor) {}

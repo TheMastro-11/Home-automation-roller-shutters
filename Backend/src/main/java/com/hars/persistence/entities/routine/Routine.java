@@ -36,6 +36,9 @@ public class Routine {
     @JoinColumn(name = "lightSensor_id")
     private LightSensor lightSensor;
 
+    @Column
+    private int lightSensorValue;
+
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
         name = "rollerShutter_routine",
@@ -44,19 +47,25 @@ public class Routine {
     )
     private List<RollerShutter> rollerShutters;  
 
+    @Column
+    private int rollerShutterValue;
+
     //builder
     public Routine() {}
 
-    public Routine(String name, LocalTime actionTime, List<RollerShutter> rollerShutters) {
+    public Routine(String name, LocalTime actionTime, List<RollerShutter> rollerShutters, int rollerShutterValue) {
         this.name = name;
         this.actionTime = actionTime;
         this.rollerShutters = rollerShutters;
+        this.rollerShutterValue = rollerShutterValue;
     }
 
-    public Routine(String name, LightSensor lightSensor, List<RollerShutter> rollerShutters) {
+    public Routine(String name, LightSensor lightSensor, int lightSensorValue , List<RollerShutter> rollerShutters, int rollerShutterValue) {
         this.name = name;
         this.lightSensor = lightSensor;
+        this.lightSensorValue = lightSensorValue;
         this.rollerShutters = rollerShutters;
+        this.rollerShutterValue = rollerShutterValue;
     }
 
     //getter
@@ -76,9 +85,18 @@ public class Routine {
         return this.lightSensor;
     }
 
+    public int getLightSensorValue() {
+        return this.lightSensorValue;
+    }
+
     public List<RollerShutter> getRollerShutters() {
         return this.rollerShutters;
     }
+
+    public int getRollerShutterValue() {
+        return this.rollerShutterValue;
+    }
+
 
     //setter
     public void setId(Long id) {
@@ -96,9 +114,17 @@ public class Routine {
     public void setLightSensor(LightSensor lightSensor) {
         this.lightSensor = lightSensor;
     } 
-    
+
+    public void setLightSensorValue(int lightSensorValue) {
+        this.lightSensorValue = lightSensorValue;
+    }
+
     public void setRollerShutters(List<RollerShutter> rollerShutters) {
         this.rollerShutters = rollerShutters;
+    }
+
+    public void setRollerShutterValue(int rollerShutterValue) {
+        this.rollerShutterValue = rollerShutterValue;
     }
     
     //helpers

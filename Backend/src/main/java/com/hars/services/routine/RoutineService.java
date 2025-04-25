@@ -44,27 +44,27 @@ public class RoutineService {
         }
     }
     
-    public Routine createRoutine(String name, LocalTime actionTime, List<RollerShutter> rollerShutters) {
+    public Routine createRoutine(String name, LocalTime actionTime, List<RollerShutter> rollerShutters, int rollerShutterValue) {
         try {
             List<RollerShutter> validRollerShutter = new ArrayList<>();
             for (int i = 0; i < rollerShutters.size(); i++) {
                 validRollerShutter.add(rollerShutterService.loadRollerShutterByName(rollerShutters.get(i).getName()));
             }
-            Routine routine = new Routine(name, actionTime, validRollerShutter);
+            Routine routine = new Routine(name, actionTime, validRollerShutter, rollerShutterValue);
             return routineRepository.save(routine);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    public Routine createRoutine(String name, LightSensor lightSensor, List<RollerShutter> rollerShutters) {
+    public Routine createRoutine(String name, LightSensor lightSensor, int lightSensorValue , List<RollerShutter> rollerShutters, int rollerShutterValue) {
         try {
             List<RollerShutter> validRollerShutter = new ArrayList<>();
             for (int i = 0; i < rollerShutters.size(); i++) {
                 validRollerShutter.add(rollerShutterService.loadRollerShutterByName(rollerShutters.get(i).getName()));
             }
             LightSensor validLightSensor = lightSensorService.loadLightSensorByName(lightSensor.getName());
-            Routine routine = new Routine(name, validLightSensor, validRollerShutter);
+            Routine routine = new Routine(name, validLightSensor, lightSensorValue, validRollerShutter, rollerShutterValue);
             return routineRepository.save(routine);
         } catch (Exception e) {
             throw e;
@@ -127,6 +127,17 @@ public class RoutineService {
             return routine;
         } catch (Exception e) {
             throw e;
+        }
+    }
+
+    public void activateRoutine(Long id) {
+        try {
+            Routine routine = routineRepository.findById(id).get();
+            for (RollerShutter rollerShutter : routine.getRollerShutters()) {
+                rollerShutterService.patchOpeningRollerShutter(rollerShutter.getID(), routine.getRollerShutterValue());
+            }
+        } catch (Exception e) {
+
         }
     }
 
