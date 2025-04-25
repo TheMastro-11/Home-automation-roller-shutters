@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.routine.RoutineDTO;
 import com.hars.persistence.entities.routine.Routine;
+import com.hars.services.agentAPI.ExternalApiClient;
 import com.hars.services.routine.RoutineService;
 
 @RestController
@@ -21,6 +22,9 @@ public class RoutineController {
 
     @Autowired
     private RoutineService routineService;
+
+    @Autowired
+    private ExternalApiClient externalApiClient;
 
     @GetMapping("/")
     public ResponseEntity<?> getAllRollerShutter() {
@@ -40,6 +44,9 @@ public class RoutineController {
 
             Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters());
             String newRoutine = newRoutine_.toJson(newRoutine_.getActionTime());
+
+            //agent Update
+            externalApiClient.callApiCreate(newRoutine_);
 
             return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
@@ -71,8 +78,17 @@ public class RoutineController {
             if (!routineService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
-            
+
+            //get element for agentAPI
+            Routine oldRoutine = routineService.loadRoutineByID(id);
+
             routineService.deleteRoutine(id);
+
+            //agent Update
+            if (oldRoutine.getActionTime() != null) {
+                externalApiClient.callApiDelete(id);
+            }            
+
             return ResponseEntity.ok("\"Routine deleted successfully!\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Delete\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -85,8 +101,16 @@ public class RoutineController {
             if (!routineService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
+            //get element for agentAPI
+            Routine oldRoutine = routineService.loadRoutineByID(id);
 
             String newRoutine = routineService.patchNameRoutine(id, routine.name()).toJson();
+
+            //agent Update
+            if (oldRoutine.getActionTime() != null) {
+                externalApiClient.callApiPatchName(id ,routine.name());
+            }
+
             return ResponseEntity.ok("{ \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify name\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
@@ -102,6 +126,10 @@ public class RoutineController {
 
             Routine newRoutine_ = routineService.patchActionTimeRoutine(id, routine.time());
             String newRoutine = newRoutine_.toJson(newRoutine_.getActionTime());
+
+            //agent Update
+            externalApiClient.callApiPatchActionTime(id, routine.time());
+            
             return ResponseEntity.ok("{ \"Entity\" : {" + newRoutine + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify action time\" , \" StackTrace\" : \"" + e.getMessage() + "\"");

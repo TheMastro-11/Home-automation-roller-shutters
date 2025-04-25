@@ -22,7 +22,18 @@ mqttAgent/.gradle/*
 
 mqttAgent/bin
 
+routineAgent/.DS_Store
+
+routineAgent/build/*
+
+routineAgent/.gradle/*
+
+routineAgent/bin
+
+
 Frontend/py_test/.py_test_cache
 
 Frontend/py_test/tests/__pycache__
+
+
 

@@ -1,46 +1,47 @@
-name: HARS
+name: RoutineAgent
 services:
   app:
     build:
       context: .
       dockerfile: dockerfile
-    image: hars_2025
-    container_name: backend
+    image: routine_agent_2025
+    container_name: routineAgent
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/HARS
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5433/ROUTINEAGENT
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: ESIT2024
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - my-network
+      - my-network2
   db:
     image: postgres
-    container_name: postgres
+    container_name: postgres2
     ports:
-      - "5432:5432"
+      - "5433:5433"
     environment:
-      POSTGRES_DB: HARS
+      POSTGRES_DB: ROUTINEAGENT
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: ESIT2024
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    command: ["postgres", "-p", "5433"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d HARS"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d ROUTINEAGENT -p 5433 -h localhost"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - my-network
+      - my-network2
 volumes:
   postgres-data:
 
 
 networks:
-  my-network:
+  my-network2:
     driver: bridge
 

@@ -5,10 +5,10 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the JAR file into the container
-COPY build/libs/RestInterface-0.1.jar app.jar
+COPY build/libs/routineAgent-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port your app runs on
-EXPOSE 8080
+EXPOSE 8081
 
 # Command to run the JAR
 CMD ["java", "-jar", "app.jar"]

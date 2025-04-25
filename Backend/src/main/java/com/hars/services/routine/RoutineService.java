@@ -3,6 +3,7 @@ package com.hars.services.routine;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,8 +133,9 @@ public class RoutineService {
     //Helpers
     private RoutineDTO convertToDTO(Routine routine) {
         RoutineDTO dto = new RoutineDTO();
-        dto.setId(routine.getID());
+        dto.setId(routine.getId());
         dto.setName(routine.getName());
+        dto.setActionTime(routine.getActionTime());
         
         if (routine.getRollerShutters() != null) {
             dto.setRollerShutters(
@@ -164,6 +166,15 @@ public class RoutineService {
                 .orElseThrow(() -> new UsernameNotFoundException("Routine not found with name: " + name));
 
         return routine;
+    }
+
+    public Routine loadRoutineByID(Long id) {
+        Optional <Routine> routine = routineRepository.findById(id);
+        if (routineRepository.findById(id).isPresent()) {
+            return routine.get();
+        } else {
+            return null;
+        }
     }
 
     public Boolean isPresentByName(String name){
