@@ -37,64 +37,6 @@ async function loadRollerShutters(homeId) {
     }
   }
   
-  
-async function adjustRollerShutterOpening(increase) {
-    if (!selectedRollerShutterId) {
-      alert("Seleziona prima una tapparella.");
-      return;
-    }
-  
-    // 1) Leggi apertura corrente dal testo di stato
-    const statusEl = document.getElementById("rollerShutterStatus");
-    let current = 0;
-    if (statusEl) {
-      const m = statusEl.textContent.match(/Opening:\s*(\d+)%/);
-      if (m) {
-        current = parseInt(m[1], 10);
-      }
-    }
-  
-    // 2) Calcola il bersaglio e il delta
-    const target = increase
-      ? Math.min(current + 10, 100)
-      : Math.max(current - 10, 0);
-    const delta = target - current;
-    if (delta === 0) {
-      // niente da fare
-      return;
-    }
-  
-    // 3) Disabilita tutti i bottoni
-    document.querySelectorAll('#rollerShutter-controls button').forEach(b => b.disabled = true);
-  
-    try {
-      // 4) Invia il delta al backend
-      await fetchApi(
-        `/api/entities/rollerShutter/patch/opening/${selectedRollerShutterId}`,
-        'PATCH',
-        { value: delta }
-      );
-  
-      // 5) Aggiorna la UI: stato e lista
-      if (statusEl) {
-        statusEl.textContent = statusEl.textContent.replace(
-          /Opening:\s*\d+%/,
-          `Opening: ${target}%`
-        );
-      }
-      const listSpan = document.querySelector(`#shutter-item-${selectedRollerShutterId} span:last-child`);
-      if (listSpan) {
-        listSpan.textContent = `Opening: ${target}%`;
-      }
-    } catch (err) {
-      console.error("Error adjusting shutter opening:", err);
-      alert("Errore durante l'aggiornamento: " + err.message);
-    } finally {
-      // 6) Riabilita i bottoni
-      document.querySelectorAll('#rollerShutter-controls button').forEach(b => b.disabled = false);
-    }
-  }
-  
 
 // Modifica l'apertura della tapparella selezionata (+/- 10%)
 async function adjustRollerShutterOpening(increase) {
