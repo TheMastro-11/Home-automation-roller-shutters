@@ -16,6 +16,7 @@ import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 import com.hars.persistence.dto.routine.RoutineDTO;
 import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
+import com.hars.persistence.entities.routine.LightValueRecord;
 import com.hars.persistence.entities.routine.Routine;
 import com.hars.persistence.repository.routine.RoutineRepository;
 import com.hars.services.lightSensor.LightSensorService;
@@ -57,14 +58,14 @@ public class RoutineService {
         }
     }
 
-    public Routine createRoutine(String name, LightSensor lightSensor, int lightSensorValue , List<RollerShutter> rollerShutters, int rollerShutterValue) {
+    public Routine createRoutine(String name, LightSensor lightSensor, LightValueRecord lightValueRecord , List<RollerShutter> rollerShutters, int rollerShutterValue) {
         try {
             List<RollerShutter> validRollerShutter = new ArrayList<>();
             for (int i = 0; i < rollerShutters.size(); i++) {
                 validRollerShutter.add(rollerShutterService.loadRollerShutterByName(rollerShutters.get(i).getName()));
             }
             LightSensor validLightSensor = lightSensorService.loadLightSensorByName(lightSensor.getName());
-            Routine routine = new Routine(name, validLightSensor, lightSensorValue, validRollerShutter, rollerShutterValue);
+            Routine routine = new Routine(name, validLightSensor, lightValueRecord, validRollerShutter, rollerShutterValue);
             return routineRepository.save(routine);
         } catch (Exception e) {
             throw e;
@@ -147,6 +148,8 @@ public class RoutineService {
         dto.setId(routine.getId());
         dto.setName(routine.getName());
         dto.setActionTime(routine.getActionTime());
+        dto.setLightValue(routine.getLightSensorValue());
+        dto.setRollerShutterValue(routine.getRollerShutterValue());
         
         if (routine.getRollerShutters() != null) {
             dto.setRollerShutters(

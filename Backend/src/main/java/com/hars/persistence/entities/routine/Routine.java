@@ -37,7 +37,7 @@ public class Routine {
     private LightSensor lightSensor;
 
     @Column
-    private int lightSensorValue;
+    private LightValueRecord lightSensorValue;
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
@@ -60,10 +60,10 @@ public class Routine {
         this.rollerShutterValue = rollerShutterValue;
     }
 
-    public Routine(String name, LightSensor lightSensor, int lightSensorValue , List<RollerShutter> rollerShutters, int rollerShutterValue) {
+    public Routine(String name, LightSensor lightSensor, LightValueRecord lightValueRecord , List<RollerShutter> rollerShutters, int rollerShutterValue) {
         this.name = name;
         this.lightSensor = lightSensor;
-        this.lightSensorValue = lightSensorValue;
+        this.lightSensorValue = lightValueRecord;
         this.rollerShutters = rollerShutters;
         this.rollerShutterValue = rollerShutterValue;
     }
@@ -85,7 +85,7 @@ public class Routine {
         return this.lightSensor;
     }
 
-    public int getLightSensorValue() {
+    public LightValueRecord getLightSensorValue() {
         return this.lightSensorValue;
     }
 
@@ -115,7 +115,7 @@ public class Routine {
         this.lightSensor = lightSensor;
     } 
 
-    public void setLightSensorValue(int lightSensorValue) {
+    public void setLightSensorValue(LightValueRecord lightSensorValue) {
         this.lightSensorValue = lightSensorValue;
     }
 
