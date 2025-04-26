@@ -1,6 +1,7 @@
 package com.hars.services.lightSensor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,6 +87,15 @@ public class LightSensorService {
     public LightSensor loadLightSensorByName(String name) {
     return lightSensorRepository.findByName(name)
             .orElseThrow(() -> new EntityNotFoundException("LightSensor not found with name: " + name));
+    }
+
+    public LightSensor loadLightSensorById(Long id) {
+        Optional<LightSensor> lightSensor = lightSensorRepository.findById(id);
+        if (lightSensor.isPresent()) {
+            return lightSensor.get();
+        } else {
+            throw new RuntimeException("Id not found");
+        }
     }
 
     public Boolean isPresentByName(String name){

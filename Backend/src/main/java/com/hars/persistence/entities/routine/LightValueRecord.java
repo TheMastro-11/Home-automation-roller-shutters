@@ -1,5 +1,5 @@
 package com.hars.persistence.entities.routine;
 
-public record LightValueRecord (int value, String method){
+public record LightValueRecord (int value, Boolean method){
     
 }

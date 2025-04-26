@@ -142,6 +142,23 @@ public class RoutineService {
         }
     }
 
+    public void lightSensorValueCheck(Long id) {
+        LightSensor lightSensor = lightSensorService.loadLightSensorById(id);
+        Optional<Routine> routine = routineRepository.findByLightSensor(lightSensor.getID());
+        if (routine.isPresent()) {
+            Routine validRoutine = routine.get();
+            if (validRoutine.getLightSensorValue().method()) {
+                if ( lightSensor.getLightValue() >= validRoutine.getLightSensorValue().value()) {
+                    this.activateRoutine(validRoutine.getId());
+                }
+            } else {
+                if ( lightSensor.getLightValue() <= validRoutine.getLightSensorValue().value()) {
+                    this.activateRoutine(validRoutine.getId());
+                }
+            }
+        }
+    }
+
     //Helpers
     private RoutineDTO convertToDTO(Routine routine) {
         RoutineDTO dto = new RoutineDTO();
@@ -197,6 +214,15 @@ public class RoutineService {
 
     public Boolean isPresentById(Long id){
         return routineRepository.findById(id).isPresent();
+    }
+
+    public Boolean isLightSensorPresentById(Long id) {
+        for (Routine routine : routineRepository.findAll()){
+            if (routine.getLightSensor().getID().equals(id)){
+                return true;
+            }
+        }
+        return false;
     }
     
 }
