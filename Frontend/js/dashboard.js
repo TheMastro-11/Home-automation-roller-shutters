@@ -55,7 +55,6 @@ function attachFormListeners() {
 
   // --- Form Utente ---
   document.querySelector('#light-sensors-section form')?.addEventListener('submit', createLightSensor);
-  document.getElementById('edit-light-sensor')?.querySelector('form')?.addEventListener('submit', submitEditSensor);
 
   console.log("Form listeners attachment process complete.");
 }
@@ -87,6 +86,6 @@ function displayDashboardBasedOnRole() {
     console.log("Displaying User View");
     adminSection.style.display = "none";
     userSection.style.display = "block";
-    if (typeof loadUserHomeDetails === "function") { loadUserHomeDetails(); } else { console.error("loadUserHomeDetails function is missing!"); }
+    loadUserHomeDetails();
   }
 }

@@ -1,58 +1,35 @@
 
-// Carica sensori (possibilmente filtrati per homeId)
-async function loadLightSensors(homeId = null) {
-    const sensorList = document.getElementById("light-sensors-list");
-    if (!sensorList) return;
-    sensorList.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
-    document.getElementById("edit-light-sensor").style.display = 'none';
-
-    // Usa SEMPRE il path base corretto
-    const apiPath = '/api/entities/lightSensor/';
-
-    // !!! NOTA: Filtro per homeId NON implementato !!!
-    // Verranno caricati i sensori accessibili dall'utente/token.
-    // Se serve filtro specifico per homeId, chiedere al backend come fare.
-     if (homeId) {
-         console.warn(`Filtering sensors by homeId (${homeId}) is NOT YET IMPLEMENTED pending backend API details. Loading all accessible sensors from ${apiPath}`);
-         // Eventuale logica filtro: apiPath = `/api/entities/lightSensor/?homeId=${homeId}`;
-    }
-
+async function loadLightSensors(homeId) {
+    const list = document.getElementById("light-sensors-list");
+    if (!list) return;
+    list.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
+  
     try {
-        const sensors = await fetchApi(apiPath);
-        sensorList.innerHTML = "";
-
-        if (sensors && sensors.length > 0) {
-             document.getElementById("light-sensors-section").style.display = 'block';
-            sensors.forEach((sensor) => {
-                const li = document.createElement("li");
-                li.className = "list-group-item d-flex justify-content-between align-items-center";
-                li.id = `sensor-item-${sensor.id}`;
-                // Prova a visualizzare 'value' o 'opening'
-                const displayValue = sensor.value ?? sensor.opening ?? 'N/A'; // Usa 'value' se esiste, altrimenti 'opening'
-
-                li.innerHTML = `
-                    <div>
-                        <strong>${sensor.name}</strong> - Value: ${displayValue}%
-                        <br>
-                        <small>Home: ${sensor.home?.name || "N/A"} (ID: ${sensor.home?.id || 'N/A'})</small>
-                    </div>
-                    <div class="mt-2 mt-sm-0">
-                        <button class="btn btn-sm btn-warning me-2" onclick="showEditSensorForm('${sensor.id}', '${sensor.name}', ${displayValue}, '${sensor.home?.id || ''}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteLightSensor('${sensor.id}')">Delete</button>
-                    </div>
-                `;
-                sensorList.appendChild(li);
-            });
-        } else {
-            sensorList.innerHTML = "<li class='list-group-item'>No light sensors found.</li>";
-             document.getElementById("light-sensors-section").style.display = 'block'; // Mostra comunque sezione per aggiungere? O nascondi?
-        }
-    } catch (error) {
-         document.getElementById("light-sensors-section").style.display = 'block';
-        sensorList.innerHTML = `<li class='list-group-item text-danger'>Error loading sensors: ${error.message}</li>`;
+      const sensors = await fetchApi('/api/entities/lightSensor/');
+      list.innerHTML = "";
+  
+      if (Array.isArray(sensors) && sensors.length > 0) {
+        sensors.forEach(sensor => {
+          const li = document.createElement("li");
+          li.className = "list-group-item";
+  
+          // Usiamo direttamente lightValue
+          const displayValue = sensor.lightValue != null
+            ? sensor.lightValue
+            : 'N/A';
+  
+          li.innerHTML = `<strong>${sensor.name}</strong> — ${displayValue}%`;
+          list.appendChild(li);
+        });
+      } else {
+        list.innerHTML = "<li class='list-group-item'>No sensors found.</li>";
+      }
+    } catch (e) {
+      console.error("Error loading sensors:", e);
+      list.innerHTML = `<li class="list-group-item text-danger">Error: ${e.message}</li>`;
     }
-}
-
+  }
+  
 // Gestisce l'invio del form per aggiungere un nuovo sensore
 async function createLightSensor(event) {
     event.preventDefault();
