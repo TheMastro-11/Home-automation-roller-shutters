@@ -144,7 +144,7 @@ public class RoutineService {
 
     public void lightSensorValueCheck(Long id) {
         LightSensor lightSensor = lightSensorService.loadLightSensorById(id);
-        Optional<Routine> routine = routineRepository.findByLightSensor(lightSensor.getID());
+        Optional<Routine> routine = routineRepository.findByLightSensorId(lightSensor.getID());
         if (routine.isPresent()) {
             Routine validRoutine = routine.get();
             if (validRoutine.getLightSensorValue().method()) {
