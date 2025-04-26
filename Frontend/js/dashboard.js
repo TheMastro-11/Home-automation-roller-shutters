@@ -34,72 +34,76 @@ function attachFormListeners() {
   document.getElementById('global-add-shutter-form')
     ?.addEventListener('submit', globalCreateRollerShutter);
 
-  // Home selector
-  document.getElementById('homeSelect')
-    ?.addEventListener('change', onHomeChange);
-
-  // Routines form (submit gestito in routines.js)
-
   // Listener per i form specifici di modifica sensore/tapparella
   document.getElementById('edit-home-sensor-form')?.querySelector('form')
     ?.addEventListener('submit', submitEditHomeSensor);
   document.getElementById('edit-home-shutter-form')?.querySelector('form')
     ?.addEventListener('submit', submitEditHomeShutter);
+
+
+  const routineForm = document.querySelector('#Routines-form form');
+  if (routineForm) {
+    // Assicurati che la funzione saveRoutines sia accessibile qui
+    // Se saveRoutines è definita in routines.js, assicurati che routines.js sia
+    // caricato PRIMA di dashboard.js nel tuo HTML, o che saveRoutines
+    // sia in qualche modo nello scope globale o importata.
+    if (typeof saveRoutines === 'function') {
+      routineForm.addEventListener('submit', saveRoutines);
+      console.log("Event listener per submit routine aggiunto da dashboard.js.");
+    } else {
+      console.error("ERRORE: Funzione saveRoutines non trovata/accessibile da dashboard.js.");
+    }
+  } else {
+    console.error("ERRORE: Impossibile trovare #Routines-form form da dashboard.js.");
+  }
 }
 
 async function loadHomes() {
-  const select = document.getElementById('homeSelect');
-  const homeList = document.getElementById('manage-homes-list'); // ID Aggiornato
-  if (!select || !homeList) {
-    console.error("Cannot find #homeSelect or #manage-homes-list");
-    return;
-  }
+  const homeList = document.getElementById('manage-homes-list');
+  if (!homeList) { console.error('#manage-homes-list not found'); return; }
 
-  select.innerHTML = `<option disabled>Loading...</option>`;
-  homeList.innerHTML = `<li class="list-group-item">Loading...</li>`;
+  homeList.innerHTML = '<li class="list-group-item">Loading…</li>';
 
   try {
-    const homes = await fetchApi('/api/entities/home/'); // Lista case OK
-    select.innerHTML = `<option disabled selected>Select a home…</option>`; // Testo Inglese
+    const homes = await fetchApi('/api/entities/home/');
     homeList.innerHTML = '';
+
     homes.forEach(home => {
-      // dropdown
-      const opt = document.createElement('option');
-      opt.value = home.id;
-      opt.textContent = home.name;
-      select.append(opt);
-      // manage list
       const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center flex-wrap';
       li.id = `home-item-${home.id}`;
-      // Ripristinati testi bottoni in Inglese
+      li.className = 'list-group-item d-flex justify-content-between align-items-center flex-wrap';
       li.innerHTML = `
         <span class="me-auto">${home.name}</span>
         <div class="btn-group btn-group-sm">
           <button class="btn btn-warning"
-            onclick="showEditHomeForm('${home.id}','${home.name.replace(/'/g, "\\'")}')">
+                  onclick="showEditHomeForm('${home.id}','${home.name.replace(/'/g, "\\'")}')">
             Edit Details
           </button>
-          <button class="btn btn-danger"
-            onclick="deleteHome('${home.id}')">
-            Delete Home
-          </button>
-           <button class="btn btn-info"
-            onclick="showSensorsForHome('${home.id}','${home.name.replace(/'/g, "\\'")}')">
+          <button class="btn btn-danger"  onclick="deleteHome('${home.id}')">Delete Home</button>
+          <button class="btn btn-info"    onclick="showSensorsForHome('${home.id}','${home.name.replace(/'/g, "\\'")}')">
             Manage Sensors
           </button>
-          <button class="btn btn-primary"
-            onclick="showShuttersForHome('${home.id}','${home.name.replace(/'/g, "\\'")}')">
+          <button class="btn btn-primary" onclick="showShuttersForHome('${home.id}','${home.name.replace(/'/g, "\\'")}')">
             Manage Shutters
           </button>
-        </div>
-      `;
-      homeList.append(li);
+        </div>`;
+      homeList.appendChild(li);
     });
+
   } catch (err) {
     console.error('Error loading homes:', err);
-    select.innerHTML = `<option disabled>Error loading homes</option>`;
     homeList.innerHTML = `<li class="list-group-item text-danger">${err.message}</li>`;
+  }
+}
+
+
+async function getHomeDetails(homeId) {
+  try {
+    const allHomes = await fetchApi('/api/entities/home/');     // sempre permesso
+    return allHomes.find(h => String(h.id) === String(homeId)) || null;
+  } catch (err) {
+    console.error('Cannot load home list:', err);
+    return null;                                                // continua senza bloccare la UI
   }
 }
 
@@ -308,17 +312,17 @@ async function showEditHomeForm(homeId, homeName) {
   editHomeDiv.style.display = "block";
 
   /* ---------- caricamento dati dinamici ---------- */
-  const ownerSelect   = document.getElementById("editHomeOwnerSelect");
-  const sensorSelect  = document.getElementById("editHomeSensorSelect");
-  const shuttersList  = document.getElementById("editHomeShuttersList");
+  const ownerSelect = document.getElementById("editHomeOwnerSelect");
+  const sensorSelect = document.getElementById("editHomeSensorSelect");
+  const shuttersList = document.getElementById("editHomeShuttersList");
 
-  ownerSelect && (ownerSelect.innerHTML  = '<option>Loading...</option>');
+  ownerSelect && (ownerSelect.innerHTML = '<option>Loading...</option>');
   sensorSelect && (sensorSelect.innerHTML = '<option>Loading...</option><option value="NONE">-- None --</option>');
   shuttersList && (shuttersList.innerHTML = '<p id="editHomeShuttersLoading">Loading...</p>');
 
   // Recupera i dettagli attuali della casa (work-around 403 → usa /home/ list)
-  let currentOwnerId       = null;
-  let currentSensorName    = null;
+  let currentOwnerId = null;
+  let currentSensorName = null;
   let originalShutterNames = [];
 
   try {
@@ -326,19 +330,19 @@ async function showEditHomeForm(homeId, homeName) {
     const homeDetails = Array.isArray(allHomes) ? allHomes.find(h => h?.id == homeId) : null;
 
     if (homeDetails) {
-      currentOwnerId       = homeDetails.owner?.id || null;
-      currentSensorName    = homeDetails.lightSensor?.name || null;
+      currentOwnerId = homeDetails.owner?.id || null;
+      currentSensorName = homeDetails.lightSensor?.name || null;
       originalShutterNames = (homeDetails.rollerShutters || []).map(rs => rs.name).filter(Boolean);
 
       // salva le versioni “originali” per il confronto nel submit
-      editHomeInnerForm.dataset.originalName     = homeName;
-      editHomeInnerForm.dataset.originalOwnerId  = currentOwnerId || "";
-      editHomeInnerForm.dataset.originalSensor   = currentSensorName || "NONE";
+      editHomeInnerForm.dataset.originalName = homeName;
+      editHomeInnerForm.dataset.originalOwnerId = currentOwnerId || "";
+      editHomeInnerForm.dataset.originalSensor = currentSensorName || "NONE";
       editHomeInnerForm.dataset.originalShutters = JSON.stringify([...originalShutterNames].sort());
     } else {
       console.error(`Home details for ID ${homeId} not found in list`);
-      editHomeInnerForm.dataset.originalOwnerId  = "";
-      editHomeInnerForm.dataset.originalSensor   = "NONE";
+      editHomeInnerForm.dataset.originalOwnerId = "";
+      editHomeInnerForm.dataset.originalSensor = "NONE";
       editHomeInnerForm.dataset.originalShutters = "[]";
     }
   } catch (e) {
@@ -349,7 +353,7 @@ async function showEditHomeForm(homeId, homeName) {
   }
 
   // Popola select/checkbox con i dati ottenuti
-  ownerSelect  && loadUsersForOwnerSelect("editHomeOwnerSelect", currentOwnerId);
+  ownerSelect && loadUsersForOwnerSelect("editHomeOwnerSelect", currentOwnerId);
   sensorSelect && loadAvailableSensorsForEditHome("editHomeSensorSelect", currentSensorName);
   shuttersList && loadAvailableShuttersForEditHome("editHomeShuttersList", originalShutterNames);
 }
@@ -360,15 +364,11 @@ async function showEditHomeForm(homeId, homeName) {
 function cancelEditHome() {
   const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = "none";
   // Mostra di nuovo le sezioni principali
-   const addHomeFormEl = document.getElementById("add-home-form");
+  const addHomeFormEl = document.getElementById("add-home-form");
   if (addHomeFormEl) addHomeFormEl.style.display = "block";
   const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "block";
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
-
-  // ---> QUESTA RIGA MANCAVA NEL CODICE CHE HAI INVIATO <---
-  const homeSelectionDiv = document.getElementById("home-selection-div"); if (homeSelectionDiv) homeSelectionDiv.style.display = 'block';
-
 
   loadHomes(); // Ricarica la lista principale
 }
@@ -529,7 +529,6 @@ function hideSensorsForHome() {
   const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "block";
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
-
   loadHomes(); // Ricarica la vista principale
 }
 
@@ -539,74 +538,53 @@ function cancelEditHomeSensor() {
 }
 
 // Carica e visualizza i sensori ASSOCIATI a una specifica casa
-async function loadHomeSensors(homeId) { // Nome funzione lasciato con L maiuscola come nel codice precedente
-  const sensorList = document.getElementById("manage-sensors-list");
-  if (!sensorList) { console.error("Element '#manage-sensors-list' not found."); return; }
-  sensorList.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
+async function loadHomeSensors(homeId) {
+  const ul = document.getElementById('manage-sensors-list');
+  if (!ul) { console.error('#manage-sensors-list not found'); return; }
+  ul.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
 
   try {
-    let sensors = [];
-    // Prova a caricare direttamente i dettagli della casa, che dovrebbero includere il sensore
-    console.log(`Fetching details for home ${homeId} to get associated sensor...`);
-    const homeDetails = await fetchApi(`/api/entities/home/${homeId}`); // Richiesta diretta che potrebbe fallire con 403
+    const allSensors = await fetchApi('/api/entities/lightSensor/');
+    /* ---- prima prova: il backend include home.id? ---------------- */
+    let sensors = allSensors.filter(s => s.home && String(s.home.id) === String(homeId));
 
-    if (homeDetails && homeDetails.lightSensor) {
-      sensors = [homeDetails.lightSensor]; // Metti il sensore trovato in un array
-      console.log("Sensor found via home details:", sensors);
-    } else {
-      console.log(`No light sensor found via home details DTO for homeId ${homeId}.`);
-      sensors = [];
-      // WORKAROUND se la chiamata sopra fallisce con 403: Filtra dalla lista globale
-      try {
-        console.warn(`Falling back to filtering global sensor list due to potential issue fetching home ${homeId} details.`);
-        const allSensors = await fetchApi('/api/entities/lightSensor/');
-        sensors = allSensors.filter(s => s.home && s.home.id == homeId); // Assumendo che /lightSensor/ includa 'home.id'
-        console.log("Sensors found via fallback global list filter:", sensors);
-      } catch (listError) {
-        console.error("Failed to fetch global sensor list as fallback:", listError);
-        sensors = []; // Mantieni vuoto se anche il fallback fallisce
-      }
+    /* ---- fallback se la chiave home manca ------------------------ */
+    if (sensors.length === 0) {
+      const home = await getHomeDetails(homeId);
+      const sensorName = home?.lightSensor?.name;
+      if (sensorName) sensors = allSensors.filter(s => s.name === sensorName);
     }
 
+    /* ---- render -------------------------------------------------- */
+    ul.innerHTML = '';
+    if (sensors.length === 0) {
+      ul.innerHTML = "<li class='list-group-item'>No light sensor associated with this home.</li>";
+      return;
+    }
 
-    sensorList.innerHTML = "";
-
-    if (sensors.length > 0) {
-      sensors.forEach(sensor => {
-        if (!sensor || !sensor.id) { console.warn("Skipping sensor with missing data:", sensor); return; }
-        const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-center";
-        li.id = `sensor-item-${sensor.id}`;
-        const value = sensor.value ?? sensor.lightValue ?? 'N/A';
-        // Testi Inglese
-        li.innerHTML = `
-                <div><strong>${sensor.name}</strong> — Value: ${value}%</div>
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-warning"
-                    onclick="showEditHomeSensorForm('${sensor.id}','${sensor.name}',${value})">
-                    Edit
-                  </button>
-                  <button class="btn btn-danger"
+    sensors.forEach(sensor => {
+      const value = sensor.lightValue ?? sensor.value ?? 'N/A';
+      ul.insertAdjacentHTML('beforeend', `
+        <li id="sensor-item-${sensor.id}"
+            class="list-group-item d-flex justify-content-between align-items-center">
+          <div><strong>${sensor.name}</strong> — Value: ${value}%</div>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-warning"
+                    onclick="showEditHomeSensorForm('${sensor.id}','${sensor.name.replace(/'/g, "\\'")}', ${value === 'N/A' ? null : value})">
+              Edit
+            </button>
+            <button class="btn btn-danger"
                     onclick="deleteHomeSensor('${sensor.id}','${homeId}')">
-                    Delete / Dissociate
-                  </button>
-                </div>`;
-        sensorList.appendChild(li);
-      });
-    } else {
-      sensorList.innerHTML = "<li class='list-group-item'>No light sensor associated with this home.</li>"; // Testo Inglese
-    }
-
+              Delete
+            </button>
+          </div>
+        </li>`);
+    });
   } catch (err) {
-    // Se l'errore originale era il 403 sulla chiamata diretta, il fallback potrebbe aver funzionato.
-    // Se anche il fallback fallisce o l'errore è diverso, mostriamo l'errore.
-    if (sensorList.innerHTML.includes("Loading")) { // Mostra errore solo se il fallback non ha popolato la lista
-      console.error("Error loading sensors for home (after potential fallback):", err);
-      sensorList.innerHTML = `<li class='list-group-item text-danger'>Error loading sensors: ${err.message}</li>`; // Testo Inglese
-    }
+    console.error('Error loading sensors:', err);
+    ul.innerHTML = `<li class='list-group-item text-danger'>Error: ${err.message}</li>`;
   }
 }
-
 
 // Mostra il form di modifica specifico per un sensore di casa
 function showEditHomeSensorForm(id, name, currentValue) {
@@ -710,7 +688,6 @@ function showShuttersForHome(homeId, homeName) {
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'none';
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'none';
   const manageSensorsSectionEl = document.getElementById("manage-sensors-section"); if (manageSensorsSectionEl) manageSensorsSectionEl.style.display = 'none';
-
   // Mostra la sezione gestione tapparelle
   const shutterSectionEl = document.getElementById("manage-shutters-section"); if (!shutterSectionEl) return; shutterSectionEl.style.display = 'block';
 
@@ -731,88 +708,84 @@ function hideShuttersForHome() {
   const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "block";
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
-
   loadHomes(); // Ricarica vista principale
 }
 
 // Carica e visualizza le tapparelle ASSOCIATE (con bottoni Edit/Dissociate)
 async function loadHomeShuttersForManagement(homeId) {
-  const shutterListUl = document.getElementById("manage-shutters-list");
-  if (!shutterListUl) { console.error("Element '#manage-shutters-list' not found."); return; }
-  shutterListUl.innerHTML = "<li class='list-group-item'>Loading shutters...</li>";
+  const ul = document.getElementById("manage-shutters-list");
+  if (!ul) { console.error("#manage-shutters-list not found"); return; }
+  ul.innerHTML = "<li class='list-group-item'>Loading shutters...</li>";
 
   try {
-    let associatedShutters = [];
-    // Ricarica dettagli casa specifica - ** USA WORKAROUND SE NECESSARIO **
-    console.log(`Fetching details for home ${homeId} to get associated shutters...`);
-    let homeDetails = null;
-    try {
-      homeDetails = await fetchApi(`/api/entities/home/${homeId}`); // Prova chiamata diretta
-      console.log("Home details fetched successfully:", homeDetails);
-    } catch (detailsError) {
-      if (detailsError.status === 403) {
-        console.warn(`Falling back to fetching home list for shutters due to 403 on /api/entities/home/${homeId}.`);
-        const allHomes = await fetchApi('/api/entities/home/');
-        if (allHomes && Array.isArray(allHomes)) {
-          homeDetails = allHomes.find(h => h?.id == homeId);
-          console.log("Home details found via fallback list fetch:", homeDetails);
-        }
-      } else {
-        throw detailsError; // Rilancia altri errori
-      }
+    const allShutters = await fetchApi("/api/entities/rollerShutter/");
+    /* 1) se il backend fornisce home.id filtriamo subito  */
+    let shutters = allShutters.filter(s => s.home && String(s.home.id) === String(homeId));
+
+    /* 2) fallback: filtriamo per nome usando i dettagli casa */
+    if (shutters.length === 0) {
+      const home = await getHomeDetails(homeId);
+      const namesSet = new Set((home?.rollerShutters || []).map(rs => rs.name));
+      shutters = allShutters.filter(s => namesSet.has(s.name));
     }
 
-    if (homeDetails && homeDetails.rollerShutters) {
-      associatedShutters = homeDetails.rollerShutters;
-    } else {
-      console.log(`No roller shutters found for homeId ${homeId} (or home details inaccessible).`);
-      associatedShutters = [];
-    }
-
-    shutterListUl.innerHTML = ""; // Pulisci lista
-
-    if (associatedShutters.length === 0) {
-      shutterListUl.innerHTML = "<li class='list-group-item'>No shutters currently associated.</li>"; // Testo Inglese
+    /* 3) render lista */
+    ul.innerHTML = "";
+    if (shutters.length === 0) {
+      ul.innerHTML = "<li class='list-group-item'>No shutters currently associated.</li>";
       return;
     }
 
-    associatedShutters.forEach(shutter => {
-      if (!shutter || !shutter.id || !shutter.name) { console.warn("Skipping invalid shutter:", shutter); return; }
+    shutters.forEach(shutter => {
       const shutterId = shutter.id;
       const shutterName = shutter.name;
-      const opening = shutter.percentageOpening ?? shutter.opening ?? "N/A";
+      const opening = shutter.percentageOpening ?? shutter.opening ?? 0;
 
       const li = document.createElement("li");
-      li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap";
       li.id = `shutter-item-${shutterId}`;
+      li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap";
 
-      const infoDiv = document.createElement("div");
-      infoDiv.style.marginRight = "10px";
-      infoDiv.innerHTML = `<strong>${shutterName}</strong> - Opening: ${opening}%`;
+      /* ——— CLICK: usa selectRollerShutter di shutters.js ——— */
+      li.onclick = () => {
+        /* reset evidenza visiva */
+        document.querySelectorAll("#manage-shutters-list .list-group-item")
+          .forEach(el => el.classList.remove("active"));
+        li.classList.add("active");
 
-      const btnDiv = document.createElement("div");
-      btnDiv.className = "mt-1 mt-sm-0 btn-group btn-group-sm";
+        /* imposta la tapparella selezionata per i controlli */
+        selectRollerShutter(
+          String(shutterId),
+          shutterName.replace(/'/g, "\\'"),
+          opening
+        );
+      };
 
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn btn-warning";
-      editBtn.textContent = "Edit Name"; // Testo Inglese
-      editBtn.onclick = () => showEditHomeShutterForm(String(shutterId), shutterName, String(homeId));
+      li.innerHTML = `
+  <span>${shutterName}</span>
+  <span class="opening">Opening: ${opening}%</span>
+  <div class="btn-group btn-group-sm ms-2">
+    <button class="btn btn-warning"
+            onclick="showEditHomeShutterForm('${shutterId}','${shutterName.replace(/'/g, "\\'")}', '${homeId}'); event.stopPropagation();">
+      Edit Name
+    </button>
+    <button class="btn btn-danger"
+            onclick="deleteManagedRollerShutter('${shutterId}','${homeId}'); event.stopPropagation();">
+      Dissociate
+    </button>
+  </div>`;
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "btn btn-danger";
-      deleteBtn.textContent = "Dissociate"; // Testo Inglese per dissociazione
-      deleteBtn.onclick = () => deleteManagedRollerShutter(String(shutterId), String(homeId));
-
-      btnDiv.append(editBtn, deleteBtn);
-      li.append(infoDiv, btnDiv);
-      shutterListUl.appendChild(li);
+      ul.appendChild(li);
     });
 
+    /* reset selezione/controlli alla prima apertura della sezione */
+    document.getElementById("rollerShutterStatus").textContent =
+      "Select a shutter from the list below…";
   } catch (err) {
-    console.error("Error loading associated shutters for management view:", err);
-    shutterListUl.innerHTML = `<li class='list-group-item text-danger'>Error loading shutters: ${err.message}</li>`; // Testo Inglese
+    console.error("Error loading shutters:", err);
+    ul.innerHTML = `<li class='list-group-item text-danger'>Error: ${err.message}</li>`;
   }
 }
+
 
 // ========================================
 // FUNZIONI GLOBALI AGGIUNTA / EDIT INLINE / DELETE

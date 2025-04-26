@@ -278,91 +278,109 @@ function cancelRoutines() {
 }
 
 
+// Funzione saveRoutines aggiornata (routines.js)
+
 async function saveRoutines(event) {
-    event.preventDefault();
+    event.preventDefault(); // Previene il submit standard del form
     const saveButton = event.submitter;
     if (saveButton) {
         saveButton.disabled = true;
         saveButton.textContent = 'Saving...';
     }
 
-    // 1) Valori form
-    const name = document.getElementById("RoutinesName").value.trim();
-    const triggerType = document.getElementById("triggerType").value; // "luminosity" | "time"
-
-    // Azione tapparelle
-    const actionType = document.getElementById("action").value;           // "open" | "close"
-    const selectedPercentage = parseInt(document.getElementById("actionPercentage").value, 10);
-
-    // Tapparelle target
-    const checked = document.querySelectorAll('#routineTargetShuttersList input[type="checkbox"]:checked');
-    const targetShutters = Array.from(checked).map(cb => ({ name: cb.value }));
-
-    // Per trigger time
-    const timeValue = document.getElementById("triggerTime").value;      // "HH:MM"
-
-    // Per trigger luminosità
-    const sensorName = document.getElementById("triggerSensorId").value;
-    const thresholdValue = parseInt(document.getElementById("triggerLuminosityValue").value, 10);
-
-    // 2) Validazioni
-    if (!name || targetShutters.length === 0) {
-        alert("Inserisci un nome e seleziona almeno una tapparella.");
-        resetButton(); return;
-    }
-    // calcolo valore da mandare
-    let rollerShutterValue = selectedPercentage;
-    if (actionType === 'close') rollerShutterValue = 100 - selectedPercentage;
-    if (isNaN(rollerShutterValue) || rollerShutterValue < 0 || rollerShutterValue > 100) {
-        alert("Percentuale azione non valida."); resetButton(); return;
-    }
-
-    // 3) Costruisco payload e scelgo endpoint
-    let apiPath, data = {
-        name,
-        rollerShutters: targetShutters,
-        rollerShutterValue
-    };
-
-    if (triggerType === 'time') {
-        if (!timeValue) {
-            alert("Seleziona un orario di trigger."); resetButton(); return;
-        }
-        apiPath = '/api/entities/routine/create/actionTime';
-        data.time = `${timeValue}:00`;     // backend si aspetta HH:MM:SS
-    } else {
-        if (!sensorName || isNaN(thresholdValue) || thresholdValue < 0 || thresholdValue > 100) {
-            alert("Seleziona un sensore e una soglia valida (0–100)."); resetButton(); return;
-        }
-        apiPath = '/api/entities/routine/create/lightSensor';
-        data.lightSensor = { name: sensorName };
-        data.lightSensorValue = thresholdValue;
-    }
-
-    console.log('Saving routine:', apiPath, data);
-
-    // 4) Invio
-    try {
-        await fetchApi(apiPath, 'POST', data);
-        alert(`Routine "${name}" creata con successo!`);
-        cancelRoutines();
-        loadRoutines();
-    } catch (err) {
-        console.error(err);
-        alert(`Errore: ${err.message}`);
-    } finally {
-        resetButton();
-    }
-
-    // helper per riabilitare il pulsante
+    // --- Helper interno per resettare il bottone ---
     function resetButton() {
         if (saveButton) {
             saveButton.disabled = false;
-            saveButton.textContent = 'Save Routine';
+            // Potresti voler cambiare questo testo se modifichi una routine esistente
+            saveButton.textContent = 'Save';
         }
     }
-}
 
+    try {
+        // 1) Recupera Valori dal Form
+        const name = document.getElementById("RoutinesName").value.trim();
+        const triggerType = document.getElementById("triggerType").value; // "luminosity" | "time"
+
+        // Azione tapparelle
+        const actionType = document.getElementById("action").value; // "open" | "close"
+        const selectedPercentage = parseInt(document.getElementById("actionPercentage").value, 10);
+
+        // Tapparelle target (NOTA: ancora solo per nome, manca ID!)
+        const checkedShutters = document.querySelectorAll('#routineTargetShuttersList input[type="checkbox"]:checked');
+        const targetShutters = Array.from(checkedShutters).map(cb => ({ name: cb.value })); // <-- DA MODIFICARE POI per includere ID
+
+        // Valori specifici per trigger
+        const timeValue = document.getElementById("triggerTime").value; // "HH:MM"
+        const sensorName = document.getElementById("triggerSensorId").value; // NOTA: ancora solo nome, manca ID!
+        const thresholdValue = parseInt(document.getElementById("triggerLuminosityValue").value, 10);
+        const condition = document.getElementById("triggerLuminosityCondition").value; // 'below' o 'above'
+
+        // 2) Validazioni Preliminari
+        if (!name || targetShutters.length === 0) {
+            alert("Please enter a routine name and select at least one target shutter.");
+            resetButton(); return;
+        }
+        // Calcola il valore effettivo da inviare per rollerShutterValue
+        let rollerShutterValue = selectedPercentage;
+        if (actionType === 'close') {
+             rollerShutterValue = 100 - selectedPercentage;
+        }
+        if (isNaN(rollerShutterValue) || rollerShutterValue < 0 || rollerShutterValue > 100) {
+            alert("Invalid action percentage."); resetButton(); return;
+        }
+
+        // 3) Costruisci Payload specifico per l'endpoint
+        let apiPath, data = {
+            name,
+            rollerShutters: targetShutters, 
+            rollerShutterValue 
+        };
+
+        if (triggerType === 'time') {
+            if (!timeValue) {
+                alert("Please select a trigger time."); resetButton(); return;
+            }
+            apiPath = '/api/entities/routine/create/actionTime';
+            data.time = `${timeValue}:00`; // Aggiunge secondi, verifica se necessario
+        } else { // triggerType === 'luminosity'
+            if (!sensorName || isNaN(thresholdValue) || thresholdValue < 0 || thresholdValue > 100) {
+                alert("Please select a sensor and enter a valid threshold (0–100)."); resetButton(); return;
+            }
+            apiPath = '/api/entities/routine/create/lightSensor';
+
+            // Oggetto lightSensor (NOTA: ancora solo per nome, manca ID!)
+            data.lightSensor = { name: sensorName }; // <-- DA MODIFICARE POI per includere ID
+
+            // *** CORREZIONE PRINCIPALE: Usa lightValueRecord ***
+            data.lightValueRecord = {
+                value: thresholdValue,
+                // Verifica se 'above' deve mappare a true e 'below' a false
+                method: (actionType === 'open')
+            };
+
+        }
+
+        console.log('Saving routine - Payload aggiornato:', apiPath, data);
+
+        // 4) Invio chiamata API
+        await fetchApi(apiPath, 'POST', data);
+
+        // 5) Successo
+        alert(`Routine "${name}" created successfully!`); // Messaggio in inglese
+        cancelRoutines(); // Chiude e resetta il form
+        loadRoutines();   // Ricarica la lista delle routine
+
+    } catch (err) {
+        // 6) Errore
+        console.error("Errore durante il salvataggio della routine:", err);
+        // Mostra l'errore specifico restituito da fetchApi (che potrebbe venire dal backend)
+        alert(`Error saving routine: ${err.message}`); // Messaggio in inglese
+    } finally {
+        // 7) Ripristina Bottone (sia in caso di successo che errore)
+        resetButton();
+    }
+}
 
 
 // Elimina una routine
