@@ -14,20 +14,19 @@ public class MqttPublisherService {
     private static final Logger logger = LoggerFactory.getLogger(MqttPublisherService.class);
 
     @Autowired
-    private MqttConfig.MqttGateway mqttGateway; // Inietta il gateway definito in MqttConfig
+    private MqttConfig.MqttGateway mqttGateway;
 
-    @Value("${mqtt.topics.publish}") // Recupera il topic di default dalla configurazione
+    @Value("${mqtt.topics.publish}") 
     private String defaultTopic;
 
     /**
      * Pubblica un messaggio sul topic di default con QoS 1.
      *
-     * @param payload Il messaggio da inviare.
+     * @param payload 
      */
     public void publishToDefaultTopic(String payload) {
         try {
             logger.info("Invio messaggio al topic di default [{}]: {}", defaultTopic, payload);
-            // Chiama il metodo del gateway che non richiede topic esplicito (usa il default dell'handler)
             mqttGateway.sendToMqtt(payload);
             logger.debug("Messaggio inviato con successo al topic di default.");
         } catch (Exception e) {
@@ -47,15 +46,14 @@ public class MqttPublisherService {
             topic = defaultTopic;
             logger.warn("Topic non specificato, utilizzo il topic di default: {}", topic);
         }
-        // Valida QoS (opzionale, ma buona pratica)
-        int effectiveQos = (qos < 0 || qos > 2) ? 1 : qos; // Default a 1 se QoS non valido
+        int effectiveQos = (qos < 0 || qos > 2) ? 1 : qos;
         if (effectiveQos != qos) {
             logger.warn("QoS specificato ({}) non valido, utilizzo QoS {}", qos, effectiveQos);
         }
 
         try {
             logger.info("Invio messaggio al topic [{}] con QoS [{}]: {}", topic, effectiveQos, payload);
-            // Chiama il metodo del gateway che accetta topic e QoS
+
             mqttGateway.sendToMqtt(payload, topic, effectiveQos);
             logger.debug("Messaggio inviato con successo al topic [{}].", topic);
         } catch (Exception e) {
@@ -70,6 +68,6 @@ public class MqttPublisherService {
      * @param payload Il messaggio da inviare.
      */
     public void publish(String topic, String payload) {
-        publish(topic, payload, 1); // Usa QoS 1 come default
+        publish(topic, payload, 1);
     }
 }
