@@ -55,6 +55,7 @@ services:
         condition: service_healthy
     networks:
       - my-network
+
   db2:
     image: postgres
     container_name: postgres2
@@ -75,6 +76,18 @@ services:
       retries: 5
     networks:
       - my-network
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: dockerfile
+    image: frontend_2025
+    container_name: frontend
+    ports:
+      - "8082:80"
+    networks:
+      - my-network
+
 volumes:
   postgres1-data:
   postgres2-data:

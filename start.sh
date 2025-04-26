@@ -9,4 +9,4 @@ cd ../routineAgent
 
 cd ..
 
-docker compose up --build
+docker compose up -d --build
