@@ -46,7 +46,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/actuator/health").permitAll() 
+                .requestMatchers("/api/auth/**","/v3/api-docs/**", "/swagger-ui/**", "/actuator/health").permitAll() 
                 .requestMatchers("/api/entities/routine/activate/*").access((authentication, context) -> {
                     String remoteIp = context.getRequest().getRemoteAddr();
                     boolean isRoutineAgentIp = false;
