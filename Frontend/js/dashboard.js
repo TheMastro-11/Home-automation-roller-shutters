@@ -44,15 +44,6 @@ function attachFormListeners() {
     adminEditSensorForm.addEventListener('submit', adminSubmitEditSensor);
   } else { console.warn("#admin-edit-sensor-form not found"); }
 
-
-  // --- Bottone Generale Routine --- 
-  const showAllRoutinesBtn = document.getElementById('show-all-routines-btn');
-  if (showAllRoutinesBtn) {
-    showAllRoutinesBtn.addEventListener('click', showAllRoutinesView); // Chiama la funzione da admin.js
-  } else { console.warn("#show-all-routines-btn not found"); }
-
-
-
   // Listener per Form Modifica Nome Tapparella (Admin)
   const adminEditShutterForm = document.getElementById('admin-edit-shutter-form')?.querySelector('form');
   if (adminEditShutterForm) {
@@ -60,7 +51,7 @@ function attachFormListeners() {
   } else { console.warn("#admin-edit-shutter-form not found"); }
 
   // --- Form Routine ---
-  document.getElementById('Routines-form')?.querySelector('form')?.addEventListener('submit', saveRoutines);
+  document.getElementById('Routines-form')?.querySelector('form')?.addEventListener('submit', saveRoutine);
 
   // --- Form Utente ---
   document.querySelector('#light-sensors-section form')?.addEventListener('submit', createLightSensor);
