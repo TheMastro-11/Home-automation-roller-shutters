@@ -3,6 +3,7 @@
 // ========================================
 
 // Carica le routine
+
 async function loadRoutines() {
     const RoutinesList = document.getElementById("Routines-list");
     if (!RoutinesList) {
@@ -13,65 +14,128 @@ async function loadRoutines() {
 
     const apiPath = '/api/entities/routine/';
     console.log("Loading ALL routines from:", apiPath);
+
     try {
-        // 1. Ottieni TUTTE le routine accessibili
         const allRoutines = await fetchApi(apiPath);
+        RoutinesList.innerHTML = "";
 
-        RoutinesList.innerHTML = ""; // Pulisci
+        if (Array.isArray(allRoutines) && allRoutines.length > 0) {
+            allRoutines.forEach((routine) => {
+                if (!routine || !routine.id) return;
 
-        // 2. Visualizza TUTTE le routine ricevute (nessun filtro)
-        if (allRoutines && Array.isArray(allRoutines) && allRoutines.length > 0) {
-            console.log(`Displaying ${allRoutines.length} total routine(s) received.`);
-            allRoutines.forEach((routine) => { // Itera direttamente su allRoutines
-                if (!routine || !routine.id) return; // Salta routine invalide
+                // Estrazione dati
+                const actionTime = routine.actionTime;               // { hour, minute }
+                const lightSensor = routine.lightSensor;             // { name }
+                const shutterValue = routine.rollerShutterValue;     // int %
+                const lightThreshold = routine.lightSensorValue;     // int %
+
+                // Trigger Info
+                let triggerType, triggerValue;
+                if (actionTime) {
+                    triggerType = 'time';
+                    triggerValue = `${String(actionTime.hour).padStart(2, '0')}:${String(actionTime.minute).padStart(2, '0')}`;
+                } else if (lightSensor) {
+                    triggerType = 'luminosity';
+                    triggerValue = `Sensor: ${lightSensor.name}`;
+                } else {
+                    triggerType = 'N/A';
+                    triggerValue = 'N/A';
+                }
+
+                // Device Info
+                const associatedShutters = routine.rollerShutters || [];
+                const deviceName = associatedShutters.length > 0
+                    ? associatedShutters.map(rs => rs.name).join(', ')
+                    : 'No target device';
+
+                // ** Action Info **
+                let actionInfo = '';
+                if (triggerType === 'time') {
+                    // ad es. "Set to 50% at 07:30"
+                    actionInfo = `Set to ${shutterValue}% at ${triggerValue}`;
+                } else if (triggerType === 'luminosity') {
+                    // ad es. "Set to 75% when Sensor1 ≥ 40%"
+                    actionInfo = `Set to ${shutterValue}% when ${lightSensor.name} hits ${lightThreshold}%`;
+                } else {
+                    actionInfo = 'N/A';
+                }
+
+                // Costruzione elemento LI
                 const li = document.createElement("li");
                 li.className = "list-group-item d-flex justify-content-between align-items-center";
                 li.id = `Routines-item-${routine.id}`;
-
-                // --- Visualizzazione Dati (VERIFICARE STRUTTURA RISPOSTA API!) ---
-                const lightSensor = routine.lightSensor;
-                const actionTime = routine.actionTime; // API lo ritorna?
-                const associatedShutters = routine.rollerShutters || [];
-                // const action = routine.action || {}; // Non supportato
-
-                // Trigger Info
-                const triggerType = actionTime ? 'time' : (lightSensor ? 'luminosity' : 'N/A');
-                let triggerValue = 'N/A';
-                if (triggerType === 'time') {
-                    // ATTENZIONE: API GET /routine/ potrebbe non includere actionTime!
-                    triggerValue = actionTime ? `${String(actionTime.hour).padStart(2, '0')}:${String(actionTime.minute).padStart(2, '0')}` : 'Time (Data Missing?)';
-                } else if (triggerType === 'luminosity') {
-                    triggerValue = `Sensor: ${lightSensor?.name || 'Unknown Sensor'}`;
-                }
-
-                // Action Info (Non disponibile)
-                const actionInfo = 'Action: TBD (Not Saved)';
-
-                // Device Info
-                const deviceName = associatedShutters.length > 0
-                    ? associatedShutters.map(rs => rs.name || 'Unknown Shutter').join(', ') // Mostra NOMI
-                    : 'No target device';
-
                 li.innerHTML = `
-                    <div>
-                        <strong>${routine.name || 'Unnamed Routine'}</strong><br>
-                        <small>Device(s): ${deviceName} | Trigger: ${triggerValue} | Action: ${actionInfo}</small>
-                    </div>
-                    <div>
-                       <button class="btn btn-sm btn-danger" onclick="deleteRoutines('${routine.id}')">Delete</button>
-                    </div>
+                <span class="routine-name">${routine.name || 'Unnamed Routine'}</span>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-warning" onclick="globalShowEditRoutineForm(${routine.id}, '${routine.name.replace(/'/g, "\\'")}')">
+                    Edit
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteRoutines(${routine.id})">
+                    Delete
+                    </button>
+                </div>
                 `;
+
                 RoutinesList.appendChild(li);
-            }); // Fine forEach
+            });
         } else {
-            // Messaggio generico
             RoutinesList.innerHTML = "<li class='list-group-item list-group-item-placeholder'>No Routines found in the system.</li>";
-        } // Fine if/else allRoutines
+        }
     } catch (error) {
         console.error("Error loading routines:", error);
         RoutinesList.innerHTML = `<li class='list-group-item text-danger'>Error loading Routines: ${error.message}</li>`;
     }
 }
+
+// Mostra inline l’input per editare il nome
+function globalShowEditRoutineForm(id, currentName) {
+    const li = document.getElementById(`Routines-item-${id}`);
+    if (!li) return;
+
+    li.innerHTML = `
+      <input
+        type="text"
+        id="global-edit-input-routine-${id}"
+        class="form-control form-control-sm"
+        value="${currentName}"
+        style="width: auto; display: inline-block; vertical-align: middle;"
+      />
+    `;
+
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'btn-group btn-group-sm ms-2';
+    btnGroup.style.verticalAlign = 'middle';
+
+    // Save
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-success';
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = async () => {
+        const newName = document.getElementById(`global-edit-input-routine-${id}`).value.trim();
+        if (!newName) {
+            alert('Inserisci un nome valido');
+            return;
+        }
+        try {
+            await fetchApi(`/api/entities/routine/patch/name/${id}`, 'PATCH', { name: newName });
+            alert('Nome routine aggiornato!');
+            loadRoutines(); // ricarica la lista
+        } catch (err) {
+            console.error('Errore nel patch routine:', err);
+            alert(`Errore: ${err.message}`);
+        }
+    };
+
+    // Cancel
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => loadRoutines();
+
+    btnGroup.append(saveBtn, cancelBtn);
+    li.appendChild(btnGroup);
+}
+
 
 // Carica SENSORI disponibili per il form routine
 async function loadSensorsForRoutineForm() {
@@ -82,8 +146,7 @@ async function loadSensorsForRoutineForm() {
     }
     selectElement.innerHTML = '<option value="" disabled selected>Loading sensors...</option>';
 
-    const apiPath = '/api/entities/lightSensor/'; // Ipotesi API
-    console.warn("API path for loading available sensors needs confirmation. Using:", apiPath);
+    const apiPath = '/api/entities/lightSensor/';
 
     try {
         const sensors = await fetchApi(apiPath);
@@ -103,8 +166,8 @@ async function loadSensorsForRoutineForm() {
                 selectElement.appendChild(opt);
             });
         } else {
-             console.log("No available light sensors found.");
-             defaultOpt.textContent = "-- No sensors available --";
+            console.log("No available light sensors found.");
+            defaultOpt.textContent = "-- No sensors available --";
         }
     } catch (err) {
         console.error("Error loading sensors for routine form:", err);
@@ -128,9 +191,7 @@ async function loadShuttersForRoutineForm() {
     // Rimuovi vecchie checkbox
     Array.from(container.querySelectorAll('.form-check')).forEach(el => el.remove());
 
-    // === API DA CONFERMARE (usiamo /rollerShutter/ come ipotesi) ===
     const apiPath = '/api/entities/rollerShutter/';
-    console.warn("API path for loading available shutters needs confirmation. Using:", apiPath);
 
     try {
         const allShutters = await fetchApi(apiPath);
@@ -161,6 +222,7 @@ async function loadShuttersForRoutineForm() {
         container.innerHTML = '<p class="text-danger">Error loading shutters.</p>';
     }
 }
+
 
 // Mostra/Nasconde opzioni trigger (luminosità/tempo)
 function toggleTriggerOptions() {
@@ -215,76 +277,119 @@ function cancelRoutines() {
     }
 }
 
-async function saveRoutine(event) {
+
+async function saveRoutines(event) {
     event.preventDefault();
-    const btn = event.submitter;
-    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-  
-    const name = document.getElementById('RoutinesName').value.trim();
-    const triggerType = document.getElementById('triggerType').value;
-    const targetShutters = Array.from(
-      document.querySelectorAll('#routineTargetShuttersList input:checked')
-    ).map(cb => cb.value);
-  
+    const saveButton = event.submitter;
+    if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = 'Saving...';
+    }
+
+    // 1) Valori form
+    const name = document.getElementById("RoutinesName").value.trim();
+    const triggerType = document.getElementById("triggerType").value; // "luminosity" | "time"
+
+    // Azione tapparelle
+    const actionType = document.getElementById("action").value;           // "open" | "close"
+    const selectedPercentage = parseInt(document.getElementById("actionPercentage").value, 10);
+
+    // Tapparelle target
+    const checked = document.querySelectorAll('#routineTargetShuttersList input[type="checkbox"]:checked');
+    const targetShutters = Array.from(checked).map(cb => ({ name: cb.value }));
+
+    // Per trigger time
+    const timeValue = document.getElementById("triggerTime").value;      // "HH:MM"
+
+    // Per trigger luminosità
+    const sensorName = document.getElementById("triggerSensorId").value;
+    const thresholdValue = parseInt(document.getElementById("triggerLuminosityValue").value, 10);
+
+    // 2) Validazioni
     if (!name || targetShutters.length === 0) {
-      alert('Inserisci un nome e seleziona almeno una tapparella.');
-      if (btn) { btn.disabled = false; btn.textContent = 'Save Routine'; }
-      return;
+        alert("Inserisci un nome e seleziona almeno una tapparella.");
+        resetButton(); return;
     }
-  
-    let apiPath = '';
-    const payload = {
-      name,
-      rollerShutters: targetShutters.map(n => ({ name: n }))
+    // calcolo valore da mandare
+    let rollerShutterValue = selectedPercentage;
+    if (actionType === 'close') rollerShutterValue = 100 - selectedPercentage;
+    if (isNaN(rollerShutterValue) || rollerShutterValue < 0 || rollerShutterValue > 100) {
+        alert("Percentuale azione non valida."); resetButton(); return;
+    }
+
+    // 3) Costruisco payload e scelgo endpoint
+    let apiPath, data = {
+        name,
+        rollerShutters: targetShutters,
+        rollerShutterValue
     };
-  
+
     if (triggerType === 'time') {
-      apiPath = '/api/entities/routine/create/actionTime';
-      const timeValue = document.getElementById('triggerTime').value;
-      if (!timeValue) {
-        alert('Seleziona un orario per il trigger.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Save Routine'; }
-        return;
-      }
-      payload.time = `${timeValue}:00`;
-  
-    } else if (triggerType === 'luminosity') {
-      apiPath = '/api/entities/routine/create/lightSensor';
-      const sensorName = document.getElementById('triggerSensorId').value;
-      if (!sensorName) {
-        alert('Seleziona un sensore per il trigger.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Save Routine'; }
-        return;
-      }
-      payload.lightSensor = { name: sensorName };
-  
+        if (!timeValue) {
+            alert("Seleziona un orario di trigger."); resetButton(); return;
+        }
+        apiPath = '/api/entities/routine/create/actionTime';
+        data.time = `${timeValue}:00`;     // backend si aspetta HH:MM:SS
     } else {
-      alert('Tipo di trigger non valido.');
-      if (btn) { btn.disabled = false; btn.textContent = 'Save Routine'; }
-      return;
+        if (!sensorName || isNaN(thresholdValue) || thresholdValue < 0 || thresholdValue > 100) {
+            alert("Seleziona un sensore e una soglia valida (0–100)."); resetButton(); return;
+        }
+        apiPath = '/api/entities/routine/create/lightSensor';
+        data.lightSensor = { name: sensorName };
+        data.lightSensorValue = thresholdValue;
     }
-  
+
+    console.log('Saving routine:', apiPath, data);
+
+    // 4) Invio
     try {
-      await fetchApi(apiPath, 'POST', payload);
-      alert(`Routine "${name}" creata con successo!`);
-      cancelRoutines();
-      loadRoutines();
-    } catch (error) {
-      console.error('Errore creazione routine:', error);
-      alert(`Errore: ${error.message}`);
+        await fetchApi(apiPath, 'POST', data);
+        alert(`Routine "${name}" creata con successo!`);
+        cancelRoutines();
+        loadRoutines();
+    } catch (err) {
+        console.error(err);
+        alert(`Errore: ${err.message}`);
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Save Routine'; }
+        resetButton();
     }
-  }
-  
+
+    // helper per riabilitare il pulsante
+    function resetButton() {
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Save Routine';
+        }
+    }
+}
+
 
 
 // Elimina una routine
-async function deleteRoutines(routineId, homeId = null) {
-    if (!confirm("Are you sure?")) { return; }
+async function deleteRoutines(routineId) {
+    // Chiedi conferma
+    if (!confirm("Are you sure you want to delete this routine?")) {
+        return; // Interrompi se l'utente annulla
+    }
+
+    // Mostra un feedback visivo (opzionale, es. disabilitare bottone)
+    const deleteButton = document.querySelector(`#Routines-item-${routineId} button.btn-danger`);
+    if (deleteButton) deleteButton.disabled = true;
+
     try {
+        // Chiama l'API DELETE
         await fetchApi(`/api/entities/routine/delete/${routineId}`, 'DELETE');
+
+        // Successo
         alert("Routine deleted successfully!");
-        loadRoutines();
-    } catch (error) { /*...*/ }
+        loadRoutines(); // Ricarica la lista completa delle routine
+
+    } catch (error) {
+        // Gestione Errore
+        console.error(`Error deleting routine (ID: ${routineId}):`, error);
+        // Mostra un messaggio di errore specifico all'utente
+        alert(`Error deleting routine: ${error.message}`);
+        // Riabilita il bottone se l'eliminazione è fallita
+        if (deleteButton) deleteButton.disabled = false;
+    }
 }

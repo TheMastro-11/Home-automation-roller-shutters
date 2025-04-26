@@ -11,7 +11,6 @@ async function loadAdminHomes() {
     }
     homeList.innerHTML = "<li class='list-group-item'>Loading homes...</li>";
 
-    // --- BLOCCO CORRETTO PER VISIBILITÀ INIZIALE ---
     const adminHomesEl = document.getElementById("admin-homes"); if (adminHomesEl) adminHomesEl.style.display = "block";
     const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "block";
     const globalAddSensorEl = document.getElementById("admin-global-add-sensor"); if (globalAddSensorEl) globalAddSensorEl.style.display = 'block';
@@ -25,8 +24,6 @@ async function loadAdminHomes() {
     const routineTitle = document.getElementById("Routines-section-title"); if (routineTitle) routineTitle.innerText = "Routines";
     const routineList = document.getElementById("Routines-list"); if (routineList) routineList.innerHTML = "<li class='list-group-item ...'></li>";
     // --- FINE BLOCCO CORRETTO ---
-
-    // Il resto della funzione try...catch continua qui sotto...
 
     try {
         const homes = await fetchApi("/api/entities/home/");
@@ -262,7 +259,7 @@ function cancelEditHome() {
     loadAdminHomes(); // Ricarica la vista principale admin
 }
 
-// Salva le modifiche della casa (con Change Detection e Skip Null/Empty)
+// Salva le modifiche della casa
 async function submitEditHome(event) {
     event.preventDefault();
     const form = event.target;
@@ -427,8 +424,6 @@ function hideSensorsForHome() {
 function cancelAdminEditSensor() {
     const adminEditSensorFormEl = document.getElementById("admin-edit-light-sensor"); if (adminEditSensorFormEl) adminEditSensorFormEl.style.display = "none";
 }
-
-// In js/admin.js (SOSTITUISCI QUESTA FUNZIONE)
 
 // Carica e visualizza il sensore ASSOCIATO a una specifica casa (Admin - con bottoni)
 async function adminLoadLightSensors(homeId) {

@@ -51,7 +51,7 @@ function attachFormListeners() {
   } else { console.warn("#admin-edit-shutter-form not found"); }
 
   // --- Form Routine ---
-  document.getElementById('Routines-form')?.querySelector('form')?.addEventListener('submit', saveRoutine);
+  document.getElementById('Routines-form')?.querySelector('form')?.addEventListener('submit', saveRoutines);
 
   // --- Form Utente ---
   document.querySelector('#light-sensors-section form')?.addEventListener('submit', createLightSensor);
@@ -72,14 +72,15 @@ function displayDashboardBasedOnRole() {
   if (!adminSection || !userSection) { console.error("Cannot find sections!"); return; }
 
   // Lasciato if(true) come richiesto per test
-  if (true) {
-    // if (isAdminUser) { // <-- Ripristinare questo dopo i test
+  //if (true) {
+  if (isAdminUser) { // <-- Ripristinare questo dopo i test
     console.log("Displaying Admin View (Forced)");
     userSection.style.display = "none";
     adminSection.style.display = "block";
     loadAdminHomes();
     loadGlobalRollerShutters();
     loadGlobalLightSensors();
+    loadRoutines();
 
 
   } else {
