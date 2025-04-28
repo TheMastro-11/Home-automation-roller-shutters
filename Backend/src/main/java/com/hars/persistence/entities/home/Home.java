@@ -30,10 +30,6 @@ public class Home {
     @Column(name = "name")
     private String name;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "homeU_id", referencedColumnName = "user_id")
-    private User owner;
-
     @OneToMany(
         cascade = CascadeType.ALL, /*orphanRemoval = true,*/ fetch = FetchType.LAZY)
     @JoinColumn(
@@ -62,10 +58,6 @@ public class Home {
         return this.name;
     }
 
-    public User getOwner() {
-        return this.owner;
-    }
-
     public List<RollerShutter> getRollerShutters(){
         return this.rollerShutters;
     }
@@ -81,10 +73,6 @@ public class Home {
     
     public void setName(String name){
         this.name = name;
-    }
-
-    public void setOwner(User user) {
-        this.owner = user;
     }
 
     public void setRollerShutters (List<RollerShutter> rollerShutters){

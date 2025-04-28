@@ -13,7 +13,6 @@ import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
 import com.hars.persistence.entities.home.Home;
 import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.persistence.entities.rollerShutter.RollerShutter;
-import com.hars.persistence.entities.users.User;
 import com.hars.persistence.repository.home.HomeRepository;
 import com.hars.services.lightSensor.LightSensorService;
 import com.hars.services.rollerShutter.RollerShutterService;
@@ -74,18 +73,6 @@ public class HomeService {
             return homeRepository.save(home);
         } catch (Exception e) {
             throw e;
-        }
-    }
-
-    public Home patchOwnerHome(Long id, User user){
-        try {
-            Home home = homeRepository.findById(id).get();
-            User validUser = userService.loadUserByUsername(user.getUsername());
-            home.setOwner(validUser);
-            
-            return homeRepository.save(home);
-        } catch (Exception e) {
-            throw new RuntimeException("User not found", e);
         }
     }
 

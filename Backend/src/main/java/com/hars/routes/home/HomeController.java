@@ -104,22 +104,6 @@ public class HomeController {
         
     }
 
-    @PatchMapping("/patch/owner/{id}")
-    public ResponseEntity<String> patchOwnerHome(@PathVariable Long id, @RequestBody HomeDTO.userInput home){
-        try {
-            if (!homeService.isPresentById(id)) {
-                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
-            }
-            Home newHome_ = homeService.patchOwnerHome(id, home.user());
-            String newHome = newHome_.toJson(newHome_.getOwner());
-
-            return ResponseEntity.ok("{ \"Entity\" : {" + newHome + "}}");
-        } catch (RuntimeException e) {
-            return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify user\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
-        }
-        
-    }
-
     @PatchMapping("/patch/rollerShutters/{id}")
     public ResponseEntity<String> patchRollerShuttersHome(@PathVariable Long id, @RequestBody HomeDTO.rollerShutterInput home){
         try {
