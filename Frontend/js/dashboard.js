@@ -1,5 +1,3 @@
-// js/dashboard.js
-
 document.addEventListener('DOMContentLoaded', () => {
   // 1) Auth check & logout
   if (typeof checkAuthentication === 'function') {
@@ -82,9 +80,6 @@ async function loadHomes() {
             Edit Details
           </button>
           <button class="btn btn-danger"  onclick="deleteHome('${homeId}')">Delete Home</button>
-          <button class="btn btn-info"    onclick="showSensorsForHome('${homeId}','${safeHomeName}')">
-            Manage Sensors
-          </button>
           <button class="btn btn-primary" onclick="showShuttersForHome('${homeId}','${safeHomeName}')">
             Manage Shutters
           </button>
@@ -423,132 +418,6 @@ async function deleteHome(homeId) {
   } catch (error) {
     console.error("Error deleting home:", error);
     alert(`Failed to delete home: ${error.message} check if the home is not associated with any devices or routines.`);
-  }
-}
-
-// ========================================
-// MANAGING SENSORS ASSOCIATED WITH A HOME
-// ========================================
-
-// Shows the section for managing sensors associated with a specific home.
-function showSensorsForHome(homeId, homeName) {
-  console.log(`Showing sensors for Home ID: ${homeId}, Name: ${homeName}`);
-  // Hide other main sections
-  const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "none";
-  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
-  const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = 'none';
-  const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'none';
-  const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'none';
-  const manageShuttersSectionEl = document.getElementById("manage-shutters-section"); if (manageShuttersSectionEl) manageShuttersSectionEl.style.display = 'none';
-
-  // Show the manage sensors section
-  const sensorSectionEl = document.getElementById("manage-sensors-section");
-  if (!sensorSectionEl) { console.error("#manage-sensors-section not found"); return; }
-  sensorSectionEl.style.display = 'block';
-
-  // Set title and store homeId (could use dataset or a hidden input if needed by children)
-  // Using the title element ID suggested in the HTML: 'manage-sensors-title-main'
-  const titleElement = document.getElementById("manage-sensors-title-main");
-  if (titleElement) titleElement.textContent = `Sensors for: ${homeName}`;
-
-  // Store homeId for use by child forms/buttons if necessary (e.g., edit/delete actions)
-  // Using the hidden input within the inline edit form: 'manage-sensors-home-id'
-  const sensorHomeIdHidden = document.getElementById("manage-sensors-home-id");
-  if (sensorHomeIdHidden) sensorHomeIdHidden.value = homeId;
-  else console.warn("Hidden input #manage-sensors-home-id not found inside the edit form.");
-
-
-  // Hide the inline sensor edit form if it was open
-  const editSensorFormEl = document.getElementById("edit-home-sensor-form"); if (editSensorFormEl) editSensorFormEl.style.display = 'none';
-
-  loadHomeSensors(homeId); // Load the sensors for this specific home
-}
-
-// Hides the manage sensors section and returns to the main home list view.
-function hideSensorsForHome() {
-  const sensorSectionEl = document.getElementById("manage-sensors-section"); if (sensorSectionEl) sensorSectionEl.style.display = 'none';
-  // Show main sections again
-  const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "block";
-  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.removeProperty("display");
-  const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
-  const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
-  loadHomes(); // Reload main view
-}
-
-// Loads and displays sensors ASSOCIATED with a specific home in the 'Manage Sensors' section.
-async function loadHomeSensors(homeId) {
-  const ul = document.getElementById('manage-sensors-list');
-  if (!ul) { console.error('#manage-sensors-list not found'); return; }
-  ul.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
-
-  try {
-    // Strategy 1: Fetch all sensors and filter client-side based on home.id
-    const allSensors = await fetchApi('/api/entities/lightSensor/');
-    let sensors = allSensors.filter(s => s.home && String(s.home.id) === String(homeId));
-
-    // Strategy 2: Fallback if home.id is not available in the sensor list API response
-    if (sensors.length === 0) {
-      const home = await getHomeDetails(homeId); // Use the existing function
-      const sensorName = home?.lightSensor?.name; // Get the name of the associated sensor
-      if (sensorName) {
-        // Filter all sensors by the name found in the home details
-        sensors = allSensors.filter(s => s.name === sensorName);
-        console.log(`Found associated sensor by name: ${sensorName}`);
-      } else {
-        console.log(`Home ${homeId} has no lightSensor associated in its details.`);
-      }
-    }
-
-    // Render the list
-    ul.innerHTML = '';
-    if (sensors.length === 0) {
-      ul.innerHTML = "<li class='list-group-item'>No light sensor associated with this home.</li>";
-      return;
-    }
-
-    sensors.forEach(sensor => {
-      const value = sensor.lightValue ?? sensor.value ?? 'N/A'; // Get current value
-      const safeName = sensor.name.replace(/'/g, "\\'"); // Escape single quotes for onclick
-      ul.insertAdjacentHTML('beforeend', `
-        <li id="sensor-item-${sensor.id}"
-            class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-          <div><strong>${sensor.name}</strong> — Value: ${value}%</div>
-          <!-- rimane solo il pulsante di delete -->
-          <button class="btn btn-danger btn-sm"
-                  onclick="deleteHomeSensor('${sensor.id}','${homeId}')">
-            Delete
-          </button>
-        </li>`);
-    });
-  } catch (err) {
-    console.error(`Error loading sensors for home ${homeId}:`, err);
-    ul.innerHTML = `<li class='list-group-item text-danger'>Error loading sensors: ${err.message}</li>`;
-  }
-}
-
-
-// Deletes a sensor globally it from the current home.
-async function deleteHomeSensor(sensorId, homeId) {
-  if (!confirm("Are you sure you want to permanently delete this sensor?")) return;
-
-  const deleteBtn = document.querySelector(`#sensor-item-${sensorId} button.btn-danger`);
-  if (deleteBtn) deleteBtn.disabled = true;
-
-  try {
-    // Delete the sensor globally
-    console.log(`Attempting to delete sensor ${sensorId} globally...`);
-    await fetchApi(
-      `/api/entities/lightSensor/delete/${sensorId}`,
-      "DELETE"
-    );
-    console.log(`Sensor ${sensorId} deleted globally.`);
-    alert("Sensor Deleted successfully!");
-    loadHomeSensors(homeId); // Reload the sensor list for the current home
-    loadGlobalLightSensors(); // Reload the global sensor list as well
-  } catch (err) {
-    console.error("Error deleting sensor:", err);
-    alert("Failed to delete sensor: " + err.message);
-    if (deleteBtn) deleteBtn.removeAttribute("disabled"); // Re-enable button on error
   }
 }
 

@@ -124,14 +124,17 @@ public class HomeController {
     @PatchMapping("/patch/lightSensor/{id}")
     public ResponseEntity<String> patchLightSensorHome(@PathVariable Long id, @RequestBody HomeDTO.lightSensorInput home){
         try {
-            if (!homeService.isPresentById(id)) {
-                return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
-            }
-
-            Home newHome_ = homeService.patchLightSensorHome(id, home.lightSensor());
-            String newHome = newHome_.toJson(newHome_.getLightSensor());
-
-            return ResponseEntity.ok("{ \"Entity\" : {" + newHome + "}}");
+            if (home.lightSensor() == null) {
+                homeService.removeLightSensorHome(id);
+                return ResponseEntity.ok("");
+            } else {
+                if (!homeService.isPresentById(id)) {
+                    return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
+                }
+                Home newHome_ = homeService.patchLightSensorHome(id, home.lightSensor());
+                String newHome = newHome_.toJson(newHome_.getLightSensor());
+                return ResponseEntity.ok("{ \"Entity\" : {" + newHome + "}}");
+            }          
         } catch (RuntimeException e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Modify light sensor\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
