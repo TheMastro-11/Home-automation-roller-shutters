@@ -1,7 +1,12 @@
 package com.hars.routes.routine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.routine.RoutineDTO;
 import com.hars.persistence.entities.routine.Routine;
+import com.hars.services.OwnershipService;
 import com.hars.services.agentAPI.ExternalApiClient;
 import com.hars.services.routine.RoutineService;
 
@@ -26,10 +32,25 @@ public class RoutineController {
     @Autowired
     private ExternalApiClient externalApiClient;
 
+    @Autowired
+    private OwnershipService ownershipService;
+
     @GetMapping("/")
     public ResponseEntity<?> getAllRollerShutter() {
         try {
-            return ResponseEntity.ok(routineService.getAllRoutines());
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            List<Long> userRoutines = ownershipService.getIds(username, "routine"); 
+            List<RoutineDTO> validRoutines = new ArrayList<>();
+            for (RoutineDTO routine : routineService.getAllRoutines()) {
+                if (userRoutines.contains(routine.getId())) {
+                    validRoutines.add(routine);
+                }
+            }
+
+            return ResponseEntity.ok(validRoutines);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Get all Routines\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -42,13 +63,18 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters(), routine.rollerShutterValue());
-            String newRoutine = newRoutine_.toJson(newRoutine_.getActionTime());
+            Routine newRoutine = routineService.createRoutine(routine.name(), routine.time(), routine.rollerShutters(), routine.rollerShutterValue());
+            String newRoutineS = newRoutine.toJson(newRoutine.getActionTime());
 
             //agent Update
-            externalApiClient.callApiCreate(newRoutine_);
+            externalApiClient.callApiCreate(newRoutine);
 
-            return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutine + "}}");
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            ownershipService.addOwnerShip(username, newRoutine);
+
+            return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutineS + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -62,10 +88,15 @@ public class RoutineController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            Routine newRoutine_ = routineService.createRoutine(routine.name(), routine.lightSensor(), routine.lightValueRecord(), routine.rollerShutters(), routine.rollerShutterValue());
-            String newRoutine = newRoutine_.toJson(newRoutine_.getLightSensor());
+            Routine newRoutine = routineService.createRoutine(routine.name(), routine.lightSensor(), routine.lightValueRecord(), routine.rollerShutters(), routine.rollerShutterValue());
+            String newRoutineS = newRoutine.toJson(newRoutine.getLightSensor());
 
-            return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutine + "}}");
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            ownershipService.addOwnerShip(username, newRoutine);
+
+            return ResponseEntity.ok("{" + "\"Response\" : \"Routine created successfully!\" , \"Entity\" : {" + newRoutineS + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }

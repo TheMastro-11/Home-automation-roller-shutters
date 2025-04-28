@@ -1,7 +1,12 @@
 package com.hars.routes.lightSensor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.lightSensor.LightSensorDTO;
+import com.hars.persistence.entities.lightSensor.LightSensor;
+import com.hars.services.OwnershipService;
 import com.hars.services.lightSensor.LightSensorService;
 
 @RestController
@@ -21,10 +28,25 @@ public class LightSensorController {
     @Autowired
     private LightSensorService lightSensorService;
 
+    @Autowired
+    private OwnershipService ownershipService;
+
     @GetMapping("/")
     public ResponseEntity<?> getAllLightSensors() {
         try {
-            return ResponseEntity.ok(lightSensorService.getAllLightSensors());
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            List<Long> userLightSensors = ownershipService.getIds(username, "lightSensor"); 
+            List<LightSensorDTO> validLightSensors = new ArrayList<>();
+            for (LightSensorDTO lightSensor : lightSensorService.getAllLightSensors()) {
+                if (userLightSensors.contains(lightSensor.getId())) {
+                    validLightSensors.add(lightSensor);
+                }
+            }
+            
+            return ResponseEntity.ok(validLightSensors);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Get all RollerShutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -37,8 +59,15 @@ public class LightSensorController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String newLightSensor = lightSensorService.createLightSensor(lightSensor).toJson();
-            return ResponseEntity.ok("{" + "\"Response\" : \"LightSensor created successfully!\" , \"Entity\" : {" + newLightSensor + "}}");
+            LightSensor newLightSensor = lightSensorService.createLightSensor(lightSensor);
+            String newLightSensorS = newLightSensor.toJson();
+
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            ownershipService.addOwnerShip(username, newLightSensor);
+
+            return ResponseEntity.ok("{" + "\"Response\" : \"LightSensor created successfully!\" , \"Entity\" : {" + newLightSensorS + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
