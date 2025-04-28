@@ -36,8 +36,6 @@ function attachFormListeners() {
     ?.addEventListener('submit', globalCreateRollerShutter);
 
   // Listeners for specific sensor/shutter edit forms (inline within Home Edit or Manage Sections)
-  document.getElementById('edit-home-sensor-form')?.querySelector('form')
-    ?.addEventListener('submit', submitEditHomeSensor);
   document.getElementById('edit-home-shutter-form')?.querySelector('form')
     ?.addEventListener('submit', submitEditHomeShutter);
 
@@ -426,32 +424,6 @@ async function deleteHome(homeId) {
     console.error("Error deleting home:", error);
     alert(`Failed to delete home: ${error.message} check if the home is not associated with any devices or routines.`);
   }
-}
-
-// ========================================
-// ROUTINE MANAGEMENT (Navigation)
-// ========================================
-
-// Shows the main view for managing all routines.
-function showAllRoutinesView() {
-  console.log("Showing All Routines view");
-  // Hide other main sections
-  const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "none";
-  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
-  const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = 'none';
-  const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'none';
-  const manageSensorsSectionEl = document.getElementById("manage-sensors-section"); if (manageSensorsSectionEl) manageSensorsSectionEl.style.display = 'none';
-  const manageShuttersSectionEl = document.getElementById("manage-shutters-section"); if (manageShuttersSectionEl) manageShuttersSectionEl.style.display = 'none';
-
-  // Show routines section
-  const routinesSectionEl = document.getElementById("Routines-section");
-  if (!routinesSectionEl) { console.error("#Routines-section not found!"); return; }
-  routinesSectionEl.style.display = 'block';
-
-  // Load routines (function expected from routines.js)
-  if (typeof loadRoutines === 'function') {
-    loadRoutines();
-  } else { console.error("loadRoutines function not found (expected in routines.js)"); }
 }
 
 // ========================================
@@ -1025,19 +997,6 @@ async function globalDeleteRollerShutter(id) {
 
 
 // --- INLINE EDIT/DELETE FOR HOME-ASSOCIATED DEVICES ---
-// These functions handle actions within the "Manage Sensors/Shutters" sections for a specific home.
-function showEditHomeShutterForm(shutterId, currentName, homeId) {
-  // Populate the form fields
-  document.getElementById("edit-home-shutter-id").value = shutterId;
-  document.getElementById("edit-home-shutter-name").value = currentName;
-  // Ensure the home ID is set in the hidden field for submission context
-  document.getElementById("edit-home-shutter-home-id").value = homeId;
-
-  // Show the form
-  const editForm = document.getElementById("edit-home-shutter-form");
-  if (editForm) editForm.style.display = "block";
-  else console.error("#edit-home-shutter-form not found");
-}
 
 // Hides the inline form for editing a home-associated shutter's name.
 function cancelEditHomeShutter() {

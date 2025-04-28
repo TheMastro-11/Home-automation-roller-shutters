@@ -37,8 +37,6 @@ async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, se
         options.body = JSON.stringify(body);
     }
 
-    // console.log(`Calling fetchApi: ${method} ${API_BASE_URL}${path}`, options);
-
     try {
         const response = await fetch(`${API_BASE_URL}${path}`, options);
 

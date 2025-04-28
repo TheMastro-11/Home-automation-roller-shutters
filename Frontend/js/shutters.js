@@ -9,46 +9,6 @@ let selectedRollerShutterId = null;
 // Global variable to store the *name* of the selected shutter for display purposes.
 let selectedRollerShutterName = null;
 
-// Loads roller shutters into the specified list element (e.g., for live control).
-// Assumes it fetches ALL shutters and displays them. Filtering by home might be needed elsewhere.
-async function loadRollerShutters(listElementId = "rollerShutter-list-items") {
-    const list = document.getElementById(listElementId);
-    if (!list) {
-        console.error(`Shutter list element with ID '${listElementId}' not found.`);
-        return;
-     }
-    list.innerHTML = "<li class='list-group-item'>Loading shutters...</li>"; // Loading indicator
-
-    try {
-        // Fetch all roller shutters
-        const shutters = await fetchApi('/api/entities/rollerShutter/');
-        list.innerHTML = ""; // Clear loading message
-
-        if (Array.isArray(shutters) && shutters.length > 0) {
-            shutters.forEach(shutter => {
-                const li = document.createElement("li");
-                // Use a unique ID prefix for items in this specific list if needed
-                li.id = `control-shutter-item-${shutter.id}`;
-                li.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
-                const opening = shutter.percentageOpening ?? shutter.opening ?? 0; // Get opening value
-                 const safeName = shutter.name.replace(/'/g, "\\'"); // Escape quotes for JS
-                li.innerHTML = `
-                  <span>${shutter.name}</span>
-                  <span class="opening">Opening: ${opening}%</span>
-                `;
-                // Set onclick to call the selection function
-                li.onclick = () => selectRollerShutter(shutter.id, safeName, opening); // Pass ID, name, opening
-                list.appendChild(li);
-            });
-        } else {
-            list.innerHTML = "<li class='list-group-item'>No roller shutters found.</li>"; // Message if none found
-        }
-    } catch (e) {
-        console.error("Error loading shutters:", e);
-        list.innerHTML = `<li class="list-group-item text-danger">Error loading shutters: ${e.message}</li>`; // Error message
-    }
-}
-
 
 // Selects a roller shutter, updates the global state, and highlights the item.
 function selectRollerShutter(id, name, opening) {
