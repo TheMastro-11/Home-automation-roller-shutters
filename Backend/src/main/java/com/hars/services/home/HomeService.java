@@ -2,6 +2,7 @@ package com.hars.services.home;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,12 +93,22 @@ public class HomeService {
             Home home = homeRepository.findById(id).get();
             LightSensor validLightSensor = lightSensorService.loadLightSensorByName(lightSensor.getName());
             home.setLightSensor(validLightSensor);
+            
             return homeRepository.save(home);
         } catch (Exception e) {
             throw new RuntimeException("Light Sensor not found", e);
         }
     }
 
+    public void removeLightSensorHome(Long id) {
+        LightSensor lightSensor = lightSensorService.loadLightSensorById(id);
+        Optional<Home> home = homeRepository.findByLightSensorId(lightSensor.getID());
+        if (home.isPresent()) {
+            Home validHome = home.get();
+            validHome.setLightSensor(null);
+            homeRepository.save(validHome);
+        }
+    }
 
     //helpers
     private HomeDTO convertToDTO(Home home) {

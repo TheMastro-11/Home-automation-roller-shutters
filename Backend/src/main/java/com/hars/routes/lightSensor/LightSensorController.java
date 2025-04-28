@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hars.persistence.dto.lightSensor.LightSensorDTO;
 import com.hars.persistence.entities.lightSensor.LightSensor;
 import com.hars.services.OwnershipService;
+import com.hars.services.home.HomeService;
 import com.hars.services.lightSensor.LightSensorService;
 
 @RestController
@@ -30,6 +31,9 @@ public class LightSensorController {
 
     @Autowired
     private OwnershipService ownershipService;
+
+    @Autowired
+    private HomeService homeService;
 
     @GetMapping("/")
     public ResponseEntity<?> getAllLightSensors() {
@@ -80,7 +84,10 @@ public class LightSensorController {
             if (!lightSensorService.isPresentById(id)) {
                 return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
             }
+            
+            homeService.removeLightSensorHome(id);
             lightSensorService.deleteLightSensor(id);
+
             return ResponseEntity.ok("\"LightSensor deleted successfully!\"");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Delete\" , \" StackTrace\" : \"" + e.getMessage() + "\"");

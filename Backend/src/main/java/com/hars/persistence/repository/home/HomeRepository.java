@@ -7,7 +7,10 @@ import org.springframework.stereotype.Repository;
 
 import com.hars.persistence.entities.home.Home;
 
+
 @Repository
 public interface HomeRepository extends JpaRepository<Home, Long> {
     Optional<Home> findByName(String name);
+
+    Optional<Home> findByLightSensorId(Long id);
 }
