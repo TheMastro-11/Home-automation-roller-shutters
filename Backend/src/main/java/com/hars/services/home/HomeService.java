@@ -16,7 +16,6 @@ import com.hars.persistence.entities.rollerShutter.RollerShutter;
 import com.hars.persistence.repository.home.HomeRepository;
 import com.hars.services.lightSensor.LightSensorService;
 import com.hars.services.rollerShutter.RollerShutterService;
-import com.hars.services.users.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -25,9 +24,6 @@ public class HomeService {
 
     @Autowired
     private HomeRepository homeRepository;
-
-    @Autowired
-    private UserService userService;
 
     @Autowired 
     private RollerShutterService rollerShutterService;
