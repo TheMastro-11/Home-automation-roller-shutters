@@ -45,7 +45,6 @@ public class LightSensorService {
         try {
             LightSensor lightSensor = lightSensorRepository.findById(id).get();
             lightSensorRepository.delete(lightSensor);
-            //lightSensorRepository.deleteSQL(id);
         } catch (Exception e) {
             throw e;
         }

@@ -1,6 +1,6 @@
 package com.hars.services.mqtt;
 
-import org.slf4j.Logger;// Percorso alla tua classe MqttConfig
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,11 +19,6 @@ public class MqttPublisherService {
     @Value("${mqtt.topics.publish}") 
     private String defaultTopic;
 
-    /**
-     * Pubblica un messaggio sul topic di default con QoS 1.
-     *
-     * @param payload 
-     */
     public void publishToDefaultTopic(String payload) {
         try {
             logger.info("Invio messaggio al topic di default [{}]: {}", defaultTopic, payload);
@@ -34,13 +29,6 @@ public class MqttPublisherService {
         }
     }
 
-    /**
-     * Pubblica un messaggio su un topic specifico con QoS specificato.
-     *
-     * @param topic   Il topic MQTT su cui pubblicare.
-     * @param payload Il messaggio da inviare.
-     * @param qos     Il Quality of Service (0, 1, o 2).
-     */
     public void publish(String topic, String payload, int qos) {
         if (topic == null || topic.trim().isEmpty()) {
             topic = defaultTopic;
@@ -61,12 +49,6 @@ public class MqttPublisherService {
         }
     }
 
-     /**
-     * Pubblica un messaggio su un topic specifico con QoS 1 (default).
-     *
-     * @param topic   Il topic MQTT su cui pubblicare.
-     * @param payload Il messaggio da inviare.
-     */
     public void publish(String topic, String payload) {
         publish(topic, payload, 1);
     }

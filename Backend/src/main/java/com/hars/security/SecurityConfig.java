@@ -35,7 +35,6 @@ public class SecurityConfig {
 
     private static final String ROUTINE_AGENT_HOSTNAME = "routineAgent";
 
-    // Constructor injection
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -68,7 +67,6 @@ public class SecurityConfig {
                         log.warn("Could not resolve hostname '{}' to check IP for path {}: {}",
                                  ROUTINE_AGENT_HOSTNAME, context.getRequest().getRequestURI(), e.getMessage());
                     }
-                    // Permetti accesso SOLO se l'IP corrisponde a quello di routineAgent
                     return new AuthorizationDecision(isRoutineAgentIp);
                 })
                 .anyRequest().authenticated() 
@@ -77,7 +75,6 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) 
             );
 
-        // Add JWT filter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

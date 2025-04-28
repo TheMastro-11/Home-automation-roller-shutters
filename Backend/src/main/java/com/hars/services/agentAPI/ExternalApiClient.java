@@ -33,7 +33,7 @@ public class ExternalApiClient {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .doOnSuccess(aVoid -> log.info("Chiamata API completata con successo."))
-                .doOnError(error -> log.error("Errore durante la chiamata API per Routine ID: {} ({}). Errore: {}", error.getMessage()))
+                .doOnError(error -> log.error("Errore durante la chiamata API per Routine, {}", error.getMessage()))
                 .subscribe();
 
     }
@@ -44,7 +44,7 @@ public class ExternalApiClient {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .doOnSuccess(aVoid -> log.info("Chiamata API completata con successo."))
-                .doOnError(error -> log.error("Errore durante la chiamata API per Routine ID: {} ({}). Errore: {}", error.getMessage()))
+                .doOnError(error -> log.error("Errore durante la chiamata API per Routine, {}", error.getMessage()))
                 .subscribe();
 
     }
@@ -56,7 +56,7 @@ public class ExternalApiClient {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .doOnSuccess(aVoid -> log.info("Chiamata API completata con successo."))
-                .doOnError(error -> log.error("Errore durante la chiamata API per Routine ID: {} ({}). Errore: {}", error.getMessage()))
+                .doOnError(error -> log.error("Errore durante la chiamata API per Routine, {}", error.getMessage()))
                 .subscribe();
 
     }
@@ -69,7 +69,7 @@ public class ExternalApiClient {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .doOnSuccess(aVoid -> log.info("Chiamata API completata con successo."))
-                .doOnError(error -> log.error("Errore durante la chiamata API per Routine ID: {} ({}). Errore: {}", error.getMessage()))
+                .doOnError(error -> log.error("Errore durante la chiamata API per Routine, {}", error.getMessage()))
                 .subscribe();
 
     }

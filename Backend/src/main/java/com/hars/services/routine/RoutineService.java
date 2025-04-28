@@ -192,7 +192,6 @@ public class RoutineService {
     }
 
     public Routine loadRoutineByName(String name) throws UsernameNotFoundException {
-        // Use orElseThrow to handle the Optional
         Routine routine = routineRepository.findByName(name)
                 .orElseThrow(() -> new UsernameNotFoundException("Routine not found with name: " + name));
 

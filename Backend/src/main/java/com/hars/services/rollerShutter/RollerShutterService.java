@@ -92,7 +92,6 @@ public class RollerShutterService {
     }
 
     public RollerShutter loadRollerShutterByName(String name) throws UsernameNotFoundException {
-        // Use orElseThrow to handle the Optional
         RollerShutter roller_shutter = rollerShutterRepository.findByName(name)
                 .orElseThrow(() -> new UsernameNotFoundException("RollerShutter not found with name: " + name));
 
@@ -100,7 +99,6 @@ public class RollerShutterService {
     }
 
     public RollerShutter loadRollerShutterById(Long id) {
-        // Use orElseThrow to handle the Optional
         RollerShutter roller_shutter = rollerShutterRepository.findById(id).get();
         return roller_shutter;
     }

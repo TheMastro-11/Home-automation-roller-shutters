@@ -16,10 +16,10 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMKeyPair; // Import esplicito per l'header
+import org.bouncycastle.openssl.PEMKeyPair; 
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions; // Import esplicito per l'annotazione header
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions; 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -155,7 +155,6 @@ public class MqttConfig {
 
     @Bean(name = "mqttInboundChannel")
     public MessageChannel mqttInboundChannel() {
-        //return new DirectChannel();
         return new PublishSubscribeChannel();
     }
 
