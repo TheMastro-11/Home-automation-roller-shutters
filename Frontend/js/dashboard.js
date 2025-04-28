@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof checkAuthentication === 'function') {
     if (!checkAuthentication()) return;
   } else {
-    console.error("checkAuthentication is missing");
+    console.error("checkAuthentication function is missing");
   }
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn && typeof logout === 'function') {
@@ -19,14 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHomes();
   loadGlobalLightSensors();
   loadGlobalRollerShutters();
-  loadRoutines(); // Funzione da routines.js
+  loadRoutines(); // Function from routines.js
 });
 
+// Attaches event listeners to various forms and buttons on the dashboard.
 function attachFormListeners() {
   // Manage Homes
   document.getElementById('add-home-form')?.addEventListener('submit', addHome);
-  document.getElementById('edit-home-form')?.querySelector('form') // Listener per il form di modifica dettagli casa
-    ?.addEventListener('submit', submitEditHome); // Funzione che gestisce il salvataggio
+  document.getElementById('edit-home-form')?.querySelector('form') // Listener for the home details edit form
+    ?.addEventListener('submit', submitEditHome); // Function that handles saving
 
   // Global Sensors & Shutters
   document.getElementById('global-add-sensor-form')
@@ -34,7 +35,7 @@ function attachFormListeners() {
   document.getElementById('global-add-shutter-form')
     ?.addEventListener('submit', globalCreateRollerShutter);
 
-  // Listener per i form specifici di modifica sensore/tapparella
+  // Listeners for specific sensor/shutter edit forms (inline within Home Edit or Manage Sections)
   document.getElementById('edit-home-sensor-form')?.querySelector('form')
     ?.addEventListener('submit', submitEditHomeSensor);
   document.getElementById('edit-home-shutter-form')?.querySelector('form')
@@ -43,21 +44,18 @@ function attachFormListeners() {
 
   const routineForm = document.querySelector('#Routines-form form');
   if (routineForm) {
-    // Assicurati che la funzione saveRoutines sia accessibile qui
-    // Se saveRoutines è definita in routines.js, assicurati che routines.js sia
-    // caricato PRIMA di dashboard.js nel tuo HTML, o che saveRoutines
-    // sia in qualche modo nello scope globale o importata.
     if (typeof saveRoutines === 'function') {
       routineForm.addEventListener('submit', saveRoutines);
-      console.log("Event listener per submit routine aggiunto da dashboard.js.");
+      console.log("Event listener for routine submit added from dashboard.js.");
     } else {
-      console.error("ERRORE: Funzione saveRoutines non trovata/accessibile da dashboard.js.");
+      console.error("ERROR: saveRoutines function not found/accessible from dashboard.js.");
     }
   } else {
-    console.error("ERRORE: Impossibile trovare #Routines-form form da dashboard.js.");
+    console.error("ERROR: Could not find #Routines-form form from dashboard.js.");
   }
 }
 
+// Loads the list of homes and displays them.
 async function loadHomes() {
   const homeList = document.getElementById('manage-homes-list');
   if (!homeList) { console.error('#manage-homes-list not found'); return; }
@@ -72,18 +70,24 @@ async function loadHomes() {
       const li = document.createElement('li');
       li.id = `home-item-${home.id}`;
       li.className = 'list-group-item d-flex justify-content-between align-items-center flex-wrap';
+
+      // Escape single quotes in home name for the onclick attribute
+      const safeHomeName = home.name.replace(/'/g, "\\'");
+      const homeId = home.id;
+
+      // *** MODIFICATION HERE: Added console.log inside onclick ***
       li.innerHTML = `
         <span class="me-auto">${home.name}</span>
         <div class="btn-group btn-group-sm">
           <button class="btn btn-warning"
-                  onclick="showEditHomeForm('${home.id}','${home.name.replace(/'/g, "\\'")}')">
+                  onclick="console.log('Attempting to call showEditHomeForm for ID: ${homeId}'); showEditHomeForm('${homeId}','${safeHomeName}')">
             Edit Details
           </button>
-          <button class="btn btn-danger"  onclick="deleteHome('${home.id}')">Delete Home</button>
-          <button class="btn btn-info"    onclick="showSensorsForHome('${home.id}','${home.name.replace(/'/g, "\\'")}')">
+          <button class="btn btn-danger"  onclick="deleteHome('${homeId}')">Delete Home</button>
+          <button class="btn btn-info"    onclick="showSensorsForHome('${homeId}','${safeHomeName}')">
             Manage Sensors
           </button>
-          <button class="btn btn-primary" onclick="showShuttersForHome('${home.id}','${home.name.replace(/'/g, "\\'")}')">
+          <button class="btn btn-primary" onclick="showShuttersForHome('${homeId}','${safeHomeName}')">
             Manage Shutters
           </button>
         </div>`;
@@ -97,65 +101,18 @@ async function loadHomes() {
 }
 
 
+// Retrieves details for a specific home (workaround for potential 403 on direct GET /home/{id}).
 async function getHomeDetails(homeId) {
   try {
-    const allHomes = await fetchApi('/api/entities/home/');     // sempre permesso
+    const allHomes = await fetchApi('/api/entities/home/'); // Always allowed
     return allHomes.find(h => String(h.id) === String(homeId)) || null;
   } catch (err) {
     console.error('Cannot load home list:', err);
-    return null;                                                // continua senza bloccare la UI
+    return null; // Continue without blocking UI
   }
 }
 
-function onHomeChange(event) {
-  const homeId = event.target.value;
-  const sensorStatusSection = document.getElementById('sensor-status');
-  const shutterStatusSection = document.getElementById('shutters-status');
-
-  if (!homeId) {
-    if (shutterStatusSection) shutterStatusSection.style.display = 'none';
-    if (sensorStatusSection) sensorStatusSection.style.display = 'none';
-    return;
-  };
-
-  if (shutterStatusSection) shutterStatusSection.style.display = 'block';
-  if (sensorStatusSection) sensorStatusSection.style.display = 'block';
-
-  // Carica dispositivi per il controllo (da shutters.js e visualizzazione sensori)
-  if (typeof loadRollerShutters === 'function') {
-    loadRollerShutters(homeId); // Da shutters.js per controllo
-  } else { console.error("loadRollerShutters function not found (expected in shutters.js)"); }
-
-  // Visualizzazione sensori in #sensor-status/#light-sensors-list
-  const sensorDisplayList = document.getElementById('light-sensors-list');
-  if (sensorDisplayList) {
-    sensorDisplayList.innerHTML = '<li class="list-group-item">Loading sensors...</li>';
-    // Usa l'API di lista filtrando lato client o server se possibile
-    fetchApi('/api/entities/lightSensor/') // Prendi tutti
-      .then(sensors => {
-        sensorDisplayList.innerHTML = '';
-        // Filtra quelli associati a homeId (se l'API non lo fa già)
-        const homeSensors = sensors.filter(s => s.home && s.home.id == homeId); // Assumi che l'API di lista includa 'home.id'
-        if (homeSensors && homeSensors.length > 0) {
-          homeSensors.forEach(s => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item';
-            li.textContent = `${s.name}: ${s.lightValue ?? s.value ?? 'N/A'}%`;
-            sensorDisplayList.appendChild(li);
-          });
-        } else {
-          sensorDisplayList.innerHTML = '<li class="list-group-item">No associated sensors.</li>'; // Testo Inglese
-        }
-      }).catch(err => {
-        console.error("Error loading sensors for display:", err);
-        sensorDisplayList.innerHTML = `<li class="list-group-item text-danger">Error loading sensors.</li>`; // Testo Inglese
-      });
-  } else {
-    console.warn("#light-sensors-list element not found for display.");
-  }
-}
-
-// Aggiunge una nuova casa
+// Adds a new home.
 async function addHome(event) {
   event.preventDefault();
   const homeNameInput = document.getElementById("newHomeName");
@@ -169,30 +126,30 @@ async function addHome(event) {
     await fetchApi("/api/entities/home/create", "POST", { name: homeName });
     alert("Home added successfully!");
     homeNameInput.value = "";
-    loadHomes(); // Ricarica la lista
+    loadHomes(); // Reload the list
   } catch (error) {
     console.error("Error adding home:", error);
     alert(`Failed to add home: ${error.message}`);
   } finally {
     if (addButton) {
       addButton.disabled = false;
-      // Assicurati che il testo originale del bottone sia corretto
-      addButton.textContent = '+ Add';
+      addButton.textContent = '+ Add'; // Ensure original button text
     }
   }
 }
 
 // ========================================
-// FUNZIONI PER FORM "EDIT HOME DETAILS"
+// FUNCTIONS FOR "EDIT HOME DETAILS" FORM
 // ========================================
 
+// Loads users into a select dropdown for assigning a home owner.
 async function loadUsersForOwnerSelect(selectElementId, currentOwnerId) {
   const selectElement = document.getElementById(selectElementId);
   if (!selectElement) { console.error(`Select element with ID '${selectElementId}' not found.`); return; }
   selectElement.innerHTML = '<option value="" selected disabled>Loading users...</option>';
   try {
     const users = await fetchApi('/api/users/');
-    selectElement.innerHTML = ''; // Pulisci
+    selectElement.innerHTML = ''; // Clear
     const defaultOption = document.createElement('option');
     defaultOption.value = "";
     defaultOption.textContent = "-- Select Owner --";
@@ -216,102 +173,135 @@ async function loadUsersForOwnerSelect(selectElementId, currentOwnerId) {
   }
 }
 
+// Loads available light sensors into a select dropdown for association with a home.
 async function loadAvailableSensorsForEditHome(selectElementId, currentSensorName) {
   const selectElement = document.getElementById(selectElementId);
   if (!selectElement) { console.error(`Select element with ID '${selectElementId}' not found.`); return; }
   selectElement.innerHTML = '<option value="" selected disabled>Loading sensors...</option>';
   try {
     const sensors = await fetchApi('/api/entities/lightSensor/');
-    selectElement.innerHTML = ''; // Pulisci
+    selectElement.innerHTML = ''; // Clear
     const noneOption = document.createElement('option');
-    noneOption.value = "NONE";
+    noneOption.value = "NONE"; // Special value for no sensor
     noneOption.textContent = "-- None --";
     selectElement.appendChild(noneOption);
+
     if (sensors && Array.isArray(sensors) && sensors.length > 0) {
       sensors.forEach(sensor => {
         if (sensor && sensor.id && sensor.name) {
           const option = document.createElement('option');
-          option.value = sensor.name;
+          option.value = sensor.name; // Use name as value for association via PATCH
           option.textContent = sensor.name;
           if (currentSensorName && sensor.name === currentSensorName) {
-            option.selected = true;
-            noneOption.selected = false;
+            option.selected = true; // Select the current sensor
+            noneOption.selected = false; // Deselect "None" if a sensor is associated
           }
           selectElement.appendChild(option);
         }
       });
-      if (!currentSensorName) { selectElement.value = "NONE"; }
+      // If no sensor was previously associated, ensure "None" is selected
+      if (!currentSensorName) {
+        selectElement.value = "NONE";
+      }
     } else {
       console.log("No available light sensors found.");
-      selectElement.value = "NONE";
+      selectElement.value = "NONE"; // Default to "None" if no sensors exist
     }
   } catch (error) {
     console.error(`Error loading sensors into select #${selectElementId}:`, error);
     selectElement.innerHTML = `<option value="" selected disabled>Error!</option>`;
+    // Add back the "None" option even on error
     const noneOptionErr = document.createElement('option');
     noneOptionErr.value = "NONE"; noneOptionErr.textContent = "-- None --";
     selectElement.appendChild(noneOptionErr);
   }
 }
 
+// Loads available roller shutters as checkboxes for association with a home.
 async function loadAvailableShuttersForEditHome(containerElementId, originalShutterNames = []) {
   const container = document.getElementById(containerElementId);
-  const loadingMsg = document.getElementById("editHomeShuttersLoading");
+  const loadingMsg = document.getElementById("editHomeShuttersLoading"); // Reference the loading paragraph
   if (!container) { console.error(`Container element with ID '${containerElementId}' not found.`); return; }
-  if (loadingMsg) loadingMsg.textContent = "Loading..."; else container.innerHTML = "";
+
+  // Show loading message or clear container
+  if (loadingMsg) loadingMsg.textContent = "Loading...";
+  else container.innerHTML = ""; // Clear previous checkboxes if no loading msg exists
+
   const apiPath = '/api/entities/rollerShutter/';
+  // If loading message wasn't there initially, add it
   if (!loadingMsg) { container.innerHTML = '<p id="editHomeShuttersLoading" style="color: #ccc;">Loading...</p>'; }
+
   try {
     const allShutters = await fetchApi(apiPath);
-    document.getElementById("editHomeShuttersLoading")?.remove(); container.innerHTML = '';
+    // Remove loading message and clear container before adding checkboxes
+    document.getElementById("editHomeShuttersLoading")?.remove();
+    container.innerHTML = ''; // Clear again just in case
+
     if (allShutters && Array.isArray(allShutters) && allShutters.length > 0) {
-      const originalNamesSet = new Set(originalShutterNames);
+      const originalNamesSet = new Set(originalShutterNames); // Use a Set for efficient lookup
+
       allShutters.forEach(shutter => {
         if (shutter && shutter.id && shutter.name) {
-          const div = document.createElement('div'); div.className = 'form-check';
-          const isChecked = originalNamesSet.has(shutter.name);
+          const div = document.createElement('div');
+          div.className = 'form-check';
+          const isChecked = originalNamesSet.has(shutter.name); // Check if currently associated
           const checkId = `edit_shutter_check_${shutter.id}`;
-          const safeName = shutter.name.replace(/"/g, '&quot;');
+          const safeName = shutter.name.replace(/"/g, '&quot;'); // Escape quotes for value attribute
+
+          // Use shutter name as the value for PATCHing by name
           div.innerHTML = `<input class="form-check-input" type="checkbox" value="${safeName}" id="${checkId}" ${isChecked ? 'checked' : ''}><label class="form-check-label" for="${checkId}">${shutter.name}</label>`;
           container.appendChild(div);
         }
       });
-    } else { container.innerHTML = '<p style="color: #ccc;">No shutters found.</p>'; }
+    } else {
+      // Display a message if no shutters are found
+      container.innerHTML = '<p style="color: #ccc;">No shutters found.</p>';
+    }
   } catch (error) {
     console.error("Error loading shutters for Edit Home form:", error);
+    // Ensure loading message is removed on error and show an error message
     document.getElementById("editHomeShuttersLoading")?.remove();
     container.innerHTML = '<p class="text-danger">Error loading shutters.</p>';
   }
 }
 
 
-// Mostra il form per modificare i dettagli di una casa
+// Displays the form to edit the details of a specific home.
 async function showEditHomeForm(homeId, homeName) {
-  // Nasconde sezioni che non servono durante l’editing
+  // Hide sections not needed during editing
+  document.getElementById("manage-homes-section")?.style.setProperty("display", "none");
+  document.getElementById("add-home-form")?.style.setProperty("display", "none");
   document.getElementById("global-devices-section")?.style.setProperty("display", "none");
   document.getElementById("Routines-section")?.style.setProperty("display", "none");
   document.getElementById("manage-sensors-section")?.style.setProperty("display", "none");
   document.getElementById("manage-shutters-section")?.style.setProperty("display", "none");
-  document.getElementById("home-selection-div")?.style.setProperty("display", "none");
+  // Also hide specific edit forms if they were somehow left open
+  document.getElementById("edit-home-sensor-form")?.style.setProperty("display", "none");
+  document.getElementById("edit-home-shutter-form")?.style.setProperty("display", "none");
 
-  // Mostra il form di edit
+  // Get the edit form element
   const editHomeDiv = document.getElementById("edit-home-form");
-  if (!editHomeDiv) return;
-
-  const editHomeInnerForm = editHomeDiv.querySelector("form");
-  if (!editHomeInnerForm) {
-    console.error("Inner form not found in #edit-home-form");
+  if (!editHomeDiv) {
+    console.error("#edit-home-form element NOT FOUND!"); // Keep essential error logs
     return;
   }
 
-  // Popola campi base
+  const editHomeInnerForm = editHomeDiv.querySelector("form");
+  if (!editHomeInnerForm) {
+    console.error("Inner form element NOT FOUND in #edit-home-form!"); // Keep essential error logs
+    return;
+  }
+
+  // Populate basic fields BEFORE showing the div
   document.getElementById("editHomeId").value = homeId;
   document.getElementById("editHomeTitle").innerText = `Edit details – ${homeName}`;
   document.getElementById("editHomeName").value = homeName;
 
+  // Show the edit form container FIRST
   editHomeDiv.style.display = "block";
 
-  /* ---------- caricamento dati dinamici ---------- */
+  /* ---------- Load dynamic data ---------- */
+  // Set loading states for dynamic fields
   const ownerSelect = document.getElementById("editHomeOwnerSelect");
   const sensorSelect = document.getElementById("editHomeSensorSelect");
   const shuttersList = document.getElementById("editHomeShuttersList");
@@ -320,7 +310,7 @@ async function showEditHomeForm(homeId, homeName) {
   sensorSelect && (sensorSelect.innerHTML = '<option>Loading...</option><option value="NONE">-- None --</option>');
   shuttersList && (shuttersList.innerHTML = '<p id="editHomeShuttersLoading">Loading...</p>');
 
-  // Recupera i dettagli attuali della casa (work-around 403 → usa /home/ list)
+  // Fetch current home details
   let currentOwnerId = null;
   let currentSensorName = null;
   let originalShutterNames = [];
@@ -334,148 +324,173 @@ async function showEditHomeForm(homeId, homeName) {
       currentSensorName = homeDetails.lightSensor?.name || null;
       originalShutterNames = (homeDetails.rollerShutters || []).map(rs => rs.name).filter(Boolean);
 
-      // salva le versioni “originali” per il confronto nel submit
+      // Store original values in form's dataset for comparison on submit
       editHomeInnerForm.dataset.originalName = homeName;
       editHomeInnerForm.dataset.originalOwnerId = currentOwnerId || "";
       editHomeInnerForm.dataset.originalSensor = currentSensorName || "NONE";
       editHomeInnerForm.dataset.originalShutters = JSON.stringify([...originalShutterNames].sort());
     } else {
-      console.error(`Home details for ID ${homeId} not found in list`);
+      console.error(`Home details for ID ${homeId} not found in API response list.`); // Keep essential error logs
+      // Set defaults if home details couldn't be fetched
       editHomeInnerForm.dataset.originalOwnerId = "";
       editHomeInnerForm.dataset.originalSensor = "NONE";
       editHomeInnerForm.dataset.originalShutters = "[]";
+      // Optionally hide form or show specific error to user here
+      // For now, it will proceed but might show empty selects/lists
     }
   } catch (e) {
-    console.error("Error fetching home list:", e);
+    console.error("Error fetching home list for edit form:", e); // Keep essential error logs
     alert("Error fetching home details: " + e.message);
-    editHomeDiv.style.display = "none";
+    editHomeDiv.style.display = "none"; // Hide form on error
+    // Show the main sections again on error
+    const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "block";
+    const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "block";
+    const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
+    const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
     return;
   }
 
-  // Popola select/checkbox con i dati ottenuti
+  // Populate selects/checkboxes by calling helper functions
+  // These functions have their own error handling/logging
   ownerSelect && loadUsersForOwnerSelect("editHomeOwnerSelect", currentOwnerId);
   sensorSelect && loadAvailableSensorsForEditHome("editHomeSensorSelect", currentSensorName);
   shuttersList && loadAvailableShuttersForEditHome("editHomeShuttersList", originalShutterNames);
 }
+// ===== END OF TEMPORARY DEBUGGING VERSION =====
 
 
-
-// Annulla la modifica della casa e torna alla lista
+// Cancels the home edit and returns to the main dashboard view.
 function cancelEditHome() {
   const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = "none";
-  // Mostra di nuovo le sezioni principali
-  const addHomeFormEl = document.getElementById("add-home-form");
-  if (addHomeFormEl) addHomeFormEl.style.display = "block";
+  // Show the main sections again
   const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "block";
-  const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
+  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) {addHomeFormEl.style.removeProperty("display");}
+  const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex'; // Use flex for row layout
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
 
-  loadHomes(); // Ricarica la lista principale
+  loadHomes(); // Reload the main home list
 }
 
-// Salva le modifiche della casa
+// Saves the changes made to the home details.
 async function submitEditHome(event) {
   event.preventDefault();
-  const form = event.target; // Questo è il form stesso
+  const form = event.target; // The form element itself
   const id = document.getElementById("editHomeId").value;
-  const saveButton = form.querySelector('button.btn-primary'); // Bottone Save dentro il form
+  const saveButton = form.querySelector('button.btn-primary'); // The Save button within the form
 
+  // Retrieve original values stored in the dataset
   const originalName = form.dataset.originalName || '';
   const originalOwnerId = form.dataset.originalOwnerId || '';
-  const originalSensorName = form.dataset.originalSensor || 'NONE';
-  const originalShuttersJson = form.dataset.originalShutters || '[]';
+  const originalSensorName = form.dataset.originalSensor || 'NONE'; // Original associated sensor name
+  const originalShuttersJson = form.dataset.originalShutters || '[]'; // Original associated shutter names (sorted JSON)
 
+  // Get new values from the form
   const newName = document.getElementById("editHomeName").value.trim();
   const ownerSelect = document.getElementById("editHomeOwnerSelect");
   const sensorSelect = document.getElementById("editHomeSensorSelect");
-  const selectedOwnerId = ownerSelect ? ownerSelect.value : null; // Usa null se non esiste
-  const selectedSensorName = sensorSelect ? sensorSelect.value : null; // Usa null se non esiste
+  const selectedOwnerId = ownerSelect ? ownerSelect.value : null; // Get selected owner ID
+  const selectedSensorName = sensorSelect ? sensorSelect.value : null; // Get selected sensor name or "NONE"
+
+  // Get selected shutter names from checkboxes
   const selectedShutterCheckboxes = document.querySelectorAll('#editHomeShuttersList input[type="checkbox"]:checked');
+  // Sort the names for consistent comparison
   const selectedShutterNames = Array.from(selectedShutterCheckboxes).map(cb => cb.value).sort();
-  const selectedShuttersJson = JSON.stringify(selectedShutterNames);
+  const selectedShuttersJson = JSON.stringify(selectedShutterNames); // Sorted JSON string of new names
 
   if (!newName) { alert("Please enter home name."); return; }
   if (saveButton) { saveButton.disabled = true; saveButton.textContent = "Saving..."; }
 
-  const apiCalls = [];
-  const callsInfo = [];
+  const apiCalls = []; // Array to hold promises for API calls
+  const callsInfo = []; // Optional: Array to log call details
 
-  // 1. Name patch
+  // 1. Patch Name if changed
   if (newName !== originalName) {
     callsInfo.push({ path: `/patch/name/${id}`, payload: { name: newName } });
     apiCalls.push(fetchApi(`/api/entities/home/patch/name/${id}`, "PATCH", { name: newName }));
   }
-  // 2. Owner patch (Controlla esistenza di ownerSelect)
+
+  // 2. Patch Owner if changed (and select exists)
   if (ownerSelect && selectedOwnerId !== originalOwnerId) {
-    if (selectedOwnerId) { // Associa nuovo owner
+    if (selectedOwnerId) { // Associate new owner 
       const selectedUsername = ownerSelect.selectedOptions[0].text;
       callsInfo.push({ path: `/patch/owner/${id}`, payload: { user: { username: selectedUsername } } });
       apiCalls.push(fetchApi(`/api/entities/home/patch/owner/${id}`, "PATCH", { user: { username: selectedUsername } }));
-    } else { // Dissocia owner
+    } else { // Dissociate owner
       callsInfo.push({ path: `/patch/owner/${id}`, payload: { user: null } });
       apiCalls.push(fetchApi(`/api/entities/home/patch/owner/${id}`, "PATCH", { user: null }));
     }
   }
-  // 3. Sensor patch (Controlla esistenza di sensorSelect)
+
+  // 3. Patch Sensor if changed (and select exists)
   if (sensorSelect && selectedSensorName !== originalSensorName) {
-    if (selectedSensorName && selectedSensorName !== "NONE") { // Associa/cambia sensore
+    if (selectedSensorName && selectedSensorName !== "NONE") { // Associate/change sensor (using name)
       callsInfo.push({ path: `/patch/lightSensor/${id}`, payload: { lightSensor: { name: selectedSensorName } } });
       apiCalls.push(fetchApi(`/api/entities/home/patch/lightSensor/${id}`, "PATCH", { lightSensor: { name: selectedSensorName } }));
-    } else { // Dissocia sensore (selectedSensorName è null o "NONE")
+    } else { // Dissociate sensor (selectedSensorName is null or "NONE")
       callsInfo.push({ path: `/patch/lightSensor/${id}`, payload: { lightSensor: null } });
       apiCalls.push(fetchApi(`/api/entities/home/patch/lightSensor/${id}`, "PATCH", { lightSensor: null }));
     }
   }
-  // 4. Shutters patch
+
+  // 4. Patch Shutters if changed (compare sorted JSON strings)
   if (selectedShuttersJson !== originalShuttersJson) {
-    const payload = { rollerShutters: selectedShutterNames.map(n => ({ name: n })) }; // Assumi che il backend voglia oggetti {name:..}
+    // Assume backend expects an array of objects like {name: ...} for association by name
+    const payload = { rollerShutters: selectedShutterNames.map(n => ({ name: n })) };
     callsInfo.push({ path: `/patch/rollerShutters/${id}`, payload });
     apiCalls.push(fetchApi(`/api/entities/home/patch/rollerShutters/${id}`, "PATCH", payload));
   }
 
+  // Check if any changes were actually detected
   if (apiCalls.length === 0) {
     alert("No changes detected.");
-    if (saveButton) { saveButton.disabled = false; saveButton.textContent = "Save"; } // Testo Inglese
+    if (saveButton) { saveButton.disabled = false; saveButton.textContent = "Save"; }
     return;
   }
 
   try {
-    console.log(`Executing ${apiCalls.length} calls:`, callsInfo);
-    await Promise.all(apiCalls);
+    console.log(`Executing ${apiCalls.length} PATCH call(s):`, callsInfo); // Log the calls being made
+    await Promise.all(apiCalls); // Execute all necessary API calls concurrently
     alert("Home details updated successfully!");
-    cancelEditHome();
+    cancelEditHome(); // Return to the main view after successful update
   } catch (error) {
-    console.error(error);
-    alert(`Failed to update: ${error.message}`);
+    console.error("Error updating home details:", error); // Log the detailed error
+    alert(`Failed to update home details: ${error.message}`); // Show user-friendly error
   } finally {
+    // Re-enable the save button regardless of success or failure
     if (saveButton) {
       saveButton.disabled = false;
-      saveButton.textContent = "Save"; // Testo Inglese
+      saveButton.textContent = "Save";
     }
   }
 }
 
 
-// Elimina una casa
+// Deletes a home.
 async function deleteHome(homeId) {
-  if (!confirm("Are you sure you want to delete this home? This action might also delete associated devices and routines depending on backend logic.")) { return; }
+  if (!confirm("Are you sure you want to delete this home? check about related devices.")) { return; }
   try {
     await fetchApi(`/api/entities/home/delete/${homeId}`, "DELETE");
     alert("Home deleted successfully!");
-    loadHomes(); // Ricarica la lista
+    loadHomes(); // Reload the list
+    // Also hide edit form if it was open for the deleted home
+    const editHomeIdInput = document.getElementById("editHomeId");
+    if (editHomeIdInput && editHomeIdInput.value === homeId) {
+      cancelEditHome(); // Use cancel function to hide form and show main sections
+    }
   } catch (error) {
     console.error("Error deleting home:", error);
-    alert(`Failed to delete home: ${error.message}`);
+    alert(`Failed to delete home: ${error.message} check if the home is not associated with any devices or routines.`);
   }
 }
 
 // ========================================
-// GESTIONE ROUTINE (Navigazione)
+// ROUTINE MANAGEMENT (Navigation)
 // ========================================
 
+// Shows the main view for managing all routines.
 function showAllRoutinesView() {
   console.log("Showing All Routines view");
-  // Nascondi altre sezioni principali
+  // Hide other main sections
   const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "none";
   const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
   const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = 'none';
@@ -483,24 +498,25 @@ function showAllRoutinesView() {
   const manageSensorsSectionEl = document.getElementById("manage-sensors-section"); if (manageSensorsSectionEl) manageSensorsSectionEl.style.display = 'none';
   const manageShuttersSectionEl = document.getElementById("manage-shutters-section"); if (manageShuttersSectionEl) manageShuttersSectionEl.style.display = 'none';
 
-  // Mostra sezione routine
+  // Show routines section
   const routinesSectionEl = document.getElementById("Routines-section");
   if (!routinesSectionEl) { console.error("#Routines-section not found!"); return; }
   routinesSectionEl.style.display = 'block';
 
+  // Load routines (function expected from routines.js)
   if (typeof loadRoutines === 'function') {
-    loadRoutines(); // Funzione da routines.js
+    loadRoutines();
   } else { console.error("loadRoutines function not found (expected in routines.js)"); }
 }
 
 // ========================================
-// GESTIONE SENSORI ASSOCIATI ALLA CASA
+// MANAGING SENSORS ASSOCIATED WITH A HOME
 // ========================================
 
-// Mostra la sezione gestione sensori per una casa specifica
+// Shows the section for managing sensors associated with a specific home.
 function showSensorsForHome(homeId, homeName) {
   console.log(`Showing sensors for Home ID: ${homeId}, Name: ${homeName}`);
-  // Nascondi altre sezioni principali
+  // Hide other main sections
   const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "none";
   const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
   const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = 'none';
@@ -508,54 +524,66 @@ function showSensorsForHome(homeId, homeName) {
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'none';
   const manageShuttersSectionEl = document.getElementById("manage-shutters-section"); if (manageShuttersSectionEl) manageShuttersSectionEl.style.display = 'none';
 
-  // Mostra la sezione gestione sensori
-  const sensorSectionEl = document.getElementById("manage-sensors-section"); if (!sensorSectionEl) return; sensorSectionEl.style.display = 'block';
+  // Show the manage sensors section
+  const sensorSectionEl = document.getElementById("manage-sensors-section");
+  if (!sensorSectionEl) { console.error("#manage-sensors-section not found"); return; }
+  sensorSectionEl.style.display = 'block';
 
-  // Imposta titolo e ID nascosto
-  const titleElement = document.getElementById("manage-sensors-title"); if (titleElement) titleElement.textContent = `Sensors for: ${homeName}`; // Testo Inglese
-  const sensorHomeIdHidden = document.getElementById("manage-sensors-home-id"); if (sensorHomeIdHidden) sensorHomeIdHidden.value = homeId;
+  // Set title and store homeId (could use dataset or a hidden input if needed by children)
+  // Using the title element ID suggested in the HTML: 'manage-sensors-title-main'
+  const titleElement = document.getElementById("manage-sensors-title-main");
+  if (titleElement) titleElement.textContent = `Sensors for: ${homeName}`;
 
-  // Nascondi form modifica se era aperto
+  // Store homeId for use by child forms/buttons if necessary (e.g., edit/delete actions)
+  // Using the hidden input within the inline edit form: 'manage-sensors-home-id'
+  const sensorHomeIdHidden = document.getElementById("manage-sensors-home-id");
+  if (sensorHomeIdHidden) sensorHomeIdHidden.value = homeId;
+  else console.warn("Hidden input #manage-sensors-home-id not found inside the edit form.");
+
+
+  // Hide the inline sensor edit form if it was open
   const editSensorFormEl = document.getElementById("edit-home-sensor-form"); if (editSensorFormEl) editSensorFormEl.style.display = 'none';
 
-  loadHomeSensors(homeId); // Funzione aggiornata
+  loadHomeSensors(homeId); // Load the sensors for this specific home
 }
 
-// Nasconde la sezione sensori e torna alla lista case
+// Hides the manage sensors section and returns to the main home list view.
 function hideSensorsForHome() {
   const sensorSectionEl = document.getElementById("manage-sensors-section"); if (sensorSectionEl) sensorSectionEl.style.display = 'none';
-  // Mostra di nuovo le sezioni principali
+  // Show main sections again
   const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "block";
-  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "block";
+  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.removeProperty("display");
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
-  loadHomes(); // Ricarica la vista principale
+  loadHomes(); // Reload main view
 }
 
-// Nasconde il form di modifica sensore
-function cancelEditHomeSensor() {
-  const editSensorFormEl = document.getElementById("edit-home-sensor-form"); if (editSensorFormEl) editSensorFormEl.style.display = "none";
-}
-
-// Carica e visualizza i sensori ASSOCIATI a una specifica casa
+// Loads and displays sensors ASSOCIATED with a specific home in the 'Manage Sensors' section.
 async function loadHomeSensors(homeId) {
   const ul = document.getElementById('manage-sensors-list');
   if (!ul) { console.error('#manage-sensors-list not found'); return; }
   ul.innerHTML = "<li class='list-group-item'>Loading sensors...</li>";
 
   try {
+    // Strategy 1: Fetch all sensors and filter client-side based on home.id
     const allSensors = await fetchApi('/api/entities/lightSensor/');
-    /* ---- prima prova: il backend include home.id? ---------------- */
     let sensors = allSensors.filter(s => s.home && String(s.home.id) === String(homeId));
 
-    /* ---- fallback se la chiave home manca ------------------------ */
+    // Strategy 2: Fallback if home.id is not available in the sensor list API response
     if (sensors.length === 0) {
-      const home = await getHomeDetails(homeId);
-      const sensorName = home?.lightSensor?.name;
-      if (sensorName) sensors = allSensors.filter(s => s.name === sensorName);
+      console.warn(`No sensors found with home.id === ${homeId}. Falling back to fetching home details.`);
+      const home = await getHomeDetails(homeId); // Use the existing function
+      const sensorName = home?.lightSensor?.name; // Get the name of the associated sensor
+      if (sensorName) {
+        // Filter all sensors by the name found in the home details
+        sensors = allSensors.filter(s => s.name === sensorName);
+        console.log(`Found associated sensor by name: ${sensorName}`);
+      } else {
+        console.log(`Home ${homeId} has no lightSensor associated in its details.`);
+      }
     }
 
-    /* ---- render -------------------------------------------------- */
+    // Render the list
     ul.innerHTML = '';
     if (sensors.length === 0) {
       ul.innerHTML = "<li class='list-group-item'>No light sensor associated with this home.</li>";
@@ -563,174 +591,132 @@ async function loadHomeSensors(homeId) {
     }
 
     sensors.forEach(sensor => {
-      const value = sensor.lightValue ?? sensor.value ?? 'N/A';
+      const value = sensor.lightValue ?? sensor.value ?? 'N/A'; // Get current value
+      const safeName = sensor.name.replace(/'/g, "\\'"); // Escape single quotes for onclick
       ul.insertAdjacentHTML('beforeend', `
         <li id="sensor-item-${sensor.id}"
-            class="list-group-item d-flex justify-content-between align-items-center">
+            class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
           <div><strong>${sensor.name}</strong> — Value: ${value}%</div>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-warning"
-                    onclick="showEditHomeSensorForm('${sensor.id}','${sensor.name.replace(/'/g, "\\'")}', ${value === 'N/A' ? null : value})">
-              Edit
-            </button>
-            <button class="btn btn-danger"
-                    onclick="deleteHomeSensor('${sensor.id}','${homeId}')">
-              Delete
-            </button>
-          </div>
+          <!-- rimane solo il pulsante di delete -->
+          <button class="btn btn-danger btn-sm"
+                  onclick="deleteHomeSensor('${sensor.id}','${homeId}')">
+            Delete
+          </button>
         </li>`);
     });
   } catch (err) {
-    console.error('Error loading sensors:', err);
-    ul.innerHTML = `<li class='list-group-item text-danger'>Error: ${err.message}</li>`;
+    console.error(`Error loading sensors for home ${homeId}:`, err);
+    ul.innerHTML = `<li class='list-group-item text-danger'>Error loading sensors: ${err.message}</li>`;
   }
 }
 
-// Mostra il form di modifica specifico per un sensore di casa
-function showEditHomeSensorForm(id, name, currentValue) {
-  document.getElementById("edit-home-sensor-id").value = id;
-  document.getElementById("edit-home-sensor-name").value = name;
-  document.getElementById("edit-home-sensor-value").value = currentValue !== null ? currentValue : "";
-  const editFormEl = document.getElementById("edit-home-sensor-form"); if (editFormEl) editFormEl.style.display = "block";
-}
 
-// Salva le modifiche al sensore fatte nel form di modifica casa
-async function submitEditHomeSensor(event) {
-  event.preventDefault();
-  const id = document.getElementById("edit-home-sensor-id").value;
-  const nameInput = document.getElementById("edit-home-sensor-name");
-  const valueInput = document.getElementById("edit-home-sensor-value");
-  const homeId = document.getElementById("manage-sensors-home-id").value;
-  const saveButton = event.submitter;
-
-  const newName = nameInput.value.trim();
-  const newValueStr = valueInput.value.trim();
-  const apiPromises = [];
-
-  // console.warn("TODO: Implement change detection in submitEditHomeSensor");
-
-  // PATCH Nome
-  if (newName) { // TODO: Confronta con originale
-    apiPromises.push(fetchApi(`/api/entities/lightSensor/patch/name/${id}`, "PATCH", { name: newName }).catch(err => { throw err; }));
-  }
-  // PATCH Valore
-  if (newValueStr) { // TODO: Confronta con originale
-    const newValue = parseInt(newValueStr, 10);
-    if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
-      // console.warn("Backend patchValueLightSensor ADDS value instead of setting it! Needs fix.");
-      apiPromises.push(fetchApi(`/api/entities/lightSensor/patch/value/${id}`, "PATCH", { value: newValue }).catch(err => { throw err; }));
-    } else { alert("Invalid value percentage (0-100). Value not updated."); }
-  }
-
-  if (apiPromises.length === 0) { alert("No valid changes detected."); return; }
-  if (saveButton) { saveButton.disabled = true; saveButton.textContent = 'Saving...'; }
-
-  try {
-    await Promise.all(apiPromises);
-    alert("Sensor updated successfully!");
-    cancelEditHomeSensor(); // Chiude form
-    loadHomeSensors(homeId); // Ricarica lista
-  } catch (error) {
-    console.error("Error updating sensor:", error);
-    alert(`Error updating sensor: ${error.message}`);
-  } finally {
-    if (saveButton) {
-      saveButton.disabled = false;
-      saveButton.textContent = 'Save Sensor Changes'; // Testo Inglese
-    }
-  }
-}
-
-// Elimina/Dissocia un sensore associato a una casa
+// Deletes a sensor globally it from the current home.
 async function deleteHomeSensor(sensorId, homeId) {
-  if (!confirm("Are you sure you want to dissociate and delete this sensor? This action is permanent.")) return; // Testo Inglese
+  if (!confirm("Are you sure you want to permanently delete this sensor?")) return;
 
   const deleteBtn = document.querySelector(`#sensor-item-${sensorId} button.btn-danger`);
-  deleteBtn?.setAttribute("disabled", "true");
+  if (deleteBtn) deleteBtn.disabled = true;
 
   try {
-    // 1) Dissocia (PATCH sulla casa)
-    await fetchApi(
-      `/api/entities/home/patch/lightSensor/${homeId}`,
-      "PATCH",
-      { lightSensor: null }
-    );
-    console.log(`Sensor dissociated from home ${homeId}`);
-
-    // 2) Elimina globalmente (DELETE sul sensore)
+    // Delete the sensor globally
+    console.log(`Attempting to delete sensor ${sensorId} globally...`);
     await fetchApi(
       `/api/entities/lightSensor/delete/${sensorId}`,
       "DELETE"
     );
-    console.log(`Sensor ${sensorId} deleted globally`);
-
-    alert("Sensor dissociated and deleted successfully!"); // Testo Inglese
-    loadHomeSensors(homeId); // Ricarica lista
-
+    console.log(`Sensor ${sensorId} deleted globally.`);
+    alert("Sensor Deleted successfully!");
+    loadHomeSensors(homeId); // Reload the sensor list for the current home
+    loadGlobalLightSensors(); // Reload the global sensor list as well
   } catch (err) {
-    console.error("Error deleting/dissociating sensor:", err);
-    alert("Failed to delete/dissociate sensor: " + err.message); // Testo Inglese
-    deleteBtn?.removeAttribute("disabled");
+    console.error("Error deleting sensor:", err);
+    alert("Failed to delete sensor: " + err.message);
+    if (deleteBtn) deleteBtn.removeAttribute("disabled"); // Re-enable button on error
   }
 }
 
+
 // ========================================
-// GESTIONE TAPPARELLE ASSOCIATE ALLA CASA
+// MANAGING SHUTTERS ASSOCIATED WITH A HOME
 // ========================================
 
-// Mostra la sezione gestione tapparelle per una casa specifica
+// Shows the section for managing shutters associated with a specific home.
 function showShuttersForHome(homeId, homeName) {
   console.log(`Showing shutters for Home ID: ${homeId}, Name: ${homeName}`);
-  // Nascondi altre sezioni principali
+  // Hide other main sections
   const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "none";
   const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "none";
   const editHomeFormEl = document.getElementById("edit-home-form"); if (editHomeFormEl) editHomeFormEl.style.display = 'none';
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'none';
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'none';
   const manageSensorsSectionEl = document.getElementById("manage-sensors-section"); if (manageSensorsSectionEl) manageSensorsSectionEl.style.display = 'none';
-  // Mostra la sezione gestione tapparelle
-  const shutterSectionEl = document.getElementById("manage-shutters-section"); if (!shutterSectionEl) return; shutterSectionEl.style.display = 'block';
 
-  // Imposta titolo
-  const titleElement = document.getElementById("manage-shutters-title"); if (titleElement) titleElement.textContent = `Shutters for: ${homeName}`; // Testo Inglese
+  // Show the manage shutters section
+  const shutterSectionEl = document.getElementById("manage-shutters-section");
+  if (!shutterSectionEl) { console.error("#manage-shutters-section not found"); return; }
+  shutterSectionEl.style.display = 'block';
 
-  // Nascondi form modifica nome tapparella se era aperto
+  // Set title (Using ID 'manage-shutters-title-main' from updated HTML)
+  const titleElement = document.getElementById("manage-shutters-title-main");
+  if (titleElement) titleElement.textContent = `Shutters for: ${homeName}`;
+
+  // Store homeId for use by child forms/buttons
+  // Using the hidden input within the inline edit form: 'edit-home-shutter-home-id'
+  const shutterHomeIdHidden = document.getElementById("edit-home-shutter-home-id");
+  if (shutterHomeIdHidden) shutterHomeIdHidden.value = homeId;
+  else console.warn("Hidden input #edit-home-shutter-home-id not found inside the edit form.");
+
+  // Hide the inline shutter edit form if it was open
   const editShutterFormEl = document.getElementById("edit-home-shutter-form"); if (editShutterFormEl) editShutterFormEl.style.display = 'none';
 
-  loadHomeShuttersForManagement(homeId); // Funzione aggiornata
+  loadHomeShuttersForManagement(homeId); // Load shutters for this specific home
 }
 
-// Nasconde la sezione tapparelle e torna alla lista case
+// Hides the manage shutters section and returns to the main home list view.
 function hideShuttersForHome() {
   const shutterSectionEl = document.getElementById("manage-shutters-section"); if (shutterSectionEl) shutterSectionEl.style.display = 'none';
-  // Mostra di nuovo le sezioni principali
+  // Show main sections again
   const manageHomesSectionEl = document.getElementById("manage-homes-section"); if (manageHomesSectionEl) manageHomesSectionEl.style.display = "block";
-  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "block";
+  const addHomeFormEl = document.getElementById("add-home-form"); if (addHomeFormEl) addHomeFormEl.style.display = "flex";
   const routinesSectionEl = document.getElementById("Routines-section"); if (routinesSectionEl) routinesSectionEl.style.display = 'block';
   const globalDevicesSectionEl = document.getElementById("global-devices-section"); if (globalDevicesSectionEl) globalDevicesSectionEl.style.display = 'flex';
-  loadHomes(); // Ricarica vista principale
+  loadHomes(); // Reload main view
 }
 
-// Carica e visualizza le tapparelle ASSOCIATE (con bottoni Edit/Dissociate)
+// Loads and displays shutters ASSOCIATED with a specific home in the 'Manage Shutters' section.
+// Includes Edit Name.
 async function loadHomeShuttersForManagement(homeId) {
   const ul = document.getElementById("manage-shutters-list");
   if (!ul) { console.error("#manage-shutters-list not found"); return; }
   ul.innerHTML = "<li class='list-group-item'>Loading shutters...</li>";
 
+  // Reset the status text for the manage section
+  const statusElManage = document.getElementById("rollerShutterStatusManage"); // Use updated ID
+  if (statusElManage) statusElManage.textContent = "Select a shutter from the list below…";
+
+
   try {
+    // Strategy 1: Fetch all shutters and filter client-side based on home.id
     const allShutters = await fetchApi("/api/entities/rollerShutter/");
-    /* 1) se il backend fornisce home.id filtriamo subito  */
     let shutters = allShutters.filter(s => s.home && String(s.home.id) === String(homeId));
 
-    /* 2) fallback: filtriamo per nome usando i dettagli casa */
+    // Strategy 2: Fallback if home.id is not in the shutter list API response
     if (shutters.length === 0) {
-      const home = await getHomeDetails(homeId);
+      const home = await getHomeDetails(homeId); // Fetch home details
+      // Get names of shutters associated with the home
       const namesSet = new Set((home?.rollerShutters || []).map(rs => rs.name));
-      shutters = allShutters.filter(s => namesSet.has(s.name));
+      if (namesSet.size > 0) {
+        // Filter all shutters by the names found in the home details
+        shutters = allShutters.filter(s => namesSet.has(s.name));
+        console.log(`Found ${shutters.length} associated shutter(s) by name.`);
+      } else {
+        console.log(`Home ${homeId} has no rollerShutters associated in its details.`);
+      }
     }
 
-    /* 3) render lista */
-    ul.innerHTML = "";
+    // Render the list
+    ul.innerHTML = ""; // Clear loading message
     if (shutters.length === 0) {
       ul.innerHTML = "<li class='list-group-item'>No shutters currently associated.</li>";
       return;
@@ -739,61 +725,47 @@ async function loadHomeShuttersForManagement(homeId) {
     shutters.forEach(shutter => {
       const shutterId = shutter.id;
       const shutterName = shutter.name;
-      const opening = shutter.percentageOpening ?? shutter.opening ?? 0;
+      const opening = shutter.percentageOpening ?? shutter.opening ?? 0; // Use percentageOpening or opening
+      const safeName = shutterName.replace(/'/g, "\\'"); // Escape single quotes for JS within HTML
 
       const li = document.createElement("li");
-      li.id = `shutter-item-${shutterId}`;
-      li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap";
+      li.id = `manage-shutter-item-${shutterId}`; // Unique ID for this list item
+      li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap list-group-item-action"; // Added action class for cursor
 
-      /* ——— CLICK: usa selectRollerShutter di shutters.js ——— */
+      // --- Click handler to select shutter for controls ---
       li.onclick = () => {
-        /* reset evidenza visiva */
+        // Remove 'active' class from all items in *this* list
         document.querySelectorAll("#manage-shutters-list .list-group-item")
           .forEach(el => el.classList.remove("active"));
+        // Add 'active' class to the clicked item
         li.classList.add("active");
-
-        /* imposta la tapparella selezionata per i controlli */
-        selectRollerShutter(
-          String(shutterId),
-          shutterName.replace(/'/g, "\\'"),
-          opening
-        );
+        // Pass the ID, name, and current opening percentage
+        selectRollerShutter(String(shutterId), safeName, opening); // Ensure ID is string if needed
       };
-
       li.innerHTML = `
-  <span>${shutterName}</span>
-  <span class="opening">Opening: ${opening}%</span>
-  <div class="btn-group btn-group-sm ms-2">
-    <button class="btn btn-warning"
-            onclick="showEditHomeShutterForm('${shutterId}','${shutterName.replace(/'/g, "\\'")}', '${homeId}'); event.stopPropagation();">
-      Edit Name
-    </button>
-    <button class="btn btn-danger"
-            onclick="deleteManagedRollerShutter('${shutterId}','${homeId}'); event.stopPropagation();">
-      Dissociate
-    </button>
-  </div>`;
-
+        <span>${shutterName}</span>
+        <span class="opening ms-auto me-2">Opening: ${opening}%</span> <div class="btn-group btn-group-sm">
+          <button class="btn btn-danger"
+                  onclick="globalDeleteRollerShutter('${shutterId}');"> Delete
+          </button>
+        </div>`;
       ul.appendChild(li);
     });
 
-    /* reset selezione/controlli alla prima apertura della sezione */
-    document.getElementById("rollerShutterStatus").textContent =
-      "Select a shutter from the list below…";
   } catch (err) {
-    console.error("Error loading shutters:", err);
-    ul.innerHTML = `<li class='list-group-item text-danger'>Error: ${err.message}</li>`;
+    console.error(`Error loading shutters for home ${homeId} management:`, err);
+    ul.innerHTML = `<li class='list-group-item text-danger'>Error loading shutters: ${err.message}</li>`;
   }
 }
 
 
 // ========================================
-// FUNZIONI GLOBALI AGGIUNTA / EDIT INLINE / DELETE
+// GLOBAL DEVICE FUNCTIONS (Add / Inline Edit / Delete)
 // ========================================
 
-// --- LIGHT SENSOR ---
+// --- GLOBAL LIGHT SENSOR ---
 
-// Carica e mostra l’elenco dei sensori globali
+// Loads and displays the list of all globally defined light sensors.
 async function loadGlobalLightSensors() {
   const container = document.getElementById('global-sensors-list');
   if (!container) { console.error("Element '#global-sensors-list' not found."); return; }
@@ -801,33 +773,37 @@ async function loadGlobalLightSensors() {
 
   try {
     const sensors = await fetchApi('/api/entities/lightSensor/');
+    container.innerHTML = ''; // Clear loading message
+
     if (!Array.isArray(sensors) || sensors.length === 0) {
-      container.innerHTML = '<li class="list-group-item">No global sensors defined.</li>'; // Testo Inglese
+      container.innerHTML = '<li class="list-group-item">No global sensors defined.</li>';
       return;
     }
-    container.innerHTML = '';
 
     sensors.forEach(s => {
-      if (!s || !s.id) return;
+      if (!s || !s.id) return; // Skip if sensor object or ID is missing
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex justify-content-between align-items-center';
-      li.id = `global-sensor-${s.id}`;
+      li.id = `global-sensor-${s.id}`; // Unique ID for the list item
 
       const span = document.createElement('span');
-      span.textContent = s.name || `Sensor ID: ${s.id}`;
+      span.textContent = s.name || `Sensor ID: ${s.id}`; // Display name or ID
 
       const btnGroup = document.createElement('div');
       btnGroup.className = 'btn-group btn-group-sm';
 
+      // Edit Button
       const editBtn = document.createElement('button');
       editBtn.className = 'btn btn-warning';
-      editBtn.textContent = 'Edit'; // Testo Inglese
+      editBtn.textContent = 'Edit';
+      // Pass ID and current name to the inline edit function
       editBtn.onclick = () => globalShowEditLightSensorForm(s.id, s.name || '');
 
+      // Delete Button
       const delBtn = document.createElement('button');
       delBtn.className = 'btn btn-danger';
-      delBtn.textContent = 'Delete'; // Testo Inglese
-      delBtn.onclick = () => globalDeleteLightSensor(s.id);
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => globalDeleteLightSensor(s.id); // Pass ID to delete function
 
       btnGroup.append(editBtn, delBtn);
       li.append(span, btnGroup);
@@ -835,102 +811,122 @@ async function loadGlobalLightSensors() {
     });
   } catch (err) {
     console.error('Error loading global sensors:', err);
-    container.innerHTML = `<li class="list-group-item text-danger">Error: ${err.message}</li>`;
+    container.innerHTML = `<li class="list-group-item text-danger">Error loading sensors: ${err.message}</li>`;
   }
 }
 
 
-// Visualizza inline il form di edit per un sensore globale
+// Displays an inline form to edit the name of a global light sensor.
 function globalShowEditLightSensorForm(id, currentName) {
   const li = document.getElementById(`global-sensor-${id}`);
-  if (!li) return;
+  if (!li) return; // Exit if the list item is not found
+
+  // Store the original content to restore on cancel
   const originalContent = li.innerHTML;
 
+  // Replace the list item content with an input field and buttons
   li.innerHTML = `
     <input
       type="text"
       id="global-edit-input-sensor-${id}"
       class="form-control form-control-sm d-inline-block w-auto me-2"
       value="${currentName}"
+      required
     />
-  `;
+  `; // Added 'required'
 
   const btnGroup = document.createElement('div');
-  btnGroup.className = 'btn-group btn-group-sm d-inline-block';
+  btnGroup.className = 'btn-group btn-group-sm d-inline-block align-middle'; // Use align-middle
 
+  // Save Button
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn btn-success';
-  saveBtn.textContent = 'Save'; // Testo Inglese
+  saveBtn.textContent = 'Save';
+  saveBtn.type = 'button'; // Prevent form submission if accidentally nested
   saveBtn.onclick = async () => {
     const inputEl = document.getElementById(`global-edit-input-sensor-${id}`);
     const newName = inputEl ? inputEl.value.trim() : '';
-    if (!newName) { alert('Please enter a valid name'); return; } // Testo Inglese
-    try {
-      saveBtn.disabled = true;
-      await fetchApi(`/api/entities/lightSensor/patch/name/${id}`, 'PATCH', { name: newName });
-      await loadGlobalLightSensors();
-    } catch (err) {
-      console.error('Error patching sensor:', err); // Testo Inglese
-      alert(`Error: ${err.message}`);
-      li.innerHTML = originalContent;
-      saveBtn.disabled = false;
+    if (!newName) { // Check if name is empty after trimming
+      alert('Sensor name cannot be empty.'); return;
     }
+    try {
+      saveBtn.disabled = true; // Disable button during API call
+      // PATCH the name using the API
+      await fetchApi(`/api/entities/lightSensor/patch/name/${id}`, 'PATCH', { name: newName });
+      await loadGlobalLightSensors(); // Reload the list to show the updated name
+    } catch (err) {
+      console.error('Error patching global sensor name:', err);
+      alert(`Error updating sensor name: ${err.message}`);
+      li.innerHTML = originalContent; // Restore original content on error
+      // No need to re-enable button here as list reloads
+    }
+    // Button will be removed on successful reload
   };
 
+  // Cancel Button
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'Cancel'; // Testo Inglese
-  cancelBtn.onclick = () => { li.innerHTML = originalContent; };
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.type = 'button';
+  cancelBtn.onclick = () => { li.innerHTML = originalContent; }; // Restore original content
 
   btnGroup.append(saveBtn, cancelBtn);
-  li.appendChild(btnGroup);
+  li.appendChild(btnGroup); // Append buttons next to the input
+
+  // Focus the input field
+  document.getElementById(`global-edit-input-sensor-${id}`).focus();
 }
 
 
-// Crea un nuovo sensore globale
+// Creates a new global light sensor via the API.
 async function globalCreateLightSensor(event) {
-  event.preventDefault();
+  event.preventDefault(); // Prevent default form submission
   const nameInput = document.getElementById('global-newSensorName');
   const sensorName = nameInput.value.trim();
-  if (!sensorName) { alert('Please enter a sensor name'); return; } // Testo Inglese
+  if (!sensorName) { alert('Please enter a sensor name.'); return; }
 
-  const submitBtn = event.submitter;
+  const submitBtn = event.submitter; // Get the button that triggered the submit
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Adding...';
+    submitBtn.textContent = 'Adding...'; // Provide visual feedback
   }
 
   try {
+    // Call the API to create the sensor
     await fetchApi('/api/entities/lightSensor/create', 'POST', { name: sensorName });
-    await loadGlobalLightSensors();
-    nameInput.value = '';
+    await loadGlobalLightSensors(); // Reload the list to show the new sensor
+    nameInput.value = ''; // Clear the input field
   } catch (err) {
-    console.error('Error creating light sensor:', err);
-    alert(`Error: ${err.message}`); // Testo Inglese
+    console.error('Error creating global light sensor:', err);
+    alert(`Error creating sensor: ${err.message}`);
   } finally {
+    // Re-enable the button regardless of success or failure
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = '+ Add Sensor'; // Testo Inglese
+      submitBtn.textContent = '+ Add Sensor'; // Restore original text
     }
   }
 }
 
-// Elimina un sensore globale
+// Deletes a global light sensor via the API.
 async function globalDeleteLightSensor(id) {
-  if (!confirm('Are you sure you want to delete this global sensor? This may also remove it from associated homes and routines.')) return; // Testo Inglese
+  // Confirmation dialog
+  if (!confirm('Are you sure you want to delete this sensor? ')) return;
   try {
+    // Call the API to delete the sensor
     await fetchApi(`/api/entities/lightSensor/delete/${id}`, 'DELETE');
-    await loadGlobalLightSensors();
+    await loadGlobalLightSensors(); // Reload the list to remove the deleted sensor
+    // Optionally, check if this sensor was associated with the currently viewed home (if in 'Manage Sensors' view) and reload that too.
   } catch (err) {
     console.error('Error deleting global light sensor:', err);
-    alert(`Error: ${err.message}`); // Testo Inglese
+    alert(`Error deleting sensor: ${err.message}. its connected to the home ` );
   }
 }
 
 
-// --- ROLLER SHUTTER ---
+// --- GLOBAL ROLLER SHUTTER ---
 
-// Carica e mostra l’elenco delle tapparelle globali
+// Loads and displays the list of all globally defined roller shutters.
 async function loadGlobalRollerShutters() {
   const container = document.getElementById('global-shutters-list');
   if (!container) { console.error("Element '#global-shutters-list' not found."); return; }
@@ -938,33 +934,36 @@ async function loadGlobalRollerShutters() {
 
   try {
     const shutters = await fetchApi('/api/entities/rollerShutter/');
+    container.innerHTML = ''; // Clear loading message
+
     if (!Array.isArray(shutters) || shutters.length === 0) {
-      container.innerHTML = '<li class="list-group-item">No global shutters defined.</li>'; // Testo Inglese
+      container.innerHTML = '<li class="list-group-item">No global shutters defined.</li>';
       return;
     }
-    container.innerHTML = '';
 
     shutters.forEach(s => {
-      if (!s || !s.id) return;
+      if (!s || !s.id) return; // Skip if shutter object or ID is missing
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex justify-content-between align-items-center';
-      li.id = `global-shutter-${s.id}`;
+      li.id = `global-shutter-${s.id}`; // Unique ID
 
       const span = document.createElement('span');
-      span.textContent = s.name || `Shutter ID: ${s.id}`;
+      span.textContent = s.name || `Shutter ID: ${s.id}`; // Display name or ID
 
       const btnGroup = document.createElement('div');
       btnGroup.className = 'btn-group btn-group-sm';
 
+      // Edit Button
       const editBtn = document.createElement('button');
       editBtn.className = 'btn btn-warning';
-      editBtn.textContent = 'Edit'; // Testo Inglese
-      editBtn.onclick = () => globalShowEditRollerShutterForm(s.id, s.name || '');
+      editBtn.textContent = 'Edit';
+      editBtn.onclick = () => globalShowEditRollerShutterForm(s.id, s.name || ''); // Pass ID and name
 
+      // Delete Button
       const delBtn = document.createElement('button');
       delBtn.className = 'btn btn-danger';
-      delBtn.textContent = 'Delete'; // Testo Inglese
-      delBtn.onclick = () => globalDeleteRollerShutter(s.id);
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => globalDeleteRollerShutter(s.id); // Pass ID
 
       btnGroup.append(editBtn, delBtn);
       li.append(span, btnGroup);
@@ -972,236 +971,171 @@ async function loadGlobalRollerShutters() {
     });
   } catch (err) {
     console.error('Error loading global shutters:', err);
-    container.innerHTML = `<li class="list-group-item text-danger">Error: ${err.message}</li>`;
+    container.innerHTML = `<li class="list-group-item text-danger">Error loading shutters: ${err.message}</li>`;
   }
 }
 
 
-// Visualizza inline il form di edit per una tapparella globale
+// Displays an inline form to edit the name of a global roller shutter.
 function globalShowEditRollerShutterForm(id, currentName) {
   const li = document.getElementById(`global-shutter-${id}`);
-  if (!li) return;
-  const originalContent = li.innerHTML;
+  if (!li) return; // Exit if list item not found
 
+  const originalContent = li.innerHTML; // Store original content
+
+  // Replace content with input and buttons
   li.innerHTML = `
     <input
       type="text"
       id="global-edit-input-shutter-${id}"
       class="form-control form-control-sm d-inline-block w-auto me-2"
       value="${currentName}"
+      required
     />
-  `;
+  `; // Added required
 
   const btnGroup = document.createElement('div');
-  btnGroup.className = 'btn-group btn-group-sm d-inline-block';
+  btnGroup.className = 'btn-group btn-group-sm d-inline-block align-middle'; // Use align-middle
 
+  // Save Button
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn btn-success';
-  saveBtn.textContent = 'Save'; // Testo Inglese
+  saveBtn.textContent = 'Save';
+  saveBtn.type = 'button';
   saveBtn.onclick = async () => {
     const inputEl = document.getElementById(`global-edit-input-shutter-${id}`);
     const newName = inputEl ? inputEl.value.trim() : '';
-    if (!newName) { alert('Please enter a valid name'); return; } // Testo Inglese
+    if (!newName) { // Check if name is empty
+      alert('Shutter name cannot be empty.'); return;
+    }
     try {
-      saveBtn.disabled = true;
+      saveBtn.disabled = true; // Disable during API call
+      // PATCH the name via API
       await fetchApi(`/api/entities/rollerShutter/patch/name/${id}`, 'PATCH', { name: newName });
-      await loadGlobalRollerShutters();
+      await loadGlobalRollerShutters(); // Reload list to show updated name
     } catch (err) {
-      console.error('Error patching shutter:', err); // Testo Inglese
-      alert(`Error: ${err.message}`);
-      li.innerHTML = originalContent;
-      saveBtn.disabled = false;
+      console.error('Error patching global shutter name:', err);
+      alert(`Error updating shutter name: ${err.message}`);
+      li.innerHTML = originalContent; // Restore original content on error
     }
   };
 
+  // Cancel Button
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'Cancel'; // Testo Inglese
-  cancelBtn.onclick = () => { li.innerHTML = originalContent; };
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.type = 'button';
+  cancelBtn.onclick = () => { li.innerHTML = originalContent; }; // Restore original content
 
   btnGroup.append(saveBtn, cancelBtn);
-  li.appendChild(btnGroup);
+  li.appendChild(btnGroup); // Append buttons
+
+  // Focus the input field
+  document.getElementById(`global-edit-input-shutter-${id}`).focus();
 }
 
-// Crea una nuova tapparella globale
+// Creates a new global roller shutter via the API.
 async function globalCreateRollerShutter(event) {
-  event.preventDefault();
+  event.preventDefault(); // Prevent default form submission
   const nameInput = document.getElementById('global-newShutterName');
   const shutterName = nameInput.value.trim();
-  if (!shutterName) { alert('Please enter a shutter name'); return; } // Testo Inglese
+  if (!shutterName) { alert('Please enter a shutter name.'); return; }
 
-  const submitBtn = event.submitter;
+  const submitBtn = event.submitter; // Get the submit button
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Adding...';
+    submitBtn.textContent = 'Adding...'; // Provide feedback
   }
 
   try {
+    // Call API to create the shutter
     await fetchApi('/api/entities/rollerShutter/create', 'POST', { name: shutterName });
-    await loadGlobalRollerShutters();
-    nameInput.value = '';
+    await loadGlobalRollerShutters(); // Reload the list
+    nameInput.value = ''; // Clear the input field
   } catch (err) {
-    console.error('Error creating roller shutter:', err);
-    alert(`Error: ${err.message}`); // Testo Inglese
+    console.error('Error creating global roller shutter:', err);
+    alert(`Error creating shutter: ${err.message}`);
   } finally {
+    // Re-enable button
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = '+ Add Shutter'; // Testo Inglese
+      submitBtn.textContent = '+ Add Shutter'; // Restore original text
     }
   }
 }
 
-// Elimina una tapparella globale
+// Deletes a global roller shutter via the API.
 async function globalDeleteRollerShutter(id) {
-  if (!confirm('Are you sure you want to delete this global shutter? This may also remove it from associated homes and routines.')) return; // Testo Inglese
+  // Confirmation dialog
+  if (!confirm('Are you sure you want to delete this shutter?')) return;
   try {
+    // Call API to delete the shutter
     await fetchApi(`/api/entities/rollerShutter/delete/${id}`, 'DELETE');
-    await loadGlobalRollerShutters();
+    await loadGlobalRollerShutters(); // Reload the list
+    // Optionally, reload associated home shutters list if currently viewing one
   } catch (err) {
     console.error('Error deleting global roller shutter:', err);
-    alert(`Error: ${err.message}`); // Testo Inglese
+    alert(`Error deleting shutter: ${err.message} check if the shutter is not associated with any home or routine.`);
   }
 }
 
 
-// Mostra il form per modificare il nome della tapparella associata
+// --- INLINE EDIT/DELETE FOR HOME-ASSOCIATED DEVICES ---
+// These functions handle actions within the "Manage Sensors/Shutters" sections for a specific home.
 function showEditHomeShutterForm(shutterId, currentName, homeId) {
-  console.log(`Editing shutter ID: ${shutterId}, Current Name: ${currentName}`);
+  // Populate the form fields
   document.getElementById("edit-home-shutter-id").value = shutterId;
   document.getElementById("edit-home-shutter-name").value = currentName;
+  // Ensure the home ID is set in the hidden field for submission context
   document.getElementById("edit-home-shutter-home-id").value = homeId;
 
+  // Show the form
   const editForm = document.getElementById("edit-home-shutter-form");
   if (editForm) editForm.style.display = "block";
+  else console.error("#edit-home-shutter-form not found");
 }
 
-// Nasconde il form di modifica nome tapparella associata
+// Hides the inline form for editing a home-associated shutter's name.
 function cancelEditHomeShutter() {
   const editForm = document.getElementById("edit-home-shutter-form");
   if (editForm) editForm.style.display = "none";
 }
 
-// Gestisce l'invio del form di modifica nome tapparella associata
+// Submits the name change for a home-associated shutter.
 async function submitEditHomeShutter(event) {
   event.preventDefault();
   const shutterId = document.getElementById("edit-home-shutter-id").value;
+  // Retrieve homeId from the hidden input to know which home's list to reload
   const homeId = document.getElementById("edit-home-shutter-home-id").value;
   const newNameInput = document.getElementById("edit-home-shutter-name");
   const newName = newNameInput.value.trim();
   const saveButton = event.submitter;
 
   if (!newName) { alert("Please enter a new name for the shutter."); return; }
-  if (!shutterId || !homeId) { console.error("Missing shutter ID or home ID for edit submission."); alert("An error occurred. Cannot save changes."); return; }
+  if (!shutterId || !homeId) {
+    console.error("Missing shutter ID or home ID for edit submission.");
+    alert("An error occurred. Cannot save changes."); return;
+  }
 
   if (saveButton) { saveButton.disabled = true; saveButton.textContent = "Saving..."; }
 
   try {
+    // PATCH the shutter's name globally
     await fetchApi(`/api/entities/rollerShutter/patch/name/${shutterId}`, "PATCH", { name: newName });
-    alert("Shutter name updated successfully!"); // Testo Inglese
-    cancelEditHomeShutter();
+    alert("Shutter name updated successfully!");
+    cancelEditHomeShutter(); // Hide the form
+    // Reload the list of shutters for the specific home being managed
     loadHomeShuttersForManagement(homeId);
+    // Also reload the global list if it's visible
+    loadGlobalRollerShutters();
 
   } catch (error) {
     console.error("Error updating shutter name:", error);
-    alert(`Failed to update shutter name: ${error.message}`); // Testo Inglese
+    alert(`Failed to update shutter name: ${error.message}`);
   } finally {
     if (saveButton) {
       saveButton.disabled = false;
-      saveButton.textContent = "Save Name"; // Testo Inglese
+      saveButton.textContent = "Save Name"; // Reset button text
     }
   }
-}
-
-// Dissocia una tapparella da una casa
-async function deleteManagedRollerShutter(shutterId, homeId) { // Rinominata per chiarezza
-  if (!confirm("Are you sure you want to dissociate this shutter from the home? (The shutter itself won't be deleted globally)")) { return; } // Testo Inglese e più chiaro
-
-  if (!shutterId || !homeId) { console.error("Missing shutter ID or home ID for dissociation."); alert("An error occurred."); return; }
-
-  const dissociateBtn = document.querySelector(`#shutter-item-${shutterId} button.btn-danger`);
-  dissociateBtn?.setAttribute("disabled", "true");
-
-  try {
-    // 1. Leggi le tapparelle attuali della casa (usa workaround se necessario)
-    let homeDetails = null;
-    try {
-      homeDetails = await fetchApi(`/api/entities/home/${homeId}`);
-    } catch (detailsError) {
-      if (detailsError.status === 403) {
-        console.warn(`Falling back to fetching home list for dissociation due to 403 on /api/entities/home/${homeId}.`);
-        const allHomes = await fetchApi('/api/entities/home/');
-        if (allHomes && Array.isArray(allHomes)) {
-          homeDetails = allHomes.find(h => h?.id == homeId);
-        }
-      } else {
-        throw detailsError;
-      }
-    }
-    if (!homeDetails || !homeDetails.rollerShutters) { throw new Error("Could not fetch current home shutters."); }
-
-    // 2. Filtra via la tapparella da dissociare
-    const updatedShutters = homeDetails.rollerShutters.filter(s => String(s.id) !== String(shutterId));
-
-    // 3. Invia la lista aggiornata con PATCH alla casa
-    //    Assicurati che il payload sia quello atteso dal backend (potrebbe volere solo ID, o oggetti completi)
-    const payload = { rollerShutters: updatedShutters.map(s => ({ id: s.id })) }; // Ipotesi: invia solo ID
-    console.log("Sending PATCH to dissociate shutter:", payload);
-    await fetchApi(`/api/entities/home/patch/rollerShutters/${homeId}`, "PATCH", payload);
-
-    alert("Roller shutter dissociated successfully!"); // Testo Inglese
-    loadHomeShuttersForManagement(homeId);
-
-  } catch (error) {
-    console.error(`Error dissociating roller shutter (ID: ${shutterId}) from home (ID: ${homeId}):`, error);
-    alert(`Error dissociating shutter: ${error.message}`); // Testo Inglese
-    dissociateBtn?.removeAttribute("disabled");
-  }
-}
-async function inlineEditHomeName(id, currentName) {
-  const li = document.getElementById(`home-item-${id}`);
-  if (!li) return;
-
-  // salva contenuto precedente
-  const original = li.innerHTML;
-
-  // crea campo di input + bottoni
-  li.innerHTML = `
-    <input type="text"
-           id="inline-home-input-${id}"
-           class="form-control form-control-sm d-inline-block w-auto me-2"
-           value="${currentName}">
-  `;
-  const btnGroup = document.createElement('div');
-  btnGroup.className = 'btn-group btn-group-sm';
-
-  // Save
-  const saveBtn = document.createElement('button');
-  saveBtn.className = 'btn btn-success';
-  saveBtn.textContent = 'Save';
-  saveBtn.onclick = async () => {
-    const newName = document.getElementById(`inline-home-input-${id}`).value.trim();
-    if (!newName) { alert('Il nome non può essere vuoto'); return; }
-    try {
-      saveBtn.disabled = true;
-      await fetchApi(`/api/entities/home/patch/name/${id}`, 'PATCH', { name: newName });
-      // ripristina la riga aggiornando il testo
-      original.replace(currentName, newName); // forza il replace visivo
-      loadHomes();   // o, se preferisci, ricostruisci solo questo li...
-    } catch (err) {
-      console.error(err);
-      alert('Errore aggiornando il nome: ' + err.message);
-      li.innerHTML = original;  // rollback
-    }
-  };
-
-  // Cancel
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'Cancel';
-  cancelBtn.onclick = () => {
-    li.innerHTML = original;
-  };
-
-  btnGroup.append(saveBtn, cancelBtn);
-  li.appendChild(btnGroup);
 }

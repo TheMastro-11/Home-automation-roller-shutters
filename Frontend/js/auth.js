@@ -1,30 +1,30 @@
-// const API_BASE_URL = "http://84.220.36.142:8080"; // Esempio produzione
-const API_BASE_URL = "http://localhost:8080"; // Sviluppo locale
+const API_BASE_URL = "http://localhost:8080"; // Local development
 
+// Hashes a message using SHA-256.
 async function sha256(message) {
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    // Converti il buffer in una stringa esadecimale
+    // Convert buffer to hex string
     return Array.from(new Uint8Array(hashBuffer))
         .map((byte) => byte.toString(16).padStart(2, "0"))
         .join("");
 }
 
-async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, sendAuthToken = true) { // sendAuthToken aggiunto
+// Generic function to fetch data from the API.
+async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, sendAuthToken = true) {
     const headers = {
         'Content-Type': 'application/json',
         ...extraHeaders,
     };
 
-    // Aggiungi l'header Authorization SOLO se sendAuthToken è true E un token esiste
+    // Add Authorization header ONLY if sendAuthToken is true AND a token exists
     if (sendAuthToken) {
         const token = localStorage.getItem("jwt");
         if (token) {
             headers['Authorization'] = 'Bearer ' + token;
         }
-        // Debug: Log headers for non-auth requests if needed
-        // else { console.log(`WorkspaceApi to ${path} - No token found or sendAuthToken is false`); }
+        // else { console.log(`API call to ${path} - No token found or sendAuthToken is false`); }
     }
 
     const options = {
@@ -32,81 +32,82 @@ async function fetchApi(path, method = 'GET', body = null, extraHeaders = {}, se
         headers: headers,
     };
 
-    if (body !== null && body !== undefined) { // Invia body solo se non è null/undefined
+    // Send body only if it's not null/undefined
+    if (body !== null && body !== undefined) {
         options.body = JSON.stringify(body);
     }
 
-    // Debug: Log opzioni chiamata
     // console.log(`Calling fetchApi: ${method} ${API_BASE_URL}${path}`, options);
 
     try {
         const response = await fetch(`${API_BASE_URL}${path}`, options);
 
-        // Gestione errori HTTP
+        // Handle HTTP errors
         if (!response.ok) {
             let errorData = { message: response.statusText || `Request failed with status ${response.status}` }; // Default message
             try {
-                // Prova a leggere un messaggio di errore JSON più specifico dal backend
+                // Try to read a more specific JSON error message from the backend
                 const errorJson = await response.json();
-                // Usa il messaggio dal JSON se presente, altrimenti mantieni statusText
+                // Use the message from JSON if present, otherwise keep statusText
                 if (errorJson && errorJson.message) {
-                    errorData = errorJson; // Usa l'intero oggetto errore se ha una struttura definita
-                    errorData.message = errorJson.message; // Assicura che message sia presente
-                } else if (errorJson && errorJson.error) { // A volte l'errore è in 'error'
+                    errorData = errorJson; // Use the entire error object if it has a defined structure
+                    errorData.message = errorJson.message; // Ensure message is present
+                } else if (errorJson && errorJson.error) { // Sometimes the error is in 'error'
                     errorData.message = errorJson.error;
                 }
-                // Aggiungi status e path per contesto se non già presenti
+                // Add status and path for context if not already present
                 if (!errorData.status) errorData.status = response.status;
                 if (!errorData.path) errorData.path = path;
 
             } catch (e) {
-                // Se il corpo dell'errore non è JSON, va bene, usiamo statusText
+                // If the error body isn't JSON, that's okay, use statusText
                 console.log("Response error body was not JSON.");
             }
             console.error(`API Error (${response.status} ${method} ${path}):`, errorData);
-            // Crea un errore che contenga più dettagli possibili
+            // Create an error containing as much detail as possible
             const error = new Error(errorData.message);
             error.status = response.status;
-            error.details = errorData; // Allega dettagli extra
-            throw error; // Lancia l'errore per interrompere l'esecuzione nel blocco chiamante
+            error.details = errorData; // Attach extra details
+            throw error; // Throw the error to stop execution in the calling block
         }
 
-        // Gestione risposte senza contenuto (es. 204 No Content per DELETE)
+        // Handle responses without content (e.g., 204 No Content for DELETE)
         if (response.status === 204) {
             return null;
         }
 
-        // Gestione risposte con contenuto (JSON o testo)
+        // Handle responses with content (JSON or text)
         try {
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 return await response.json(); // Parse JSON
             } else {
-                const textResponse = await response.text(); // Ottieni come testo
-                // Se il testo è vuoto ma la risposta era OK (es. 200/201), ritorna null o un indicatore di successo
+                const textResponse = await response.text(); // Get as text
+                // If the text is empty but the response was OK (e.g., 200/201), return null or a success indicator
                 if (response.ok && !textResponse) {
-                    return { success: true }; // O semplicemente null
+                    return { success: true }; // Or simply null
                 }
-                return textResponse; // Altrimenti ritorna il testo
+                return textResponse; // Otherwise return the text
             }
         } catch (e) {
             console.warn(`Could not parse API response body for ${method} ${path}:`, e);
-            // Se il parsing fallisce ma la risposta era OK, ritorna un indicatore di successo
+            // If parsing fails but the response was OK, return a success indicator
             if (response.ok) {
                 return { success: true, message: "Response OK but body parsing failed." };
             }
-            return null; // Altrimenti null
+            return null; // Otherwise null
         }
 
     } catch (error) {
-        // Cattura sia errori di rete/fetch sia errori lanciati da !response.ok
+        // Catch both network/fetch errors and errors thrown by !response.ok
         console.error(`Network or API call error (${method} ${path}):`, error);
-        // Rilancia l'errore per poterlo gestire nel chiamante (es. con alert)
-        // Assicurati che il messaggio sia utile
+        // Rethrow the error so it can be handled by the caller (e.g., with alert)
+        // Make sure the message is useful
         throw new Error(error.message || "Network error or failed API call.");
     }
 }
 
+// Handles the login form submission.
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById("loginForm");
 
@@ -114,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener("submit", async function (event) {
             event.preventDefault();
 
-            const usernameInput = document.getElementById("loginname"); // ID corretto per login
-            const passwordInput = document.getElementById("loginPassword"); // ID corretto per login
+            const usernameInput = document.getElementById("loginname"); // Correct ID for login
+            const passwordInput = document.getElementById("loginPassword"); // Correct ID for login
             const submitButton = loginForm.querySelector('button[type="submit"]');
 
             const username = usernameInput.value.trim();
@@ -136,9 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     password: hashedPassword
                 };
 
-                // Chiama fetchApi specificando sendAuthToken = false
-                //                                                         vvvvv
-                const result = await fetchApi("/api/auth/authenticate", 'POST', loginData, {}, false); // << AGGIUNTO false ALLA FINE
+                // Call fetchApi specifying sendAuthToken = false
+                const result = await fetchApi("/api/auth/authenticate", 'POST', loginData, {}, false); // false added at the end
 
                 if (result && result.jwt) {
                     localStorage.setItem("jwt", result.jwt);
@@ -158,26 +158,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// Controlla se l'utente è autenticato (se esiste un token JWT)
-// Se non lo è, reindirizza alla pagina di login.
+// Checks if the user is authenticated (if a JWT exists).
+// Redirects to the login page if not authenticated.
 function checkAuthentication() {
     const token = localStorage.getItem("jwt");
     if (!token) {
         console.log("No JWT found, redirecting to login.");
-        window.location.href = "login.html"; // Assicurati che login.html sia nella stessa cartella o usa il path corretto
-        return false; // Non autenticato
+        window.location.href = "login.html"; // Ensure login.html is in the same folder or use the correct path
+        return false; // Not authenticated
     }
-    // Nota: Qui non stiamo validando la *scadenza* o la *validità* del token,
-    // solo la sua presenza. Il backend rifiuterà le richieste con token scaduti/invalidi.
-    return true; // Autenticato (token presente)
+    // Note: We are not validating the *expiration* or *validity* of the token here,
+    // only its presence. The backend will reject requests with expired/invalid tokens.
+    return true; // Authenticated (token present)
 }
-// Esegue il logout: rimuove il token e reindirizza al login
+
+// Performs logout: removes the token and redirects to login.
 function logout() {
-    console.log("Logout function called"); // Messaggio per debug
+    console.log("Logout function called"); // Debug message
     localStorage.removeItem("jwt");
-    // Mostra un messaggio all'utente
-    // alert("You have been logged out!"); // Puoi rimuovere/modificare questo alert
+    // alert("You have been logged out!"); // You can remove/modify this alert
     console.log("JWT removed. Redirecting to login page...");
-    // Reindirizza alla pagina di login
+    // Redirect to the login page
     window.location.href = "login.html";
 }
