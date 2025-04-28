@@ -3,54 +3,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (registerForm) {
     registerForm.addEventListener("submit", async function (event) {
-      event.preventDefault(); // Impedisce l'invio standard del form
+      event.preventDefault(); // Prevent standard form submission
 
       const usernameInput = document.getElementById("username");
       const passwordInput = document.getElementById("password");
       const submitButton = registerForm.querySelector('button[type="submit"]');
 
       const username = usernameInput.value.trim();
-      const password = passwordInput.value; // Non trimmare la password
+      const password = passwordInput.value; // Do not trim password
 
       if (!username || !password) {
         alert("Please enter both username and password.");
         return;
       }
 
-      submitButton.disabled = true; // Disabilita durante l'invio
-      submitButton.textContent = "Registering..."; // Feedback visivo
-
-      // In js/register.js, dentro l'event listener del form submit
+      submitButton.disabled = true; // Disable button during submission
+      submitButton.textContent = "Registering..."; // Visual feedback
 
       try {
+        // Ensure sha256 function is available (expected from auth.js)
+        if (typeof sha256 !== 'function') {
+             throw new Error("Hashing function (sha256) not found.");
+        }
         const hashedPassword = await sha256(password);
         const userData = {
           username: username,
           password: hashedPassword,
         };
 
-        // Chiama fetchApi specificando sendAuthToken = false
+        // Ensure fetchApi function is available (expected from auth.js)
+         if (typeof fetchApi !== 'function') {
+             throw new Error("API function (fetchApi) not found.");
+        }
+        // Call fetchApi specifying sendAuthToken = false for registration
         const responseData = await fetchApi(
           "/api/auth/register",
           "POST",
           userData,
           {},
-          false
-        ); // << AGGIUNTO false ALLA FINE
+          false // Do not send auth token for registration
+        ); //
 
-        // Puoi aggiungere un controllo sulla risposta se l'API ritorna qualcosa di utile
-        console.log("Registration response:", responseData);
+        // Optional: Check responseData if the API returns useful info on success
+        console.log("Registration response:", responseData); //
 
-        alert("Registration successful! Please login.");
-        window.location.href = "login.html";
+        alert("Registration successful! Please login."); //
+        window.location.href = "login.html"; // Redirect to login page
       } catch (error) {
-        console.error("Registration failed:", error);
-        alert("Registration failed: " + error.message);
-        submitButton.disabled = false;
+        console.error("Registration failed:", error); //
+        // Display the specific error message from fetchApi or the catch block
+        alert("Registration failed: " + error.message); //
+        submitButton.disabled = false; // Re-enable button on failure
         submitButton.textContent = "Register";
       }
-      // Non è necessario riabilitare il bottone qui se la registrazione ha successo,
-      // perché la pagina viene reindirizzata.
+      // No need to re-enable button here if registration succeeds,
+      // because the page redirects.
     });
+  } else {
+      console.warn("Register form with ID 'registerForm' not found.");
   }
 });
