@@ -1,7 +1,12 @@
 package com.hars.routes.home;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.home.HomeDTO;
 import com.hars.persistence.entities.home.Home;
+import com.hars.services.OwnershipService;
 import com.hars.services.home.HomeService;
 
 
@@ -23,10 +29,25 @@ public class HomeController {
     @Autowired
     private HomeService homeService;
 
+    @Autowired
+    private OwnershipService ownershipService;
+
     @GetMapping("/")
     public ResponseEntity<?> getAllHomes() {
         try {
-            return ResponseEntity.ok(homeService.getAllHomes());
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            List<Long> userHomes = ownershipService.getIds(username, "home"); 
+            List<HomeDTO> validHomes = new ArrayList<>();
+            for (HomeDTO home: homeService.getAllHomes()) {
+                if (userHomes.contains(home.getId())) {
+                    validHomes.add(home);
+                }
+            }
+
+            return ResponseEntity.ok(validHomes);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Get all Homes\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -34,20 +55,25 @@ public class HomeController {
 
     @PostMapping("/create")
     public ResponseEntity<String> createHome(@RequestBody HomeDTO.nameInput home) {
-    
         try {
             if (homeService.isPresentByName(home.name())) {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String newHome = homeService.createHome(home).toJson();
-            return ResponseEntity.ok("{" + "\"Response\" : \"Home created successfully!\" , \"Entity\" : {" + newHome + "}}");
+            Home newHome = homeService.createHome(home);
+            String newHomeS = newHome.toJson();
+
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            ownershipService.addOwnerShip(username, newHome);
+
+            return ResponseEntity.ok("{" + "\"Response\" : \"Home created successfully!\" , \"Entity\" : {" + newHomeS + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
         
     }
-
     @DeleteMapping(("/delete/{id}"))
     public ResponseEntity<String> deleteHome(@PathVariable Long id){
         try {

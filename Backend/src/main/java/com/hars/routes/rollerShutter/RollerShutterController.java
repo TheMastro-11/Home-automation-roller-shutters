@@ -1,7 +1,12 @@
 package com.hars.routes.rollerShutter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hars.persistence.dto.rollerShutter.RollerShutterDTO;
+import com.hars.persistence.entities.rollerShutter.RollerShutter;
+import com.hars.services.OwnershipService;
 import com.hars.services.mqtt.MqttPublisherService;
 import com.hars.services.rollerShutter.RollerShutterService;
 
@@ -25,10 +32,25 @@ public class RollerShutterController {
     @Autowired
     private MqttPublisherService mqttPublisherService;
 
+    @Autowired
+    private OwnershipService ownershipService;
+
     @GetMapping("/")
     public ResponseEntity<?> getAllRollerShutter() {
         try {
-            return ResponseEntity.ok(rollerShutterService.getAllRollerShutters());
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            List<Long> userRollerShutters = ownershipService.getIds(username, "rollerShutter"); 
+            List<RollerShutterDTO> validRollerShutter = new ArrayList<>();
+            for (RollerShutterDTO rollerShutter : rollerShutterService.getAllRollerShutters()) {
+                if (userRollerShutters.contains(rollerShutter.getId())) {
+                    validRollerShutter.add(rollerShutter);
+                }
+            }
+
+            return ResponseEntity.ok(validRollerShutter);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot Get all RollerShutters\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
@@ -41,8 +63,15 @@ public class RollerShutterController {
                 return ResponseEntity.badRequest().body("Error: Name is already taken!");
             }
 
-            String newRollerShutter = rollerShutterService.createRollerShutter(rollerShutter.name()).toJson();
-            return ResponseEntity.ok("{" + "\"Response\" : \"RollerShutter created successfully!\" , \"Entity\" : {" + newRollerShutter + "}}");
+            RollerShutter newRollerShutter = rollerShutterService.createRollerShutter(rollerShutter.name());
+            String newRollerShutterS = newRollerShutter.toJson();
+
+            //ownership
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            ownershipService.addOwnerShip(username, newRollerShutter);
+
+            return ResponseEntity.ok("{" + "\"Response\" : \"RollerShutter created successfully!\" , \"Entity\" : {" + newRollerShutterS + "}}");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("\"Error\" : \"Cannot create\" , \" StackTrace\" : \"" + e.getMessage() + "\"");
         }
