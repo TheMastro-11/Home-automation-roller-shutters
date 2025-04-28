@@ -142,37 +142,6 @@ async function addHome(event) {
 // FUNCTIONS FOR "EDIT HOME DETAILS" FORM
 // ========================================
 
-// Loads users into a select dropdown for assigning a home owner.
-async function loadUsersForOwnerSelect(selectElementId, currentOwnerId) {
-  const selectElement = document.getElementById(selectElementId);
-  if (!selectElement) { console.error(`Select element with ID '${selectElementId}' not found.`); return; }
-  selectElement.innerHTML = '<option value="" selected disabled>Loading users...</option>';
-  try {
-    const users = await fetchApi('/api/users/');
-    selectElement.innerHTML = ''; // Clear
-    const defaultOption = document.createElement('option');
-    defaultOption.value = "";
-    defaultOption.textContent = "-- Select Owner --";
-    selectElement.appendChild(defaultOption);
-    if (users && Array.isArray(users) && users.length > 0) {
-      users.forEach(user => {
-        if (user && user.id && user.username) {
-          const option = document.createElement('option');
-          option.value = user.id;
-          option.textContent = user.username;
-          if (currentOwnerId && String(user.id) === String(currentOwnerId)) {
-            option.selected = true;
-          }
-          selectElement.appendChild(option);
-        }
-      });
-    } else { console.log("No users found from API."); }
-  } catch (error) {
-    console.error(`Error loading users into select #${selectElementId}:`, error);
-    selectElement.innerHTML = `<option value="" selected disabled>Error loading users!</option>`;
-  }
-}
-
 // Loads available light sensors into a select dropdown for association with a home.
 async function loadAvailableSensorsForEditHome(selectElementId, currentSensorName) {
   const selectElement = document.getElementById(selectElementId);
@@ -302,16 +271,13 @@ async function showEditHomeForm(homeId, homeName) {
 
   /* ---------- Load dynamic data ---------- */
   // Set loading states for dynamic fields
-  const ownerSelect = document.getElementById("editHomeOwnerSelect");
   const sensorSelect = document.getElementById("editHomeSensorSelect");
   const shuttersList = document.getElementById("editHomeShuttersList");
 
-  ownerSelect && (ownerSelect.innerHTML = '<option>Loading...</option>');
   sensorSelect && (sensorSelect.innerHTML = '<option>Loading...</option><option value="NONE">-- None --</option>');
   shuttersList && (shuttersList.innerHTML = '<p id="editHomeShuttersLoading">Loading...</p>');
 
   // Fetch current home details
-  let currentOwnerId = null;
   let currentSensorName = null;
   let originalShutterNames = [];
 
@@ -320,23 +286,18 @@ async function showEditHomeForm(homeId, homeName) {
     const homeDetails = Array.isArray(allHomes) ? allHomes.find(h => h?.id == homeId) : null;
 
     if (homeDetails) {
-      currentOwnerId = homeDetails.owner?.id || null;
       currentSensorName = homeDetails.lightSensor?.name || null;
       originalShutterNames = (homeDetails.rollerShutters || []).map(rs => rs.name).filter(Boolean);
 
       // Store original values in form's dataset for comparison on submit
       editHomeInnerForm.dataset.originalName = homeName;
-      editHomeInnerForm.dataset.originalOwnerId = currentOwnerId || "";
       editHomeInnerForm.dataset.originalSensor = currentSensorName || "NONE";
       editHomeInnerForm.dataset.originalShutters = JSON.stringify([...originalShutterNames].sort());
     } else {
       console.error(`Home details for ID ${homeId} not found in API response list.`); // Keep essential error logs
       // Set defaults if home details couldn't be fetched
-      editHomeInnerForm.dataset.originalOwnerId = "";
       editHomeInnerForm.dataset.originalSensor = "NONE";
       editHomeInnerForm.dataset.originalShutters = "[]";
-      // Optionally hide form or show specific error to user here
-      // For now, it will proceed but might show empty selects/lists
     }
   } catch (e) {
     console.error("Error fetching home list for edit form:", e); // Keep essential error logs
@@ -352,7 +313,6 @@ async function showEditHomeForm(homeId, homeName) {
 
   // Populate selects/checkboxes by calling helper functions
   // These functions have their own error handling/logging
-  ownerSelect && loadUsersForOwnerSelect("editHomeOwnerSelect", currentOwnerId);
   sensorSelect && loadAvailableSensorsForEditHome("editHomeSensorSelect", currentSensorName);
   shuttersList && loadAvailableShuttersForEditHome("editHomeShuttersList", originalShutterNames);
 }
@@ -380,15 +340,12 @@ async function submitEditHome(event) {
 
   // Retrieve original values stored in the dataset
   const originalName = form.dataset.originalName || '';
-  const originalOwnerId = form.dataset.originalOwnerId || '';
   const originalSensorName = form.dataset.originalSensor || 'NONE'; // Original associated sensor name
   const originalShuttersJson = form.dataset.originalShutters || '[]'; // Original associated shutter names (sorted JSON)
 
   // Get new values from the form
   const newName = document.getElementById("editHomeName").value.trim();
-  const ownerSelect = document.getElementById("editHomeOwnerSelect");
   const sensorSelect = document.getElementById("editHomeSensorSelect");
-  const selectedOwnerId = ownerSelect ? ownerSelect.value : null; // Get selected owner ID
   const selectedSensorName = sensorSelect ? sensorSelect.value : null; // Get selected sensor name or "NONE"
 
   // Get selected shutter names from checkboxes
@@ -407,18 +364,6 @@ async function submitEditHome(event) {
   if (newName !== originalName) {
     callsInfo.push({ path: `/patch/name/${id}`, payload: { name: newName } });
     apiCalls.push(fetchApi(`/api/entities/home/patch/name/${id}`, "PATCH", { name: newName }));
-  }
-
-  // 2. Patch Owner if changed (and select exists)
-  if (ownerSelect && selectedOwnerId !== originalOwnerId) {
-    if (selectedOwnerId) { // Associate new owner 
-      const selectedUsername = ownerSelect.selectedOptions[0].text;
-      callsInfo.push({ path: `/patch/owner/${id}`, payload: { user: { username: selectedUsername } } });
-      apiCalls.push(fetchApi(`/api/entities/home/patch/owner/${id}`, "PATCH", { user: { username: selectedUsername } }));
-    } else { // Dissociate owner
-      callsInfo.push({ path: `/patch/owner/${id}`, payload: { user: null } });
-      apiCalls.push(fetchApi(`/api/entities/home/patch/owner/${id}`, "PATCH", { user: null }));
-    }
   }
 
   // 3. Patch Sensor if changed (and select exists)
@@ -571,7 +516,6 @@ async function loadHomeSensors(homeId) {
 
     // Strategy 2: Fallback if home.id is not available in the sensor list API response
     if (sensors.length === 0) {
-      console.warn(`No sensors found with home.id === ${homeId}. Falling back to fetching home details.`);
       const home = await getHomeDetails(homeId); // Use the existing function
       const sensorName = home?.lightSensor?.name; // Get the name of the associated sensor
       if (sensorName) {
