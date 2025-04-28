@@ -30,10 +30,26 @@ routineAgent/.gradle/*
 
 routineAgent/bin
 
+Frontend/hars/node_modules
+Frontend/hars//.pnp
+Frontend/hars/.pnp.js
 
-Frontend/py_test/.py_test_cache
+# testing
+Frontend/hars//coverage
 
-Frontend/py_test/tests/__pycache__
+# production
+Frontend/hars//build
+
+# misc
+Frontend/hars/.DS_Store
+Frontend/hars/.env.local
+Frontend/hars/.env.development.local
+Frontend/hars/.env.test.local
+Frontend/hars/.env.production.local
+
+Frontend/hars/npm-debug.log*
+Frontend/hars/yarn-debug.log*
+Frontend/hars/yarn-error.log*
 
 
 

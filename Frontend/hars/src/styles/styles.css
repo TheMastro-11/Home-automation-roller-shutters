@@ -1,0 +1,458 @@
+/* ======================================== */
+/* 1. GENERAL STYLES                  */
+/* ======================================== */
+
+body {
+    background-color: #1c1c1c;
+    color: #ffffff; 
+    font-family: "Arial", sans-serif;
+    font-weight: normal; 
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Main container */
+  .container {
+    background: linear-gradient(#2a2a2a, #1c1c1c) padding-box,
+      linear-gradient(120deg, transparent 25%, #1cb0ff, #40ff99) border-box;
+    background-size: 100% 100%;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    padding: 30px 20px; /* Increased padding, especially at the top */
+  }
+  
+  /* Headings (White & Bold) */
+  h2, h4, h5, h6 {
+    color: #ffffff;
+    font-weight: 700; /* Equivalent to bold */
+  }
+  
+  /* Specific style for H2 if needed */
+  h2 {
+    font-size: 26px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  
+  /* ======================================== */
+  /* 2. FORM STYLES                     */
+  /* ======================================== */
+  
+  form {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Form Labels (White & Bold) */
+  .form-label {
+    color: #ffffff !important; /* Override Bootstrap if needed */
+    font-weight: bold;
+  }
+  
+  /* Inputs & Selects (White text, dark background) */
+  form input, form select {
+    background-color: #444;
+    color: #ffffff; /* Ensure white text */
+    border: 1px solid #666;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    width: 100%;
+    font-weight: normal; /* Input text not bold */
+  }
+  
+  /* Specific style for select (Bootstrap 5 uses .form-select) */
+  form select.form-select {
+     /* Light gray arrow for dark background */
+     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cccccc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  }
+  
+  /* Buttons inside forms (Inherit from .btn below) */
+  form button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    /* font-weight is handled by .btn below */
+  }
+  
+  /* ======================================== */
+  /* 3. BUTTON STYLES                   */
+  /* ======================================== */
+  
+  /* Base style for Bootstrap buttons */
+  .btn {
+      font-weight: bold; /* All buttons bold */
+      font-size: 16px; /* Base size */
+      padding: 10px 20px; /* Base padding */
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, transform 0.2s ease, background 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .btn:hover {
+      transform: scale(1.05); /* Common hover effect */
+  }
+  
+  /* Logout & Delete Button (Red) */
+  .btn-danger {
+    background: #dc3545; /* Bootstrap Red */
+    color: white;
+  }
+  .btn-danger:hover {
+    background: #c82333; /* Darker Red */
+  }
+  
+  /* Primary / Add Home / Open All Button (Green) */
+  .btn-primary, /* Using .btn-primary as the main green button */
+  .btn-outline-success { /* Completely overriding outline style */
+    background: #28a745; /* Bootstrap Green */
+    color: white;
+    border-color: #28a745; /* Ensure border matches */
+  }
+  .btn-primary:hover,
+  .btn-outline-success:hover {
+    background: #1e7e34; /* Darker Green */
+    border-color: #1e7e34;
+  }
+  
+  /* Edit Button (Yellow) */
+  .btn-warning {
+      background-color: #ffc107; /* Bootstrap Yellow */
+      color: #333; /* Black text for readability on yellow */
+      border-color: #ffc107;
+  }
+  .btn-warning:hover {
+      background-color: #e0a800; /* Darker Yellow */
+      border-color: #e0a800;
+      color: #333;
+  }
+  
+  /* Routines / Info Button (Cyan/Blue) */
+  .btn-info {
+      background-color: #0dcaf0; /* Bootstrap Cyan */
+      color: #ffffff; /* White text */
+      border-color: #0dcaf0;
+  }
+  .btn-info:hover {
+       background-color: #0baccc;
+       border-color: #0baccc;
+       color: #ffffff;
+  }
+  
+  /* Cancel / Secondary Button (Gray) */
+  .btn-secondary {
+      background-color: #6c757d; /* Bootstrap Gray */
+      color: white;
+      border-color: #6c757d;
+  }
+  .btn-secondary:hover {
+       background-color: #5a6268;
+       border-color: #5a6268;
+  }
+  
+  /* Style for small buttons (used in btn-group) */
+  .btn-sm, .btn-group-sm > .btn {
+      padding: 0.25rem 0.5rem; /* Reduced padding */
+      font-size: 0.875rem; /* Reduced font size */
+      border-radius: 0.2rem; /* Slightly smaller border radius */
+  }
+  
+  /* ======================================== */
+  /* 4. LIST STYLES                     */
+  /* ======================================== */
+  
+  /* Common style for main list items */
+  .list-group-item {
+      background-color: #333333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      padding: 12px 15px; /* Adjusted padding */
+      color: #ffffff; /* Base white text */
+      display: flex; /* Use flex for internal layout */
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap; /* Allow wrapping on small screens */
+  }
+  
+  /* --- Specific List Styles --- */
+  
+  /* Generic container for scrollable lists */
+  .global-list-container, .dynamic-list-container {
+      overflow-y: auto;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 0; /* Remove padding if items have their own */
+      background-color: #444; /* Consistent background */
+  }
+  .global-list-container {
+      max-height: 160px; /* Height for global lists */
+  }
+  .dynamic-list-container {
+      max-height: 150px; /* Height for dynamic lists (e.g., routine shutters) */
+      padding: 10px; /* Add padding inside if needed */
+  }
+  .global-list-container .list-group-item,
+  .dynamic-list-container .list-group-item {
+      padding: 0.4rem 0.8rem; /* Adjust item padding inside containers */
+      font-size: 0.9em;
+      background-color: transparent; /* Inherit container background */
+      border: none; /* Remove individual item borders */
+      border-bottom: 1px solid #555; /* Add separator */
+      margin-bottom: 0;
+      border-radius: 0;
+  }
+  .global-list-container .list-group-item:last-child,
+  .dynamic-list-container .list-group-item:last-child {
+      border-bottom: none; /* No border for the last item */
+  }
+  
+  
+  /* Manage Homes List */
+  #manage-homes-list .list-group-item {
+      background-color: #2a2a2a; /* Different background */
+      font-size: 18px;
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  #manage-homes-list .list-group-item:hover {
+      background-color: #383838;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+      transform: scale(1.02); /* Slightly larger on hover */
+  }
+  /* Home Name Text */
+  #manage-homes-list .list-group-item span:first-child { /* Assuming name is first span */
+      font-weight: bold;
+      color: #ffffff;
+      margin-right: 15px; /* Space before buttons */
+  }
+  /* Action Buttons Container */
+  #manage-homes-list .list-group-item .btn-group {
+      flex-shrink: 0; /* Prevent shrinking */
+  }
+  
+  
+  /* Routines List (#Routines-list) */
+  #Routines-list {
+    margin-top: 20px;
+    padding: 0;
+    list-style: none;
+  }
+  #Routines-list li {
+    /* Inherits .list-group-item */
+    font-size: 16px;
+  }
+  #Routines-list li div:first-child strong.routine-name {
+      font-weight: bold;
+      display: block; /* Or inline-block if preferred */
+      margin-bottom: 3px;
+  }
+  /* Routine Details (smaller, NOW WHITE) */
+  #Routines-list li small {
+      color: white !important;
+      font-size: 0.85em;
+      font-weight: normal;
+  }
+  /* Buttons inside routine list items (if any, like delete) */
+  #Routines-list li .btn-group .btn { /* Target buttons inside the group */
+      padding: 5px 10px; /* Make buttons smaller */
+      font-size: 0.8rem;
+  }
+  /* Routine list placeholder */
+  #Routines-list li.list-group-item-placeholder {
+      color: #ffffff;
+      display: block;
+      justify-content: initial;
+      align-items: initial;
+      font-style: italic;
+      background-color: #2a2a2a;
+      font-weight: normal;
+      border: 1px dashed #555; /* Differentiate placeholder */
+  }
+  
+  /* Light Sensors List (#light-sensors-list) */
+  #light-sensors-list { /* Example ID for sensor status display */
+      margin-top: 20px;
+      padding: 0;
+      list-style: none;
+  }
+  #light-sensors-list li {
+     /* Inherits .list-group-item */
+  }
+  /* Sensor Name/Value Text Container */
+  #light-sensors-list li div:first-child {
+      margin-right: 10px;
+      flex-grow: 1;
+  }
+  /* Sensor Name (Bold) */
+  #light-sensors-list li strong {
+     font-weight: bold;
+  }
+  /* Sensor Value (could be in small or just text) */
+  #light-sensors-list li small { /* If value is in small tag */
+      color: #cccccc; /* Keeping this light gray for sensors list */
+      font-size: 0.85em;
+      font-weight: normal;
+      display: block;
+      margin-top: 4px;
+  }
+  
+  /* Manage Sensors List (#manage-sensors-list) */
+  #manage-sensors-list {
+      /* Inherits base list styles */
+  }
+  #manage-sensors-list li {
+      /* Inherits .list-group-item */
+  }
+  
+  /* Roller Shutter Control List (#rollerShutter-list-items) */
+  #rollerShutter-list-items {
+      padding: 0;
+      list-style: none;
+      margin-top: 10px; /* Add some space above list */
+  }
+  #rollerShutter-list-items li {
+     /* Inherits .list-group-item */
+     font-size: 16px;
+     font-weight: bold; /* Bold text */
+     cursor: pointer; /* Indicate clickable */
+     transition: background-color 0.2s ease; /* Smooth transition */
+  }
+  #rollerShutter-list-items li:hover {
+      background-color: #444; /* Slight highlight on hover */
+  }
+  #rollerShutter-list-items li.active { /* Selected shutter */
+      background-color: #1cb0ff; /* Custom blue */
+      border-color: #1cb0ff;
+      color: white;
+  }
+  #rollerShutter-list-items li span.opening { /* Style for opening % */
+      font-weight: normal;
+      font-size: 0.9em;
+      color: #ccc;
+  }
+  #rollerShutter-list-items li.active span.opening {
+      color: white; /* Make opening % white when active */
+  }
+  
+  /* Manage Shutters List (#manage-shutters-list) */
+  #manage-shutters-list {
+      /* Similar styles to #rollerShutter-list-items if needed */
+       padding: 0;
+       list-style: none;
+       margin-top: 10px;
+  }
+  #manage-shutters-list li {
+     /* Inherits .list-group-item */
+     font-size: 16px;
+     cursor: pointer;
+     transition: background-color 0.2s ease;
+  }
+  #manage-shutters-list li:hover {
+       background-color: #444;
+  }
+  #manage-shutters-list li.active { /* Selected shutter in manage view */
+      background-color: #1cb0ff; /* Custom blue */
+      border-color: #1cb0ff;
+      color: white;
+  }
+  #manage-shutters-list li span.opening {
+      font-weight: normal;
+      font-size: 0.9em;
+      color: #ccc;
+  }
+  #manage-shutters-list li.active span.opening {
+      color: white;
+  }
+  
+  
+  /* ======================================== */
+  /* 5. SPECIFIC ELEMENT STYLES         */
+  /* ======================================== */
+  
+  /* Status text for selected shutter (White & Bold) */
+  /* Using more specific IDs from updated HTML */
+  #rollerShutterStatusControl, #rollerShutterStatusManage {
+      color: #ffffff;
+      font-weight: bold;
+      min-height: 1.5em; /* Prevent layout shift */
+  }
+  
+  /* Loading Spinner */
+  .spinner {
+    border: 4px solid #555; /* Darker background */
+    border-top: 4px solid #1cb0ff; /* Blue color */
+    border-radius: 50%;
+    width: 30px; /* Slightly smaller */
+    height: 30px;
+    animation: spin 1.5s linear infinite;
+    margin: 20px auto; /* Added margin */
+    display: none; /* Initially hidden */
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  
+  /* ======================================== */
+  /* 6. RESPONSIVENESS                  */
+  /* ======================================== */
+  
+  @media screen and (max-width: 768px) {
+    .container {
+      padding: 20px;
+    }
+  
+    h2 {
+      font-size: 22px;
+    }
+  
+    /* Adjust list item padding and button sizes for mobile */
+    .list-group-item {
+        padding: 10px;
+        /* Allow button groups to stack vertically if needed */
+    }
+     .list-group-item > div:first-child { /* Target text container */
+         margin-bottom: 8px; /* Add space below text when buttons wrap */
+     }
+  
+     .btn { /* Reduce base button size */
+      font-size: 14px;
+      padding: 8px 15px;
+     }
+  
+     .btn-sm, .btn-group-sm > .btn { /* Reduce small button size */
+       padding: 0.2rem 0.4rem;
+       font-size: 0.8rem;
+     }
+  
+    /* Specific adjustments for home list on mobile */
+    #manage-homes-list .list-group-item span:first-child {
+       margin-right: 0; /* Remove right margin */
+       display: block; /* Ensure it takes full width */
+       width: 100%;
+       text-align: center; /* Center text */
+    }
+     #manage-homes-list .list-group-item .btn-group {
+        width: 100%; /* Make button group take full width */
+        justify-content: center; /* Center buttons */
+        margin-top: 10px;
+     }
+  
+     /* Adjust sensor list layout on mobile */
+     #light-sensors-list li {
+         justify-content: center; /* Center items when wrapping */
+     }
+     #light-sensors-list li div:first-child {
+         margin-right: 0;
+         text-align: center;
+         width: 100%;
+         margin-bottom: 10px;
+     }
+  }
