@@ -161,8 +161,13 @@ public class MqttConfig {
     @Bean
     public MqttPahoMessageDrivenChannelAdapter mqttInbound(MqttPahoClientFactory clientFactory) {
         String inboundClientId = awsIotClientId + "_sub";
+        String[] shadowTopics = {
+            "$aws/things/+/shadow/update/accepted",
+            "$aws/things/+/shadow/get/accepted",
+            "$aws/things/+/shadow/update/delta"
+        };
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(inboundClientId, clientFactory, defaultSubscribeTopic);
+                new MqttPahoMessageDrivenChannelAdapter(inboundClientId, clientFactory, shadowTopics);
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);

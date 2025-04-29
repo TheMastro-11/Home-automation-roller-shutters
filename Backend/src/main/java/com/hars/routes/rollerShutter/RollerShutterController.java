@@ -111,14 +111,16 @@ public class RollerShutterController {
         
         if (!rollerShutterService.isPresentById(id)) {
             return ResponseEntity.badRequest().body("\"Error\": \"ID does not exist!\"");
-        }
-        
+        }  
+
+        String name = rollerShutterService.loadRollerShutterById(id).getName();
         try {
-            mqttPublisherService.publish("$aws/things/roller_shutter/shadow/sendControl", "{ \"message\" : \"ciao\"}");
+            mqttPublisherService.publish("$aws/things/ESP8266_Tapparella/shadow/update", "{ \"state\": {\"desired\": {\"" + name + "\": "+ rollerShutter.value() +"}}}");
         } catch (Exception e) {
             throw new RuntimeException("Publish Error", e);
         }
         
+
         try {
             String newRollerShutter = rollerShutterService.patchOpeningRollerShutter(id, rollerShutter.value()).toJson();
             return ResponseEntity.ok("{ \"Entity\" : {" + newRollerShutter + "}}");
