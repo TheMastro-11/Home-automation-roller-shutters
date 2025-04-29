@@ -393,94 +393,246 @@ Base path: `/api/agent/routine`
     * **Risposta Successo (200 OK):** `""` (Stringa vuota)
     * **Risposta Errore (500 Internal Server Error):** `{"Error" : "Cannot Modify action time" , " StackTrace" : "..."}`
 
-
 ### Frontend
 
-#### 1. Struttura HTML e Componenti UI
+#### 1. Introduzione
 
-I file HTML definiscono la struttura delle pagine principali:
+Questo progetto è un'interfaccia web frontend progettata per interagire con un sistema backend di gestione smart home. Consente agli utenti di:
+* Autenticarsi (registrarsi e accedere).
+* Gestire "Case" (Homes).
+* Gestire dispositivi globali come sensori di luminosità e tapparelle (Roller Shutters).
+* Associare sensori e tapparelle a case specifiche.
+* Controllare lo stato delle tapparelle (apertura/chiusura percentuale, apri/chiudi tutto).
+* Creare, visualizzare ed eliminare "Routine" automatiche basate su orari o livelli di luminosità per controllare le tapparelle.
+* Visualizzare lo stato dei sensori di luminosità associati.
 
-* **`login.html` e `register.html`:**
-    * **Scopo:** Forniscono form semplici per l'autenticazione e la registrazione degli utenti.
-    * **Struttura:** Utilizzano Bootstrap 5 per il layout responsivo (griglia, `d-flex`, `justify-content-center`, `align-items-center`). Contengono un form standard (`<form>`) con campi per username/password (`<input>`), etichette (`<label>`) e un pulsante di invio (`<button type="submit">`). Includono link per navigare tra le due pagine.
-    * **Riuso:** La struttura base del form centrato verticalmente e orizzontalmente può essere riutilizzata per altre pagine con form semplici. I singoli campi del form (`div.mb-3`) sono componenti standard di Bootstrap riutilizzabili.
-* **`dashboard.html`:**
-    * **Scopo:** Pagina principale dopo il login, mostra contenuti diversi per utenti standard e amministratori.
-    * **Struttura:** Include un pulsante di logout. Contiene due sezioni principali (`#admin-section` e `#user-section`) la cui visibilità è gestita via JavaScript. L'admin section è più complessa e suddivisa ulteriormente per gestire case, sensori globali, tapparelle globali, e routine. Utilizza liste (`<ul>`, `.list-group`) per visualizzare dati e form (`<form>`) per aggiungere/modificare entità. Include elementi dinamici come select (`<select>`) e liste di checkbox (`div.dynamic-list-container`) popolate via JavaScript.
-    * **Riuso:**
-        * **Layout Sezioni:** Il pattern di avere sezioni separate per ruoli diversi (`#admin-section`, `#user-section`) è riutilizzabile.
-        * **Liste Dinamiche:** Le liste (`.list-group`) popolate dinamicamente (es. `#admin-homes-list`, `#Routines-list`) sono un pattern comune. Lo stile CSS associato può essere riutilizzato per altre liste.
-        * **Form Modali/Nascosti:** L'uso di form nascosti (`#edit-home-form`, `#admin-edit-light-sensor`, `#Routines-form`) che vengono mostrati su richiesta è un pattern riutilizzabile per operazioni di modifica o aggiunta senza cambiare pagina.
-        * **Contenitori Dinamici:** I `div.dynamic-list-container` usati per le checkbox delle tapparelle nei form di modifica casa e routine sono riutilizzabili per visualizzare liste selezionabili.
+L'interfaccia utilizza HTML per la struttura, CSS (principalmente Bootstrap con stili personalizzati) per l'aspetto, e JavaScript per la logica, l'interattività e la comunicazione con un API backend.
 
-#### 2. Stili CSS (`styles.css`)
+#### 2. Prerequisiti
 
-* **Scopo:** Definisce l'aspetto visuale dell'applicazione, sovrascrivendo e personalizzando Bootstrap.
-* **Tema:** Tema scuro (`background-color: #1c1c1c`, `color: #ffffff`).
-* **Componenti Stilizzati:**
-    * **Container:** Stile personalizzato con bordo gradiente (`.container`).
-    * **Form:** Sfondo scuro (`#2a2a2a`), etichette bianche e in grassetto (`.form-label`), input e select con sfondo scuro (`#444`) e testo bianco.
-    * **Bottoni:** Stili personalizzati per diversi tipi di azioni (`.btn-danger`, `.btn-primary`, `.btn-warning`, `.btn-info`, `.btn-secondary`, `.btn-outline-success`). Tutti i bottoni sono in grassetto.
-    * **Liste:** Stili specifici per gli elementi delle liste (`.list-group-item`) con sfondi scuri e bordi definiti. Stili hover per le liste admin (`.admin-home-item:hover`). Stili per liste con scroll (`.global-list-container`, `.dynamic-list-container`).
-    * **Spinner:** Animazione di caricamento (`.spinner`).
-* **Riuso:**
-    * L'intero tema scuro può essere applicato ad altre applicazioni web.
-    * Le classi CSS personalizzate per bottoni, form e liste possono essere estratte e riutilizzate.
-    * Il layout responsivo basato su Bootstrap è intrinsecamente riutilizzabile.
+Per riutilizzare o sviluppare questo frontend, sono necessarie le seguenti conoscenze e strumenti:
 
-#### 3. Logica JavaScript
+* **Conoscenze di Base:**
+    * HTML
+    * CSS
+    * JavaScript (incluse chiamate asincrone - `async/await`, `fetch`)
+* **Strumenti:**
+    * Un browser web moderno (es. Chrome, Firefox, Edge)
+    * Un editor di testo o IDE (es. Visual Studio Code, Sublime Text)
+    * (Opzionale ma consigliato) Un server web locale (come Live Server per VS Code o un server Python/Node.js semplice) per servire i file ed evitare problemi legati a CORS durante lo sviluppo.
+* **Backend API:** Il frontend è progettato per comunicare con un'API backend specifica. È **fondamentale** avere accesso a questa API o a una sua implementazione compatibile affinché il frontend funzioni correttamente. L'URL base dell'API è attualmente configurato in `js/auth.js`.
 
-* **`api.js`:**
-    * **Scopo:** Centralizza la comunicazione con l'API backend e gestisce l'autenticazione iniziale (login) e l'hashing delle password.
-    * **Funzioni Chiave:**
-        * `sha256(message)`: Funzione asincrona per calcolare l'hash SHA-256 di una stringa (usata per le password prima dell'invio). Riutilizzabile ovunque sia necessario hashare dati nel frontend.
-        * `fetchApi(path, method, body, extraHeaders, sendAuthToken)`: Funzione wrapper per `fetch`. Gestisce l'aggiunta automatica del token JWT (se `sendAuthToken` è `true`), l'impostazione degli header, la serializzazione del body in JSON e la gestione base degli errori HTTP e del parsing della risposta (JSON o testo). **Altamente riutilizzabile** per qualsiasi interazione con l'API backend.
-        * **Gestore Login:** Il listener `DOMContentLoaded` in `api.js` gestisce specificamente l'invio del form di login (`#loginForm`), chiamando `fetchApi` per `/api/auth/authenticate` senza inviare il token, e salvando il JWT ricevuto in `localStorage`.
-    * **Riuso:** `fetchApi` è il componente più critico e riutilizzabile per interagire con il backend. `sha256` è una utility generica. Il gestore del login è specifico ma il pattern (leggere form, hashare password, chiamare API, salvare token, reindirizzare) è comune.
-* **`auth.js` / `register.js`:**
-    * **Scopo:** Gestiscono l'autenticazione post-login, il logout e la registrazione.
-    * **Funzioni Chiave (`auth.js`):**
-        * `checkAuthentication()`: Controlla la presenza del JWT in `localStorage` e reindirizza al login se assente. Usato all'inizio del caricamento delle pagine protette (es. `dashboard.js`). Riutilizzabile per proteggere rotte/pagine.
-        * `getUserRole()`: Decodifica il JWT per estrarre il ruolo dell'utente. Riutilizzabile per controlli basati sul ruolo.
-        * `isAdmin()`: Funzione helper che usa `getUserRole()` per verificare se l'utente è admin. Riutilizzabile.
-        * `logout()`: Rimuove il JWT da `localStorage` e reindirizza al login. Associato al pulsante Logout. Riutilizzabile.
-    * **Funzioni Chiave (`register.js`):** Gestisce l'invio del form di registrazione (`#registerForm`), chiama `sha256` e poi `fetchApi` per `/api/auth/register` (senza token). Riutilizzabile se la logica di registrazione è simile.
-* **`dashboard.js`:**
-    * **Scopo:** Orchestrazione della pagina dashboard.
-    * **Funzioni Chiave:**
-        * **Listener `DOMContentLoaded`:** Esegue `checkAuthentication`, collega il listener per il `logout`, chiama `displayDashboardBasedOnRole` e `attachFormListeners`. Questo pattern di inizializzazione è riutilizzabile per pagine complesse.
-        * `displayDashboardBasedOnRole()`: Usa `isAdmin()` per mostrare/nascondere le sezioni `#admin-section`/`#user-section` e chiama le funzioni di caricamento dati appropriate (`loadAdminHomes` o `loadUserHomeDetails`). Riutilizzabile per UI basate sui ruoli.
-        * `attachFormListeners()`: Collega i gestori di eventi (`submit`) ai vari form presenti nel dashboard (aggiunta/modifica casa, aggiunta sensore/tapparella globale, modifica sensore/tapparella admin, salvataggio routine, creazione/modifica sensore utente). Centralizzare i listener è una buona pratica riutilizzabile.
-* **`admin.js`:**
-    * **Scopo:** Contiene tutta la logica specifica per la vista Amministratore nel dashboard.
-    * **Funzionalità Principali:**
-        * **Gestione Case:** `loadAdminHomes`, `addHome`, `deleteHome`, `showEditHomeForm`, `cancelEditHome`, `submitEditHome`. Gestiscono il caricamento della lista, aggiunta, eliminazione e modifica delle case, inclusa l'assegnazione di proprietario, sensore e tapparelle (con caricamento dinamico di utenti/sensori/tapparelle disponibili tramite funzioni helper come `loadUsersForOwnerSelect`, `loadAvailableSensorsForEditHome`, `loadAvailableShuttersForEditHome`).
-        * **Gestione Sensori (Admin):** `showSensorsForHome`, `hideSensorsForHome`, `adminLoadLightSensors` (carica sensori *per una casa specifica*), `adminShowEditSensorForm`, `cancelAdminEditSensor`, `adminSubmitEditSensor`, `adminDeleteLightSensor`.
-        * **Gestione Tapparelle (Admin):** `showShuttersForHome`, `hideShuttersForHome`, `adminLoadRollerShutters` (carica tapparelle *per una casa specifica*), `adminShowEditShutterForm`, `cancelAdminEditShutter`, `adminSubmitEditShutter`, `adminDeleteRollerShutter`.
-        * **Gestione Globale (Sensori/Tapparelle):** `loadGlobalLightSensors`, `globalCreateLightSensor`, `globalShowEditLightSensorForm`, `globalDeleteLightSensor` (e funzioni analoghe per le tapparelle). Permettono di creare/modificare/eliminare entità a livello di sistema, indipendentemente dalle case.
-        * **Gestione Routine (Navigazione):** `showAllRoutinesView` per mostrare la sezione routine (il caricamento è in `routines.js`).
-    * **Riuso:** Le funzioni sono specifiche per l'admin ma i pattern sono riutilizzabili: caricare liste, mostrare/nascondere form di modifica, gestire invio form con chiamate API (GET, POST, PATCH, DELETE), popolare select/checkbox dinamicamente. Le funzioni di gestione globale sono riutilizzabili se si ha un concetto simile di entità globali.
-* **`user.js`:**
-    * **Scopo:** Gestisce il caricamento dei dati per la vista Utente standard nel dashboard.
-    * **Funzioni Chiave:** `loadUserHomeDetails`. Chiama l'API `/api/entities/home/` per ottenere la casa (o le case) dell'utente e poi invoca le funzioni di caricamento specifiche per tapparelle (`loadRollerShutters`), sensori (`loadLightSensors`) e routine (`loadRoutines`), potenzialmente passando l'ID della casa se necessario per filtrare (anche se le funzioni chiamate potrebbero non usare l'ID passato). Gestisce il caso in cui l'utente non ha case assegnate.
-    * **Riuso:** Il pattern di caricare l'entità principale (casa) e poi le entità correlate è comune e riutilizzabile.
-* **`sensors.js`:**
-    * **Scopo:** Gestisce la logica relativa ai sensori di luminosità per la vista utente (e alcune funzioni usate anche dall'admin, anche se l'admin ha le sue specifiche in `admin.js`).
-    * **Funzioni Chiave:** `loadLightSensors` (carica e visualizza sensori, potenzialmente filtrati per casa), `createLightSensor` (gestisce form aggiunta), `showEditSensorForm`, `cancelEditSensor`, `submitEditSensor` (gestisce form modifica), `deleteLightSensor`.
-    * **Riuso:** Le funzioni CRUD (Create, Read, Update, Delete) per i sensori sono un pattern standard. La logica per popolare/aggiornare la UI è riutilizzabile.
-* **`shutters.js`:**
-    * **Scopo:** Gestisce la logica relativa alle tapparelle per la vista utente.
-    * **Funzioni Chiave:** `loadRollerShutters` (carica lista), `selectRollerShutter` (gestisce selezione e mostra controlli), `adjustRollerShutterOpening` (invia PATCH per +/- 10%), `openAllShutters`, `closeAllShutters` (invia PATCH a 100% o 0% per tutte le tapparelle).
-    * **Riuso:** Funzioni CRUD e di controllo per le tapparelle. Il concetto di selezionare un elemento da una lista per abilitare controlli specifici è riutilizzabile. Le funzioni "Open/Close All" sono specifiche ma il pattern di iterare su una lista ed eseguire un'azione API per ciascuno è riutilizzabile.
-* **`routines.js`:**
-    * **Scopo:** Gestisce la logica per le routine (visualizzazione, creazione, eliminazione).
-    * **Funzioni Chiave:** `loadRoutines` (carica e visualizza tutte le routine accessibili), `loadSensorsForRoutineForm`, `loadShuttersForRoutineForm` (popolano dinamicamente le select/checkbox nel form routine), `toggleTriggerOptions` (mostra/nasconde campi form in base al tipo di trigger), `showRoutinesForm` (resetta e mostra il form), `cancelRoutines` (nasconde e resetta il form), `saveRoutines` (gestisce l'invio del form per creare routine via API POST), `deleteRoutines`.
-    * **Riuso:** Funzioni CRUD per le routine. Il caricamento dinamico di opzioni nei form (`loadSensorsForRoutineForm`, `loadShuttersForRoutineForm`) è un pattern riutilizzabile. La gestione della visibilità condizionale dei campi form (`toggleTriggerOptions`) è comune.
+#### 3. Installazione e Setup
 
-#### 4. Dipendenze
+Il setup del frontend è relativamente semplice:
 
-* **Bootstrap 5:** Usato pesantemente per layout, componenti UI e stili base. Il riutilizzo dipende dalla disponibilità di Bootstrap nel nuovo contesto.
-* **API Backend:** Tutto il codice JavaScript che interagisce con le entità (case, sensori, tapparelle, routine, utenti) dipende strettamente dalla struttura e dagli endpoint dell'API backend definita in `api.js` e usata in tutti gli altri file JS. Qualsiasi riutilizzo richiede un backend compatibile o un adattamento significativo del codice `fetchApi` e delle chiamate specifiche.
+1.  **Ottenere i File:** Scarica o copia tutti i file e le cartelle del progetto (`dashboard.html`, `login.html`, `register.html`, la cartella `js/` con i suoi file, la cartella `css/` con `styles.css`).
+2.  **Struttura Cartelle:** Mantieni la struttura delle cartelle originale:
+    ```
+    /Frontend
+    |-- dashboard.html
+    |-- login.html
+    |-- register.html
+    |-- /css
+    |   |-- styles.css
+    |-- /js
+    |   |-- auth.js
+    |   |-- dashboard.js
+    |   |-- register.js
+    |   |-- routines.js
+    |   |-- shutters.js
+    ```
+3.  **Configurare l'URL dell'API:**
+    * Apri il file `js/auth.js`.
+    * Trova la costante `API_BASE_URL`.
+    * Modifica il valore (attualmente `"http://localhost:8080"`) con l'URL corretto del tuo backend API.
+4.  **Esecuzione:**
+    * **Senza Server Web:** Puoi aprire direttamente il file `login.html` o `register.html` nel tuo browser. Tuttavia, potresti incontrare problemi con le chiamate API a seconda della configurazione del browser e dell'API (CORS).
+    * **Con Server Web Locale (Consigliato):** Avvia un server web locale nella directory `Frontend`. Accedi all'applicazione tramite l'URL fornito dal server (es. `http://localhost:5500/login.html` o `http://127.0.0.1:8000/login.html`).
 
+#### 4. Architettura Generale
 
+* **Pagine Multiple:** Sebbene abbia funzionalità dinamiche tipiche di una Single Page Application (SPA), il progetto utilizza file HTML separati per le sezioni principali: Login, Registrazione e Dashboard. La navigazione tra queste pagine avviene tramite reindirizzamenti standard del browser (`window.location.href`).
+* **JavaScript Modulare (per Funzionalità):** Il codice JavaScript è suddiviso ### Frontend Gestione Smart Home - Manuale di Riuso
 
+#### 1. Introduzione
+
+Questo progetto è un'interfaccia web frontend progettata per interagire con un sistema backend di gestione smart home. Consente agli utenti di:
+* Autenticarsi (registrarsi e accedere).
+* Gestire "Case" (Homes), che sembrano essere raggruppamenti logici di dispositivi.
+* Gestire dispositivi globali come sensori di luminosità e tapparelle (Roller Shutters).
+* Associare sensori e tapparelle a case specifiche.
+* Controllare lo stato delle tapparelle (apertura/chiusura percentuale, apri/chiudi tutto).
+* Creare, visualizzare ed eliminare "Routine" automatiche basate su orari o livelli di luminosità per controllare le tapparelle.
+* Visualizzare lo stato dei sensori di luminosità associati.
+
+L'interfaccia utilizza HTML per la struttura, CSS (principalmente Bootstrap con stili personalizzati) per l'aspetto, e JavaScript vanilla per la logica, l'interattività e la comunicazione con un API backend.
+
+#### 2. Prerequisiti
+
+Per riutilizzare o sviluppare questo frontend, sono necessarie le seguenti conoscenze e strumenti:
+
+* **Conoscenze di Base:**
+    * HTML
+    * CSS
+    * JavaScript (incluse chiamate asincrone - `async/await`, `fetch`)
+* **Strumenti:**
+    * Un browser web moderno (es. Chrome, Firefox, Edge)
+    * Un editor di testo o IDE (es. Visual Studio Code, Sublime Text)
+    * (Opzionale ma consigliato) Un server web locale (come Live Server per VS Code o un server Python/Node.js semplice) per servire i file ed evitare problemi legati a CORS durante lo sviluppo.
+* **Backend API:** Il frontend è progettato per comunicare con un'API backend specifica. È **fondamentale** avere accesso a questa API o a una sua implementazione compatibile affinché il frontend funzioni correttamente. L'URL base dell'API è attualmente configurato in `js/auth.js`.
+
+#### 3. Installazione e Setup
+
+Il setup del frontend è relativamente semplice:
+
+1.  **Ottenere i File:** Scarica o copia tutti i file e le cartelle del progetto (`dashboard.html`, `login.html`, `register.html`, la cartella `js/` con i suoi file, la cartella `css/` con `styles.css`).
+2.  **Struttura Cartelle:** Mantieni la struttura delle cartelle originale:
+    ```
+    /Frontend
+    |-- dashboard.html
+    |-- login.html
+    |-- register.html
+    |-- /css
+    |   |-- styles.css
+    |-- /js
+    |   |-- auth.js
+    |   |-- dashboard.js
+    |   |-- register.js
+    |   |-- routines.js
+    |   |-- shutters.js
+    ```
+3.  **Configurare l'URL dell'API:**
+    * Apri il file `js/auth.js`.
+    * Trova la costante `API_BASE_URL`.
+    * Modifica il valore (attualmente `"http://localhost:8080"`) con l'URL corretto del tuo backend API.
+4.  **Esecuzione:**
+    * **Senza Server Web:** Puoi aprire direttamente il file `login.html` o `register.html` nel tuo browser. Tuttavia, potresti incontrare problemi con le chiamate API a seconda della configurazione del browser e dell'API (CORS).
+    * **Con Server Web Locale (Consigliato):** Avvia un server web locale nella directory `Frontend`. Accedi all'applicazione tramite l'URL fornito dal server (es. `http://localhost:5500/login.html` o `http://127.0.0.1:8000/login.html`).
+
+#### 4. Architettura Generale
+
+* **Pagine Multiple:** Il progetto utilizza file HTML separati per le sezioni principali: Login, Registrazione e Dashboard. La navigazione tra queste pagine avviene tramite reindirizzamenti standard del browser (`window.location.href`).
+* **JavaScript Modulare (per Funzionalità):** Il codice JavaScript è suddiviso in file basati sulla funzionalità principale che gestiscono:
+    * `auth.js`: Autenticazione, gestione token JWT, funzione `fetchApi` per le chiamate backend.
+    * `register.js`: Logica specifica per il form di registrazione.
+    * `dashboard.js`: Logica principale della dashboard, gestione case, gestione dispositivi globali, caricamento dati iniziali, gestione form di modifica.
+    * `shutters.js`: Logica per il controllo delle tapparelle (selezione, aggiustamenti, apri/chiudi tutto).
+    * `routines.js`: Logica per la gestione delle routine (creazione, visualizzazione, eliminazione, gestione form).
+* **Interazione con API:** Tutta la comunicazione con il backend avviene tramite la funzione `fetchApi` in `js/auth.js`. Questa funzione centralizza la gestione degli header (incluso il token JWT per le richieste autenticate), la gestione degli errori HTTP e la gestione delle risposte (JSON o testo).
+* **Styling:** Utilizza Bootstrap 5 (caricato da CDN) per la struttura di base, il layout responsive e i componenti. Un file `css/styles.css` personalizza l'aspetto con un tema scuro e stili specifici per gli elementi dell'interfaccia.
+* **Gestione dello Stato:** Lo stato dell'applicazione (dati su case, dispositivi, routine) viene recuperato dall'API al caricamento della pagina o a seguito di azioni dell'utente. 
+Lo stato di autenticazione è gestito tramite un token JWT memorizzato nel `localStorage` del browser.
+
+#### 5. Componenti Chiave e Funzionalità
+
+Vediamo nel dettaglio i diversi moduli e le loro responsabilità:
+
+* **Autenticazione (`login.html`, `register.html`, `js/auth.js`, `js/register.js`)**
+    * **Registrazione:** Il file `register.html` contiene il form. `js/register.js` gestisce l'invio del form, chiama la funzione `sha256` (da `auth.js`) per l'hashing della password e invia i dati all'endpoint `/api/auth/register` tramite `fetchApi`. In caso di successo, reindirizza alla pagina di login.
+    * **Login:** `login.html` contiene il form. `js/auth.js` gestisce l'invio, esegue l'hashing della password e invia le credenziali all'endpoint `/api/auth/authenticate`. Se l'API restituisce un token JWT, questo viene salvato nel `localStorage` e l'utente viene reindirizzato alla `dashboard.html`.
+    * **Protezione Pagine:** La funzione `checkAuthentication` in `auth.js` viene chiamata all'inizio del caricamento della `dashboard.js`. Controlla la presenza del token JWT nel `localStorage`. Se manca, reindirizza l'utente a `login.html`.
+    * **Logout:** Il pulsante Logout nella dashboard chiama la funzione `logout` in `auth.js`, che rimuove il token JWT dal `localStorage` e reindirizza a `login.html`.
+    * **`fetchApi`:** Funzione centrale in `auth.js` per tutte le chiamate API. Aggiunge automaticamente l'header `Authorization: Bearer <token>` se un token esiste e `sendAuthToken` è `true`. Gestisce errori HTTP e parsing delle risposte.
+
+* **Dashboard (`dashboard.html`, `js/dashboard.js`)**
+    * **Layout:** `dashboard.html` definisce la struttura principale usando contenitori e sezioni Bootstrap. Include aree per la gestione delle case, dei dispositivi globali, delle routine e sezioni nascoste che vengono mostrate dinamicamente per la modifica dei dettagli della casa o la gestione dei dispositivi associati.
+    * **Caricamento Dati Iniziale:** All'evento `DOMContentLoaded`, `dashboard.js` esegue `checkAuthentication`, collega i listener ai form/pulsanti e chiama le funzioni per caricare i dati iniziali: `loadHomes`, `loadGlobalLightSensors`, `loadGlobalRollerShutters`, `loadRoutines`.
+    * **Gestione Case:**
+        * `loadHomes`: Recupera l'elenco delle case da `/api/entities/home/` e le visualizza in una lista, aggiungendo pulsanti per Modifica Dettagli, Elimina e Gestisci Tapparelle.
+        * `addHome`: Gestisce il form per aggiungere una nuova casa, inviando una POST a `/api/entities/home/create`.
+        * `showEditHomeForm`: Nasconde le sezioni principali e mostra un form precompilato per modificare i dettagli di una casa specifica. Recupera i dettagli attuali della casa (sensore e tapparelle associate) e carica gli elenchi di sensori e tapparelle disponibili per l'associazione nei rispettivi select e checkbox. Utilizza `loadAvailableSensorsForEditHome` e `loadAvailableShuttersForEditHome`.
+        * `submitEditHome`: Gestisce il salvataggio delle modifiche alla casa. Confronta i valori nuovi con quelli originali (memorizzati nel `dataset` del form) ed esegue chiamate PATCH separate e specifiche solo per i campi modificati (nome, sensore, tapparelle) agli endpoint `/api/entities/home/patch/name/{id}`, `/api/entities/home/patch/lightSensor/{id}`, `/api/entities/home/patch/rollerShutters/{id}`. L'associazione avviene inviando il nome del dispositivo.
+        * `deleteHome`: Chiede conferma ed esegue una DELETE a `/api/entities/home/delete/{id}`.
+        * `showShuttersForHome`: Mostra una sezione dedicata alla gestione delle tapparelle associate a una specifica casa, nascondendo le altre sezioni principali. Chiama `loadHomeShuttersForManagement`.
+        * `loadHomeShuttersForManagement`: Carica e visualizza solo le tapparelle associate alla casa selezionata, recuperandole da `/api/entities/rollerShutter/` e filtrandole (o recuperando i dettagli della casa per ottenere i nomi delle tapparelle associate). Include controlli per selezionare una tapparella e pulsanti per eliminarla (chiamando `globalDeleteRollerShutter`).
+        * `hideShuttersForHome`: Nasconde la sezione di gestione tapparelle e ripristina la vista principale.
+    * **Gestione Dispositivi Globali:**
+        * `loadGlobalLightSensors`, `loadGlobalRollerShutters`: Caricano e visualizzano elenchi di tutti i sensori/tapparelle disponibili globalmente dagli endpoint `/api/entities/lightSensor/` e `/api/entities/rollerShutter/`, aggiungendo pulsanti Modifica (nome) ed Elimina per ciascuno.
+        * `globalCreateLightSensor`, `globalCreateRollerShutter`: Gestiscono i form per aggiungere nuovi dispositivi globali, inviando POST a `/api/entities/lightSensor/create` e `/api/entities/rollerShutter/create`.
+        * `globalShowEditLightSensorForm`, `globalShowEditRollerShutterForm`: Implementano la modifica *inline* del nome. Sostituiscono il nome del dispositivo con un campo input e pulsanti Salva/Annulla direttamente nell'elemento della lista. Il salvataggio invia una PATCH a `/api/entities/lightSensor/patch/name/{id}` o `/api/entities/rollerShutter/patch/name/{id}`.
+        * `globalDeleteLightSensor`, `globalDeleteRollerShutter`: Chiedono conferma ed eseguono DELETE agli endpoint `/api/entities/lightSensor/delete/{id}` o `/api/entities/rollerShutter/delete/{id}`.
+
+* **Controllo Tapparelle (`js/shutters.js`)**
+    * **Selezione:** `selectRollerShutter` viene chiamata quando si clicca su una tapparella nelle liste di controllo o gestione. Memorizza l'ID e il nome della tapparella selezionata in variabili globali (`selectedRollerShutterId`, `selectedRollerShutterName`), aggiorna il testo di stato e aggiunge la classe `active` all'elemento della lista selezionato.
+    * **Aggiustamento (+/- 10%):** `adjustRollerShutterOpening` legge lo stato di apertura corrente dall'elemento della lista attivo (o dallo stato), calcola il nuovo valore (assicurandosi che rimanga tra 0 e 100) e invia una PATCH all'endpoint `/api/entities/rollerShutter/patch/opening/{id}` con il *delta* (la variazione, +10 o -10) nel payload `{ "value": delta }`. Aggiorna l'interfaccia.
+    * **Apri/Chiudi Tutto:** `openAllShutters` e `closeAllShutters` recuperano lo stato di *tutte* le tapparelle da `/api/entities/rollerShutter/`. Calcolano il delta necessario per portare ciascuna tapparella rispettivamente a 100% o 0% e inviano chiamate PATCH individuali (con il delta calcolato) solo per quelle che necessitano di essere modificate. Usano `Promise.all` per eseguire le chiamate in parallelo e aggiornano l'interfaccia ottimisticamente.
+
+* **Gestione Routine (`js/routines.js`)**
+    * **Visualizzazione:** `loadRoutines` recupera tutte le routine da `/api/entities/routine/` e le visualizza in una lista. Per ogni routine, formatta le informazioni sul trigger (ora o luminosità con sensore, condizione e soglia) e sull'azione (percentuale di apertura target e tapparelle coinvolte). Aggiunge pulsanti per Modifica Nome ed Elimina.
+    * **Modifica Nome (Inline):** `globalShowEditRoutineForm` funziona in modo simile alle funzioni di modifica inline per i dispositivi globali, sostituendo il nome con un input e pulsanti Salva/Annulla. Il salvataggio invia una PATCH a `/api/entities/routine/patch/name/{id}`.
+    * **Form Creazione:**
+        * `showRoutinesForm`: Mostra il form di creazione/modifica (attualmente solo creazione), lo resetta, imposta i valori predefiniti e chiama `loadSensorsForRoutineForm` e `loadShuttersForRoutineForm` per popolare le opzioni dinamiche.
+        * `loadSensorsForRoutineForm`: Popola il dropdown dei sensori (per trigger luminosità) recuperando i dati da `/api/entities/lightSensor/`.
+        * `loadShuttersForRoutineForm`: Popola l'area con le checkbox delle tapparelle target recuperando i dati da `/api/entities/rollerShutter/`.
+        * `toggleTriggerOptions`: Mostra/nasconde le opzioni specifiche per il trigger (luminosità vs tempo) in base alla selezione nel dropdown `triggerType` e imposta/rimuove l'attributo `required` sui campi pertinenti.
+        * `cancelRoutines`: Nasconde e resetta il form.
+    * **Salvataggio:** `saveRoutines` gestisce l'invio del form di creazione. Raccoglie tutti i dati, inclusi nome, tipo di trigger, valori del trigger (ora o sensore/soglia/condizione), azione (apri/chiudi), percentuale e tapparelle target (selezionate tramite checkbox). Determina l'endpoint API corretto (`/api/entities/routine/create/actionTime` o `/api/entities/routine/create/lightSensor`) in base al tipo di trigger. Costruisce il payload JSON corretto, che include il nome, l'array di tapparelle target (come `{name: 'nome_tapparella'}`), il valore `rollerShutterValue` (calcolato in base ad apri/chiudi e percentuale) e i dati specifici del trigger (ora formattata o oggetto `lightSensor` con nome e oggetto `lightValueRecord` con valore e metodo booleano per sopra/sotto). Invia la richiesta POST e, in caso di successo, chiude il form e ricarica l'elenco delle routine.
+    * **Eliminazione:** `deleteRoutine` chiede conferma ed esegue una DELETE all'endpoint `/api/entities/routine/delete/{id}`.
+
+* **Styling (`css/styles.css`)**
+    * Definisce un tema scuro personalizzato per tutti gli elementi (sfondi, testo, bordi).
+    * Sovrascrive e personalizza gli stili di Bootstrap per bottoni, liste, form e contenitori per adattarli al tema scuro.
+    * Utilizza gradienti e bordi per il contenitore principale.
+    * Include stili per l'evidenziazione degli elementi attivi nelle liste (es. tapparelle selezionate).
+    * Fornisce stili responsive di base per adattare leggermente layout e dimensioni su schermi più piccoli.
+
+#### 6. Personalizzazione
+
+Questo frontend può essere personalizzato in diversi modi:
+
+* **Endpoint API:** Modifica la costante `API_BASE_URL` in `js/auth.js` per puntare a un backend diverso. Assicurati che il nuovo backend esponga endpoint compatibili con quelli chiamati dal frontend.
+* **Aspetto Grafico:** Modifica `css/styles.css` per cambiare colori, font, spaziature e layout. Puoi anche cambiare la versione di Bootstrap o usare un tema Bootstrap diverso (richiederà aggiustamenti agli stili personalizzati).
+* **Testo e Lingua:** Modifica le stringhe di testo direttamente nei file HTML e nei messaggi `alert()` o `textContent` all'interno dei file JavaScript.
+* **Aggiungere Nuovi Tipi di Dispositivi:** Richiederebbe modifiche significative:
+    * Aggiungere nuove sezioni nell'HTML (`dashboard.html`).
+    * Creare nuovi file JavaScript (o estendere quelli esistenti) per gestire la logica specifica del nuovo dispositivo.
+    * Aggiungere nuove funzioni di caricamento, creazione, modifica ed eliminazione in `dashboard.js`.
+    * Definire nuovi stili in `css/styles.css`.
+    * Assicurarsi che l'API backend supporti il nuovo tipo di dispositivo.
+* **Modificare Funzionalità Esistenti:** Ad esempio, cambiare il modo in cui vengono associate le tapparelle (per ID invece che per nome) richiederebbe di modificare le funzioni `submitEditHome`, `loadAvailableShuttersForEditHome`, `saveRoutines`, e `loadShuttersForRoutineForm` per gestire gli ID e assicurarsi che l'API li accetti.
+
+#### 7. Dipendenze
+
+* **Bootstrap 5:** Utilizzato per layout, componenti e responsività. Caricato tramite CDN nei file HTML.
+* **API Backend:** Dipendenza **fondamentale**. Il frontend è inutile senza un'API backend compatibile che fornisca gli endpoint attesi per autenticazione, gestione di case, dispositivi (sensori, tapparelle) e routine.
+
+#### 8. Integrazione API (Endpoints Attesi)
+
+Il frontend si aspetta che il backend API esponga i seguenti endpoint:
+
+* **Autenticazione:**
+    * `POST /api/auth/register` (Payload: `{ username, password }` - password hashata)
+    * `POST /api/auth/authenticate` (Payload: `{ username, password }` - password hashata) -> Restituisce `{ jwt }`
+* **Case (Homes):**
+    * `GET /api/entities/home/` -> Restituisce array di oggetti Home
+    * `POST /api/entities/home/create` (Payload: `{ name }`)
+    * `DELETE /api/entities/home/delete/{id}`
+    * `PATCH /api/entities/home/patch/name/{id}` (Payload: `{ name }`)
+    * `PATCH /api/entities/home/patch/lightSensor/{id}` (Payload: `{ lightSensor: { name: sensorName } }` o `{ lightSensor: null }`)
+    * `PATCH /api/entities/home/patch/rollerShutters/{id}` (Payload: `{ rollerShutters: [{ name: shutterName1 }, ...] }`)
+* **Sensori di Luminosità:**
+    * `GET /api/entities/lightSensor/` -> Restituisce array di oggetti LightSensor
+    * `POST /api/entities/lightSensor/create` (Payload: `{ name }`)
+    * `DELETE /api/entities/lightSensor/delete/{id}`
+    * `PATCH /api/entities/lightSensor/patch/name/{id}` (Payload: `{ name }`)
+* **Tapparelle (Roller Shutters):**
+    * `GET /api/entities/rollerShutter/` -> Restituisce array di oggetti RollerShutter
+    * `POST /api/entities/rollerShutter/create` (Payload: `{ name }`)
+    * `DELETE /api/entities/rollerShutter/delete/{id}`
+    * `PATCH /api/entities/rollerShutter/patch/name/{id}` (Payload: `{ name }`)
+    * `PATCH /api/entities/rollerShutter/patch/opening/{id}` (Payload: `{ value: delta }`)
+* **Routine:**
+    * `GET /api/entities/routine/` -> Restituisce array di oggetti Routine
+    * `POST /api/entities/routine/create/actionTime` (Payload: `{ name, time: "HH:MM:SS", rollerShutters: [{name},...], rollerShutterValue }`)
+    * `POST /api/entities/routine/create/lightSensor` (Payload: `{ name, lightSensor: {name}, lightValueRecord: {value, method}, rollerShutters: [{name},...], rollerShutterValue }`)
+    * `DELETE /api/entities/routine/delete/{id}`
+    * `PATCH /api/entities/routine/patch/name/{id}` (Payload: `{ name }`)in file basati sulla funzionalità principale che gestiscono:
+    * `auth.js`: Autenticazione, gestione token JWT, funzione `fetchApi` per le chiamate backend.
+    * `register.js`: Logica specifica per il form di registrazione.
+    * `dashboard.js`: Logica principale della dashboard, gestione case, gestione dispositivi globali, caricamento dati iniziali, gestione form di modifica.
+    * `shutters.js`: Logica per il controllo delle tapparelle (selezione, aggiustamenti, apri/chiudi tutto).
+    * `routines.js`: Logica per la gestione delle routine (creazione, visualizzazione, eliminazione, gestione form).
+* **Interazione con API:** Tutta la comunicazione con il backend avviene tramite la funzione `fetchApi` in `js/auth.js`. Questa funzione centralizza la gestione degli header (incluso il token JWT per le richieste autenticate), la gestione degli errori HTTP e la gestione delle risposte (JSON o testo).
+* **Styling:** Utilizza Bootstrap 5 (caricato da CDN) per la struttura di base, il layout responsive e i componenti. Un file `css/styles.css` personalizza l'aspetto con un tema scuro e stili specifici per gli elementi dell'interfaccia.
+* **Gestione dello Stato:** Lo stato dell'applicazione (dati su case, dispositivi, routine) viene recuperato dall'API al caricamento della pagina o a seguito di azioni dell'utente. Non sembra esserci una gestione dello stato complessa lato client al di fuori delle variabili globali semplici (come `selectedRollerShutterId` in `shutters.js`). Lo stato di autenticazione è gestito tramite un token JWT memorizzato nel `localStorage` del browser.

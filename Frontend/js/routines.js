@@ -1,8 +1,3 @@
-// ========================================
-//        js/routines.js
-// Handles loading, creating, editing, and deleting routines.
-// ========================================
-
 async function loadRoutines() {
     const RoutinesList = document.getElementById("Routines-list");
     if (!RoutinesList) {
@@ -16,16 +11,13 @@ async function loadRoutines() {
 
     try {
         const allRoutines = await fetchApi(apiPath);
-        RoutinesList.innerHTML = ""; // Clear loading message
+        RoutinesList.innerHTML = ""; 
 
         if (Array.isArray(allRoutines) && allRoutines.length > 0) {
             allRoutines.forEach((routine) => {
-                if (!routine || !routine.id) return; // Skip if routine or ID is missing
-
-                // --- Trigger Info Logic: gestione Time object, Time string o Luminosity ---
+                if (!routine || !routine.id) return;
                 let triggerInfo = 'N/A';
 
-                // 1) Se actionTime è un oggetto {hour, minute}
                 if (routine.actionTime 
                     && typeof routine.actionTime === 'object'
                     && routine.actionTime.hour !== undefined 
@@ -33,12 +25,10 @@ async function loadRoutines() {
                     
                     triggerInfo = `Time: ${String(routine.actionTime.hour).padStart(2,'0')}:${String(routine.actionTime.minute).padStart(2,'0')}`;
                 }
-                // 2) Se actionTime è una stringa "HH:MM:SS"
                 else if (typeof routine.actionTime === 'string') {
                     const hhmm = routine.actionTime.slice(0,5);
                     triggerInfo = `Time: ${hhmm}`;
                 }
-                // 3) Trigger Luminosity
                 else if (routine.lightSensor && routine.lightSensor.name
                          && routine.lightValue && routine.lightValue.value !== undefined) {
                     const sensorName = routine.lightSensor.name;
@@ -46,17 +36,12 @@ async function loadRoutines() {
                     const condition = routine.lightValue.method === true ? 'Above' : 'Below';
                     triggerInfo = `Luminosity: ${sensorName} ${condition} ${threshold}%`;
                 }
-                // --- Fine Trigger Info Logic ---
-
-                // Extract other data for display
                 const shutterValue = routine.rollerShutterValue;
                 const associatedShutters = routine.rollerShutters || [];
                 const targetDeviceNames = associatedShutters.length > 0
                     ? associatedShutters.map(rs => rs.name).join(', ')
                     : 'No target shutters';
                 const actionInfo = `Set to ${shutterValue}%`;
-
-                // Build List Item
                 const li = document.createElement("li");
                 li.className = "list-group-item d-flex justify-content-between align-items-center flex-wrap";
                 li.id = `Routines-item-${routine.id}`;
@@ -92,16 +77,10 @@ async function loadRoutines() {
 }
 
 
-// Shows an inline input field to edit the name of a routine.
 function globalShowEditRoutineForm(id, currentName) {
     const li = document.getElementById(`Routines-item-${id}`);
-    if (!li) return; // Exit if list item not found
-
-    // Store original content for cancellation
+    if (!li) return; 
     const originalContent = li.innerHTML;
-
-    // Replace content with input and buttons
-    // Using flex for better alignment
     li.innerHTML = `
       <div class="d-flex align-items-center flex-grow-1 me-2">
           <input
@@ -113,11 +92,10 @@ function globalShowEditRoutineForm(id, currentName) {
           />
       </div>
       <div class="btn-group btn-group-sm"></div>
-    `; // Placeholder for buttons
+    `; 
 
-    const btnGroup = li.querySelector('.btn-group'); // Get the button group element
+    const btnGroup = li.querySelector('.btn-group'); 
 
-    // Save Button
     const saveBtn = document.createElement('button');
     saveBtn.className = 'btn btn-success';
     saveBtn.textContent = 'Save';
@@ -126,97 +104,84 @@ function globalShowEditRoutineForm(id, currentName) {
         const inputEl = document.getElementById(`global-edit-input-routine-${id}`);
         const newName = inputEl ? inputEl.value.trim() : '';
         if (!newName) {
-            alert('Please enter a valid routine name.'); // This alert message was translated from Italian.
+            alert('Please enter a valid routine name.');
             return;
         }
         try {
-            saveBtn.disabled = true; // Disable during API call
-            // PATCH the name via API
-            await fetchApi(`/api/entities/routine/patch/name/${id}`, 'PATCH', { name: newName }); //
-            alert('Routine name updated successfully!'); // This alert message was translated from Italian.
-            loadRoutines(); // Reload the entire list
+            saveBtn.disabled = true; 
+            await fetchApi(`/api/entities/routine/patch/name/${id}`, 'PATCH', { name: newName }); 
+            alert('Routine name updated successfully!'); 
+            loadRoutines();
         } catch (err) {
-            console.error('Error patching routine name:', err); // This error message was translated from Italian.
-            alert(`Error updating name: ${err.message}`); // This alert message was translated from Italian.
-            li.innerHTML = originalContent; // Restore on error
+            console.error('Error patching routine name:', err); 
+            alert(`Error updating name: ${err.message}`);
+            li.innerHTML = originalContent;
         }
     };
 
-    // Cancel Button
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
     cancelBtn.textContent = 'Cancel';
     cancelBtn.type = 'button';
-    cancelBtn.onclick = () => loadRoutines(); // Reload list to cancel editing
-
-    btnGroup.append(saveBtn, cancelBtn); // Add buttons to the group
-
-    // Focus the input field
+    cancelBtn.onclick = () => loadRoutines(); 
+    btnGroup.append(saveBtn, cancelBtn); 
     document.getElementById(`global-edit-input-routine-${id}`).focus();
 }
 
 
-// Loads available light sensors into the routine form's trigger select dropdown.
 async function loadSensorsForRoutineForm() {
     const selectElement = document.getElementById("triggerSensorId");
     if (!selectElement) {
-        console.error("Select element #triggerSensorId not found in routine form."); // This error message was translated from Italian.
+        console.error("Select element #triggerSensorId not found in routine form."); 
         return;
     }
-    selectElement.innerHTML = '<option value="" disabled selected>Loading sensors...</option>'; // Loading state
+    selectElement.innerHTML = '<option value="" disabled selected>Loading sensors...</option>'; 
 
     const apiPath = '/api/entities/lightSensor/';
 
     try {
-        const sensors = await fetchApi(apiPath); //
-        selectElement.innerHTML = ''; // Clear loading message
+        const sensors = await fetchApi(apiPath);
+        selectElement.innerHTML = ''; 
 
-        // Add a default, non-selectable option
         const defaultOpt = document.createElement('option');
-        defaultOpt.value = ""; // Empty value, required won't pass
+        defaultOpt.value = ""; 
         defaultOpt.textContent = "-- Select Trigger Sensor --";
-        defaultOpt.disabled = true; // Make it non-selectable initially
+        defaultOpt.disabled = true; 
         defaultOpt.selected = true;
         selectElement.appendChild(defaultOpt);
 
         if (Array.isArray(sensors) && sensors.length > 0) {
             sensors.forEach(sensor => {
-                if (!sensor.id || !sensor.name) return; // Skip if ID or Name is missing
+                if (!sensor.id || !sensor.name) return; 
                 const opt = document.createElement('option');
-                // Use NAME as the value for simplicity in form submission,
-                // assuming the backend can look up the sensor by name for routine creation.
-                // If backend requires ID, this needs adjustment & lookup before submit.
-                opt.value = sensor.name; // Use name as value
+                opt.value = sensor.name; 
                 opt.textContent = sensor.name;
                 selectElement.appendChild(opt);
             });
-             defaultOpt.disabled = false; // Enable default option selection if sensors loaded
+             defaultOpt.disabled = false; 
         } else {
-            console.log("No available light sensors found for routine form."); //
+            console.log("No available light sensors found for routine form.");
             defaultOpt.textContent = "-- No sensors available --";
-            // Keep defaultOpt disabled and selected
         }
     } catch (err) {
-        console.error("Error loading sensors for routine form:", err); //
-        selectElement.innerHTML = `<option value="" selected disabled>Error loading sensors!</option>`; // Show error in the select
+        console.error("Error loading sensors for routine form:", err); 
+        selectElement.innerHTML = `<option value="" selected disabled>Error loading sensors!</option>`; 
     }
 }
 
 
-// Loads available roller shutters as checkboxes into the routine form's target list.
 async function loadShuttersForRoutineForm() {
-    const containerElementId = "routineTargetShuttersList"; // ID of the div in the Routine form
+    const containerElementId = "routineTargetShuttersList"; 
     const container = document.getElementById(containerElementId);
     if (!container) { console.error(`Container element with ID '${containerElementId}' not found.`); return; }
 
-    // Display loading message
-    container.innerHTML = `<p id="routineTargetShuttersLoading" style="color: #ccc;">Loading available shutters...</p>`; // Loading message translated.
+    container.innerHTML = `<p id="routineTargetShuttersLoading" style="color: #ccc;">Loading available shutters...</p>`; 
 
     const apiPath = '/api/entities/rollerShutter/';
 
     try {
-        const allShutters = await fetchApi(apiPath); //
-        container.innerHTML = ''; // Clear loading message
+        const allShutters = await fetchApi(apiPath);
+        container.innerHTML = ''; 
 
         if (allShutters && Array.isArray(allShutters) && allShutters.length > 0) {
             allShutters.forEach(shutter => {
@@ -224,29 +189,25 @@ async function loadShuttersForRoutineForm() {
                     const div = document.createElement('div');
                     div.className = 'form-check';
                     const checkId = `routine_shutter_${shutter.id}`;
-                    const safeName = shutter.name.replace(/"/g, '&quot;'); // Escape double quotes for value attribute
-
-                    // Use NAME as the value. The backend needs to handle lookup by name on routine creation.
-                    // If backend requires IDs, store the ID in a data attribute or adjust the value.
+                    const safeName = shutter.name.replace(/"/g, '&quot;'); 
                     div.innerHTML = `
                         <input class="form-check-input" type="checkbox" value="${safeName}" id="${checkId}">
                         <label class="form-check-label" for="${checkId}">${shutter.name}</label>
-                    `; //
+                    `;
                     container.appendChild(div);
                 }
             });
-            console.log("Rendered shutter checkboxes for routine form."); //
+            console.log("Rendered shutter checkboxes for routine form.");
         } else {
-            container.innerHTML = '<p style="color: #ccc;">No available shutters found.</p>'; // Message if no shutters
+            container.innerHTML = '<p style="color: #ccc;">No available shutters found.</p>';
         }
     } catch (error) {
-        console.error("Error loading shutters for Routine form:", error); //
-        container.innerHTML = '<p class="text-danger">Error loading shutters.</p>'; // Error message
+        console.error("Error loading shutters for Routine form:", error); 
+        container.innerHTML = '<p class="text-danger">Error loading shutters.</p>'; 
     }
 }
 
 
-// Toggles the visibility of trigger options (Luminosity vs. Time) in the routine form.
 function toggleTriggerOptions() {
     const type = document.getElementById("triggerType").value;
     const luminositySection = document.getElementById("triggerLuminositySection");
@@ -257,205 +218,165 @@ function toggleTriggerOptions() {
     const luminosityCondition = document.getElementById("triggerLuminosityCondition");
 
 
-    if (luminositySection) luminositySection.style.display = type === "luminosity" ? "block" : "none"; //
-    if (timeSection) timeSection.style.display = type === "time" ? "block" : "none"; //
+    if (luminositySection) luminositySection.style.display = type === "luminosity" ? "block" : "none"; 
+    if (timeSection) timeSection.style.display = type === "time" ? "block" : "none"; 
 
-    // Set required attribute based on visibility
     if (type === "luminosity") {
         sensorSelect?.setAttribute("required", "");
         luminosityValue?.setAttribute("required", "");
         timeInput?.removeAttribute("required");
-    } else { // type === "time"
+    } else {
          sensorSelect?.removeAttribute("required");
         luminosityValue?.removeAttribute("required");
         timeInput?.setAttribute("required", "");
     }
 }
 
-// Shows the form for creating or editing a routine.
 function showRoutinesForm() {
     const formContainer = document.getElementById("Routines-form");
     if (!formContainer) {
-        console.error("Element #Routines-form not found!"); // Error message translated.
+        console.error("Element #Routines-form not found!"); 
         return;
     }
     const actualForm = formContainer.querySelector("form");
     if (!actualForm) {
-        console.error("No <form> found inside #Routines-form!"); // Error message translated.
+        console.error("No <form> found inside #Routines-form!"); 
         return;
     }
 
-    // Reset and initial setup for CREATING a new routine
-    document.getElementById("form-title").innerText = "Create Routine"; //
-    actualForm.reset(); // Reset all form fields to default values
-    // Remove hidden ID if it exists from a previous edit attempt
-    document.getElementById("Routines-id-hidden")?.remove(); //
+    document.getElementById("form-title").innerText = "Create Routine";
+    actualForm.reset(); 
+    document.getElementById("Routines-id-hidden")?.remove();
+    document.getElementById("triggerType").value = "luminosity";
+    document.getElementById("action").value = "open";
+    document.getElementById("actionPercentage").value = "100";
+    document.getElementById("triggerLuminosityCondition").value = "below"; 
 
-    // Set default values explicitly after reset
-    document.getElementById("triggerType").value = "luminosity"; //
-    document.getElementById("action").value = "open"; //
-    document.getElementById("actionPercentage").value = "100"; // Default to 100%
-    document.getElementById("triggerLuminosityCondition").value = "below"; // Default condition
+    toggleTriggerOptions(); 
+    loadSensorsForRoutineForm();
+    loadShuttersForRoutineForm();
 
-    toggleTriggerOptions(); // Ensure correct fields are shown and required attributes set
-
-    // Populate dynamic fields (sensors and shutters)
-    loadSensorsForRoutineForm(); //
-    loadShuttersForRoutineForm(); //
-
-    // Show the form container
-    formContainer.style.display = "block"; //
+    formContainer.style.display = "block";
 }
 
-// Hides and resets the routine form.
 function cancelRoutines() {
     const formContainer = document.getElementById("Routines-form");
     if (formContainer) {
         const actualForm = formContainer.querySelector("form");
-        if (actualForm) actualForm.reset(); // Reset fields
-        formContainer.style.display = "none"; // Hide the form
-        // Remove hidden ID if present
-        document.getElementById("Routines-id-hidden")?.remove(); //
+        if (actualForm) actualForm.reset();
+        formContainer.style.display = "none";
+        document.getElementById("Routines-id-hidden")?.remove();
     }
 }
 
 
-// Saves a new routine based on the form data.
 async function saveRoutines(event) {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault();
     const form = event.target;
     const saveButton = event.submitter;
     if (saveButton) {
         saveButton.disabled = true;
         saveButton.textContent = 'Saving...';
     }
-
-    // --- Helper function to reset the button ---
     function resetButton() {
         if (saveButton) {
             saveButton.disabled = false;
-            // Reset text (might need adjustment if editing is implemented)
-            saveButton.textContent = 'Save'; //
+            saveButton.textContent = 'Save'; 
         }
     }
 
     try {
-        // 1) Get Values from Form
-        const name = document.getElementById("RoutinesName").value.trim(); //
-        const triggerType = document.getElementById("triggerType").value; // "luminosity" | "time"
+        const name = document.getElementById("RoutinesName").value.trim();
+        const triggerType = document.getElementById("triggerType").value;
 
-        // Shutter action
-        const actionType = document.getElementById("action").value; // "open" | "close"
-        const selectedPercentage = parseInt(document.getElementById("actionPercentage").value, 10); //
+        const actionType = document.getElementById("action").value;
+        const selectedPercentage = parseInt(document.getElementById("actionPercentage").value, 10);
 
-        // Target shutters (by name - requires backend lookup)
-        const checkedShutters = document.querySelectorAll('#routineTargetShuttersList input[type="checkbox"]:checked'); //
-        // Map to the format expected by the backend (e.g., array of {name: "shutterName"})
-        const targetShutters = Array.from(checkedShutters).map(cb => ({ name: cb.value })); // Expects {name: ...}
+        const checkedShutters = document.querySelectorAll('#routineTargetShuttersList input[type="checkbox"]:checked');
+        const targetShutters = Array.from(checkedShutters).map(cb => ({ name: cb.value }));
 
-        // Trigger-specific values
-        const timeValue = (document.getElementById("triggerTime").value); // "HH:MM"
-        const sensorName = document.getElementById("triggerSensorId").value; // Name of the sensor
-        const thresholdValue = parseInt(document.getElementById("triggerLuminosityValue").value, 10); //
-        const condition = document.getElementById("triggerLuminosityCondition").value; // "above" | "below"
+        const timeValue = (document.getElementById("triggerTime").value);
+        const sensorName = document.getElementById("triggerSensorId").value;
+        const thresholdValue = parseInt(document.getElementById("triggerLuminosityValue").value, 10);
+        const condition = document.getElementById("triggerLuminosityCondition").value;
 
-        // 2) Preliminary Validations
         if (!name || targetShutters.length === 0) {
-            alert("Please enter a routine name and select at least one target shutter."); //
+            alert("Please enter a routine name and select at least one target shutter.");
             resetButton(); return;
         }
 
-        // Calculate the actual rollerShutterValue based on actionType and percentage
-        // If action is 'open', value is the percentage. If 'close', value is 100 - percentage.
-        let rollerShutterValue = actionType === 'close' ? (100 - selectedPercentage) : selectedPercentage; //
+        let rollerShutterValue = actionType === 'close' ? (100 - selectedPercentage) : selectedPercentage;
 
-        // Ensure calculated value is valid
         if (isNaN(rollerShutterValue) || rollerShutterValue < 0 || rollerShutterValue > 100) {
-            alert("Invalid action percentage resulting in invalid target opening (0-100)."); // Alert text updated.
+            alert("Invalid action percentage resulting in invalid target opening (0-100).");
             resetButton(); return;
         }
 
-
-        // 3) Build Payload specific to the endpoint
         let apiPath, data = {
             name,
-            rollerShutters: targetShutters, // Array of {name: ...}
-            rollerShutterValue // The calculated target opening percentage (0-100)
-        }; //
+            rollerShutters: targetShutters,
+            rollerShutterValue 
+        }; 
 
         if (triggerType === 'time') {
-            if (!timeValue) { // timeValue should be "HH:MM"
-                alert("Please select a trigger time."); resetButton(); return; //
+            if (!timeValue) { 
+                alert("Please select a trigger time."); resetButton(); return;
             }
             apiPath = '/api/entities/routine/create/actionTime'; 
 
             const [hours, minutes] = timeValue.split(':').map(Number);
-            const adjustedHours = (hours + 2) % 24; // Ensure it wraps around 24 hours
+            const adjustedHours = (hours + 2) % 24; 
             const timeAdd = `${String(adjustedHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
             data.time = `${timeAdd}:00`; 
         }
-        else { // triggerType === 'luminosity'
+        else {
             if (!sensorName || isNaN(thresholdValue) || thresholdValue < 0 || thresholdValue > 100) {
-                alert("Please select a sensor and enter a valid threshold (0–100)."); resetButton(); return; //
+                alert("Please select a sensor and enter a valid threshold (0–100)."); resetButton(); return;
             }
-            apiPath = '/api/entities/routine/create/lightSensor'; //
+            apiPath = '/api/entities/routine/create/lightSensor';
 
-            // Sensor object (by name - requires backend lookup)
-            data.lightSensor = { name: sensorName }; // Expects {name: ...}
+            data.lightSensor = { name: sensorName };
 
             data.lightValueRecord = {
-                value: thresholdValue, //
-                method: (document.getElementById("triggerLuminosityCondition").value === 'above') // Tentative mapping
+                value: thresholdValue,
+                method: (document.getElementById("triggerLuminosityCondition").value === 'above') 
             };
         }
 
         console.log(`Saving routine - Endpoint: ${apiPath}, Payload:`, JSON.stringify(data));
 
-        // 4) Send API Call
-        await fetchApi(apiPath, 'POST', data); //
+        await fetchApi(apiPath, 'POST', data);
 
-        // 5) Success
-        alert(`Routine "${name}" created successfully!`); //
-        cancelRoutines(); // Close and reset the form
-        loadRoutines();   // Reload the list of routines
+        alert(`Routine "${name}" created successfully!`);
+        cancelRoutines();
+        loadRoutines();
 
     } catch (err) {
-        // 6) Error Handling
-        console.error("Error saving routine:", err); // Error message translated.
-        // Show the specific error message returned by fetchApi (could be from backend)
-        alert(`Error saving routine: ${err.message}`); //
+        console.error("Error saving routine:", err);
+        alert(`Error saving routine: ${err.message}`);
     } finally {
-        // 7) Reset Button (on success or error)
-        resetButton(); //
+        resetButton();
     }
 }
 
 
-// Deletes a routine by its ID.
-async function deleteRoutine(routineId) { // Renamed function
-    // Ask for confirmation
-    if (!confirm("Are you sure you want to delete this routine?")) { //
-        return; // Stop if user cancels
+async function deleteRoutine(routineId) {
+    if (!confirm("Are you sure you want to delete this routine?")) {
+        return;
     }
 
-    // Provide visual feedback (optional, e.g., disable button)
-    const deleteButton = document.querySelector(`#Routines-item-${routineId} button.btn-danger`); //
+    const deleteButton = document.querySelector(`#Routines-item-${routineId} button.btn-danger`); 
     if (deleteButton) deleteButton.disabled = true;
 
     try {
-        // Call the DELETE API endpoint
-        await fetchApi(`/api/entities/routine/delete/${routineId}`, 'DELETE'); //
+        await fetchApi(`/api/entities/routine/delete/${routineId}`, 'DELETE');
 
-        // Success
-        alert("Routine deleted successfully!"); //
-        loadRoutines(); // Reload the complete list of routines
+        alert("Routine deleted successfully!");
+        loadRoutines(); 
 
     } catch (error) {
-        // Error Handling
-        console.error(`Error deleting routine (ID: ${routineId}):`, error); //
-        // Show a specific error message to the user
-        alert(`Error deleting routine: ${error.message}`); //
-        // Re-enable the button if deletion failed
-        if (deleteButton) deleteButton.disabled = false; //
+        console.error(`Error deleting routine (ID: ${routineId}):`, error);
+        alert(`Error deleting routine: ${error.message}`);
+        if (deleteButton) deleteButton.disabled = false;
     }
 }
