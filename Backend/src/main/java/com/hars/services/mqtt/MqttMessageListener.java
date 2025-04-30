@@ -23,6 +23,7 @@ import com.hars.persistence.repository.lightSensor.LightSensorRepository;
 import com.hars.persistence.repository.rollerShutter.RollerShutterRepository;
 import com.hars.services.lightSensor.LightSensorService;
 import com.hars.services.rollerShutter.RollerShutterService;
+import com.hars.services.routine.RoutineService;
 
 @Component
 public class MqttMessageListener {
@@ -36,6 +37,7 @@ public class MqttMessageListener {
 
     private final LightSensorService lightSensorService;
     private final RollerShutterService rollerShutterService;
+    private final RoutineService routineService;
     private final LightSensorRepository lightSensorRepository;
     private final RollerShutterRepository rollerShutterRepository;
     private final ObjectMapper objectMapper;
@@ -43,11 +45,13 @@ public class MqttMessageListener {
     @Autowired
     public MqttMessageListener(LightSensorService lightSensorService,
                                RollerShutterService rollerShutterService,
+                               RoutineService routineService,
                                LightSensorRepository lightSensorRepository,
                                RollerShutterRepository rollerShutterRepository,
                                ObjectMapper objectMapper) {
         this.lightSensorService = lightSensorService;
         this.rollerShutterService = rollerShutterService;
+        this.routineService = routineService;
         this.lightSensorRepository = lightSensorRepository;
         this.rollerShutterRepository = rollerShutterRepository;
         this.objectMapper = objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -142,8 +146,7 @@ public class MqttMessageListener {
             logger.info("Thing '{}' (ID: {}): Rilevato valore LightSensor = {}", sensor.getName(), sensor.getID(), lightValueInt);
             try {
                 lightSensorService.patchValueLightSensor(sensor.getID(), lightValueInt);
-
-                 logger.warn("Azione richiesta: Aggiungere 'setLightValue(Long id, int value)' a LightSensorService e decommentare la chiamata qui.");
+                routineService.lightSensorValueCheck(sensor.getID());
 
                 logger.debug("Stato LightSensor per Thing '{}' (ID: {}) aggiornato nel DB.", sensor.getName(), sensor.getID());
             } catch (Exception e) {
@@ -159,8 +162,6 @@ public class MqttMessageListener {
             logger.info("Thing '{}' (ID: {}): Rilevata posizione RollerShutter = {}", shutter.getName(), shutter.getID(), position);
             try {
                 rollerShutterService.patchOpeningRollerShutter(shutter.getID(), position);
-
-                 logger.warn("Azione richiesta: Aggiungere 'setPercentageOpening(Long id, int percentage)' a RollerShutterService e decommentare la chiamata qui.");
 
                  logger.debug("Stato RollerShutter per Thing '{}' (ID: {}) aggiornato nel DB.", shutter.getName(), shutter.getID());
             } catch (Exception e) {

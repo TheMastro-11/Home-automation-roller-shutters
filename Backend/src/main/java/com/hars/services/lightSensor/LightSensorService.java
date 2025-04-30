@@ -61,11 +61,10 @@ public class LightSensorService {
         }
     }
 
-    public LightSensor patchValueLightSensor(Long id, int increase_value){
+    public LightSensor patchValueLightSensor(Long id, int value){
         try {
             LightSensor lightSensor = lightSensorRepository.findById(id).get();
-            int oldValue = lightSensor.getLightValue();
-            lightSensor.setLightValue(increase_value + oldValue);
+            lightSensor.setLightValue(value);
             lightSensor = lightSensorRepository.save(lightSensor);
             return lightSensor;
         } catch (Exception e) {
