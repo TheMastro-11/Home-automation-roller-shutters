@@ -185,7 +185,6 @@ La fase di validazione ha lo scopo di verificare che il sistema soddisfi i requi
 - **Test di Integrazione**: Controllare la corretta interazione tra i vari componenti (dispositivo, AWS IoT, backend e frontend).  
 - **Test di Performance e Scalabilità**: Valutare la latenza nelle comunicazioni, la capacità di gestione simultanea di più dispositivi e l'efficienza nell'aggiornamento in tempo reale. 
 
-
 - **Test sul Campo**:  
   - Simulazione delle condizioni di luminosità variabile per verificare la reazione del dispositivo e il corretto invio dei dati. 
   - Verifica del funzionamento del motore passo-passo in risposta ai comandi automatizzati e manuali.
@@ -197,13 +196,16 @@ La fase di validazione ha lo scopo di verificare che il sistema soddisfi i requi
 - **Test di Sicurezza**:  
   - Verifica dell'autenticazione tramite PostgreSQL. 
 
+## 5 Scelta Database
+La scelta di utilizzare un database locale come postgres è stata effettuata per motivi di efficienza e sicurezza, in ogni caso è possibile integrare un database DynamoDB collegato allo shadow direttamente tramite aws per la gestione dei dati dei sensori (Già testato in fase di sviluppo). La logica del backend rimane la stessa ed è quindi possibile per future implementazioni cambiare lo strumento di archiviazione.
 
-## 5 Manuale Riuso
+## 6 Manuale Riuso
 Il codice è suddiviso in 3 sottocartelle:
   - [Backend](Docs/Backend.md): sistema in java che gestisce tutte le chiamate REST e la logica delle entità.
   - [Frontend](Docs/Frontend.md): interfaccia in javascript e html per interazione utente e chiamate api.
   - [RoutineAgent](Docs/RoutineAgent.md) : sistema in java per la gestione delle routine basate sull'orario.
 
-## 6 Build ed esecuzione
+## 7 Build ed esecuzione
 Il progetto è inteso per essere eseguito tramite docker compose, per facilitarne la costruzione abbiamo realizzato uno script denominato **start.sh**.
+
 
