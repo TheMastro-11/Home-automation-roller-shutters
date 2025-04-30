@@ -197,7 +197,7 @@ La fase di validazione ha lo scopo di verificare che il sistema soddisfi i requi
   - Verifica dell'autenticazione tramite PostgreSQL. 
 
 ## 5 Scelta Database
-La scelta di utilizzare un database locale come postgres è stata effettuata per motivi di efficienza e sicurezza, in ogni caso è possibile integrare un database DynamoDB collegato allo shadow direttamente tramite aws per la gestione dei dati dei sensori (Già testato in fase di sviluppo). La logica del backend rimane la stessa ed è quindi possibile per future implementazioni cambiare lo strumento di archiviazione.
+La scelta di utilizzare un database locale come postgres è stata effettuata per motivi di sviluppo, in ogni caso è possibile integrare un database relazionale come Aurora o uno come DynamoDB, collegato allo shadow direttamente tramite aws per la gestione dei dati dei sensori (Già testati). La logica del backend rimane la stessa ed è quindi possibile per future implementazioni cambiare lo strumento di archiviazione.
 
 ## 6 Manuale Riuso
 Il codice è suddiviso in 3 sottocartelle:
