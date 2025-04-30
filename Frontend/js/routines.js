@@ -30,12 +30,12 @@ async function loadRoutines() {
                     triggerInfo = `Time: ${hhmm}`;
                 }
                 else if (routine.lightSensor && routine.lightSensor.name
-                         && routine.lightValue && routine.lightValue.value !== undefined) {
-                    const sensorName = routine.lightSensor.name;
-                    const threshold = routine.lightValue.value;
-                    const condition = routine.lightValue.method === true ? 'Above' : 'Below';
-                    triggerInfo = `Luminosity: ${sensorName} ${condition} ${threshold}%`;
-                }
+                    && routine.lightValue && routine.lightValue.value !== undefined) {
+               const sensorName = routine.lightSensor.name;
+               const threshold = routine.lightValue.value;
+               const condition = routine.lightValue.method === true ? 'Above' : 'Below';
+               triggerInfo = `Luminosity: ${sensorName} ${condition} ${threshold}`;
+           }
                 const shutterValue = routine.rollerShutterValue;
                 const associatedShutters = routine.rollerShutters || [];
                 const targetDeviceNames = associatedShutters.length > 0
@@ -236,7 +236,7 @@ function updateLumDisplay() {
     const lumSlider = document.getElementById('triggerLuminosityValue');
     const lumDisplay = document.getElementById('triggerLuminosityValueDisplay');
     if (lumSlider && lumDisplay) {
-        lumDisplay.textContent = `${lumSlider.value}%`;
+        lumDisplay.textContent = lumSlider.value;
     }
 }
 
