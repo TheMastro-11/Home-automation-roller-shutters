@@ -573,7 +573,7 @@ async function globalCreateLightSensor(event) {
     nameInput.value = '';
   } catch (err) {
     console.error('Error creating global light sensor:', err);
-    alert(`Error creating sensor: ${err.message}`);
+    alert(`Error creating sensor: ${err.message} check if the sensor name is already in use.`);
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -711,7 +711,8 @@ async function globalCreateRollerShutter(event) {
     nameInput.value = '';
   } catch (err) {
     console.error('Error creating global roller shutter:', err);
-    alert(`Error creating shutter: ${err.message}`);
+    alert(`Error creating shutter: ${err.message} check if the shutter name is already in use.`
+    );
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
