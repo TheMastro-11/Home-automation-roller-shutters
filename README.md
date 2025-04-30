@@ -201,7 +201,7 @@ La fase di validazione ha lo scopo di verificare che il sistema soddisfi i requi
 ## 5 Manuale Riuso
 Il codice è suddiviso in 3 sottocartelle:
   - [Backend](Docs/Backend.md): sistema in java che gestisce tutte le chiamate REST e la logica delle entità.
-  - [Frontend](Frontend/): interfaccia in javascript e html per interazione utente e chiamate api.
+  - [Frontend](Docs/Frontend.md): interfaccia in javascript e html per interazione utente e chiamate api.
   - [RoutineAgent](Docs/RoutineAgent.md) : sistema in java per la gestione delle routine basate sull'orario.
 
 ## 6 Build ed esecuzione

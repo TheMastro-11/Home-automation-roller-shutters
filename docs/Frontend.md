@@ -1,4 +1,4 @@
-# Manuale di Riuso - Fronten
+# Manuale di Riuso - Frontend
 
 ## Introduzione
 
