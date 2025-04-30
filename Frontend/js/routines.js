@@ -257,10 +257,10 @@ function setupSliderListeners() {
     }
 
     const actionSlider = document.getElementById('actionPercentage');
-    if (actionSlider && !actionSlider.dataset.listenerAttached) { // Controlla se l'evento è già stato aggiunto
+    if (actionSlider && !actionSlider.dataset.listenerAttached) { 
         actionSlider.addEventListener('input', updateActionDisplay);
-        actionSlider.dataset.listenerAttached = 'true'; // Marca come aggiunto
-        updateActionDisplay(); // Aggiorna subito
+        actionSlider.dataset.listenerAttached = 'true';
+        updateActionDisplay();
     }
 }
 
@@ -269,18 +269,17 @@ function toggleTriggerOptions() {
     const luminositySection = document.getElementById("triggerLuminositySection");
     const timeSection = document.getElementById("triggerTimeSection");
     const sensorSelect = document.getElementById("triggerSensorId");
-    const luminositySlider = document.getElementById("triggerLuminosityValue"); // Modificato: ora è lo slider
+    const luminositySlider = document.getElementById("triggerLuminosityValue");
     const timeInput = document.getElementById("triggerTime");
-    // const luminosityCondition = document.getElementById("triggerLuminosityCondition"); // Non più necessario qui per required
 
     if (luminositySection) luminositySection.style.display = type === "luminosity" ? "block" : "none";
     if (timeSection) timeSection.style.display = type === "time" ? "block" : "none";
 
     if (type === "luminosity") {
         sensorSelect?.setAttribute("required", "");
-        luminositySlider?.setAttribute("required", ""); // Lo slider può essere required
+        luminositySlider?.setAttribute("required", ""); 
         timeInput?.removeAttribute("required");
-        updateLumDisplay(); // Assicurati che il display sia aggiornato quando si mostra la sezione
+        updateLumDisplay();
     } else {
         sensorSelect?.removeAttribute("required");
         luminositySlider?.removeAttribute("required");
@@ -304,22 +303,18 @@ function showRoutinesForm() {
     actualForm.reset();
     document.getElementById("Routines-id-hidden")?.remove();
 
-    // Imposta valori predefiniti
     document.getElementById("triggerType").value = "luminosity";
-    document.getElementById("action").value = "open"; // Assumendo che 'open' sia ancora l'unica opzione
     document.getElementById("triggerLuminosityCondition").value = "below";
 
-    // Imposta valori predefiniti per gli slider (devono corrispondere al 'value' nell'HTML)
     const lumSlider = document.getElementById('triggerLuminosityValue');
     const actionSlider = document.getElementById('actionPercentage');
-    if(lumSlider) lumSlider.value = 50; // O il tuo valore predefinito HTML
-    if(actionSlider) actionSlider.value = 100; // O il tuo valore predefinito HTML
+    if(lumSlider) lumSlider.value = 50;
+    if(actionSlider) actionSlider.value = 100;
 
-    toggleTriggerOptions(); // Applica la visibilità iniziale corretta
+    toggleTriggerOptions();
     loadSensorsForRoutineForm();
     loadShuttersForRoutineForm();
 
-    // Imposta gli listener e aggiorna i display degli slider
     setupSliderListeners();
 
     formContainer.style.display = "block";

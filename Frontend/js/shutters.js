@@ -91,18 +91,13 @@ async function openAllShutters() {
         controlButtons.forEach(b => b.disabled = true);
 
         const patchPromises = shutters.map(s => {
-            const currentOpening = s.percentageOpening ?? s.opening ?? 0;
-            const delta = 100 - currentOpening;
-            if (delta > 0) {
+            const delta = 100;
                 console.log(`Opening shutter ${s.id} (delta: ${delta})`);
                 return fetchApi(
                     `/api/entities/rollerShutter/patch/opening/${s.id}`,
                     "PATCH",
                     { value: delta }
                 );
-            } else {
-                return Promise.resolve();
-            }
         });
 
         await Promise.all(patchPromises);
@@ -140,18 +135,14 @@ async function closeAllShutters() {
         controlButtons.forEach(b => b.disabled = true);
 
         const patchPromises = shutters.map(s => {
-            const currentOpening = s.percentageOpening ?? s.opening ?? 0;
-            const delta = -currentOpening; 
-            if (delta < 0) {
+            const delta = 0; 
                  console.log(`Closing shutter ${s.id} (delta: ${delta})`);
                 return fetchApi(
                     `/api/entities/rollerShutter/patch/opening/${s.id}`,
                     "PATCH",
                     { value: delta }
                 );
-            } else {
-                return Promise.resolve(); 
-            }
+
         });
         await Promise.all(patchPromises);
          console.log("Close All command sent.");

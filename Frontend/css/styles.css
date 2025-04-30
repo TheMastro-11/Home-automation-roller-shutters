@@ -1,458 +1,542 @@
-/* ======================================== */
-/* 1. GENERAL STYLES                  */
-/* ======================================== */
-
 body {
-  background-color: #1c1c1c;
-  color: #ffffff; 
+  background-color: #ffffff;
+  color: #ffffff;
   font-family: "Arial", sans-serif;
-  font-weight: normal; 
+  font-weight: normal;
   margin: 0;
   padding: 0;
 }
 
-/* Main container */
 .container {
-  background: linear-gradient(#2a2a2a, #1c1c1c) padding-box,
-    linear-gradient(120deg, transparent 25%, #1cb0ff, #40ff99) border-box;
+  background: linear-gradient(#001ced, #ff09b1) padding-box, linear-gradient(120deg, transparent 25%, #1cb0ff, #40ff99) border-box;
   background-size: 100% 100%;
-  border: 2px solid transparent;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  padding: 30px 20px; /* Increased padding, especially at the top */
+  padding: 30px 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Headings (White & Bold) */
-h2, h4, h5, h6 {
+h2,
+h4,
+h5,
+h6 {
   color: #ffffff;
-  font-weight: 700; /* Equivalent to bold */
+  font-weight: 700;
 }
 
-/* Specific style for H2 if needed */
 h2 {
   font-size: 26px;
   margin-bottom: 24px;
   text-align: center;
 }
 
-/* ======================================== */
-/* 2. FORM STYLES                     */
-/* ======================================== */
-
 form {
   background-color: #2a2a2a;
   padding: 20px;
   border-radius: 8px;
   margin-top: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .1);
 }
 
-/* Form Labels (White & Bold) */
 .form-label {
-  color: #ffffff !important; /* Override Bootstrap if needed */
+  color: #ffffff !important;
   font-weight: bold;
 }
 
-/* Inputs & Selects (White text, dark background) */
-form input, form select {
+form input,
+form select {
   background-color: #444;
-  color: #ffffff; /* Ensure white text */
+  color: #ffffff;
   border: 1px solid #666;
   padding: 10px;
   border-radius: 6px;
   margin-bottom: 15px;
   width: 100%;
-  font-weight: normal; /* Input text not bold */
+  font-weight: normal;
+  box-sizing: border-box;
 }
 
-/* Specific style for select (Bootstrap 5 uses .form-select) */
 form select.form-select {
-   /* Light gray arrow for dark background */
-   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cccccc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cccccc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
-/* Buttons inside forms (Inherit from .btn below) */
 form button[type="submit"] {
   width: 100%;
   padding: 10px;
   font-size: 16px;
-  /* font-weight is handled by .btn below */
 }
 
-/* ======================================== */
-/* 3. BUTTON STYLES                   */
-/* ======================================== */
-
-/* Base style for Bootstrap buttons */
 .btn {
-    font-weight: bold; /* All buttons bold */
-    font-size: 16px; /* Base size */
-    padding: 10px 20px; /* Base padding */
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, transform 0.2s ease, background 0.3s ease, border-color 0.3s ease;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  transition: background-color .3s ease, transform .2s ease, background .3s ease, border-color .3s ease;
+  cursor: pointer;
 }
 
 .btn:hover {
-    transform: scale(1.05); /* Common hover effect */
+  transform: scale(1.05);
 }
 
-/* Logout & Delete Button (Red) */
 .btn-danger {
-  background: #dc3545; /* Bootstrap Red */
-  color: white;
-}
-.btn-danger:hover {
-  background: #c82333; /* Darker Red */
+  background: #dc3545;
+  color: #fff;
 }
 
-/* Primary / Add Home / Open All Button (Green) */
-.btn-primary, /* Using .btn-primary as the main green button */
-.btn-outline-success { /* Completely overriding outline style */
-  background: #28a745; /* Bootstrap Green */
-  color: white;
-  border-color: #28a745; /* Ensure border matches */
+.btn-danger:hover {
+  background: #c82333;
 }
+
+.btn-primary,
+.btn-outline-success {
+  background: #28a745;
+  color: #fff;
+  border-color: #28a745;
+}
+
 .btn-primary:hover,
 .btn-outline-success:hover {
-  background: #1e7e34; /* Darker Green */
+  background: #1e7e34;
   border-color: #1e7e34;
 }
 
-/* Edit Button (Yellow) */
 .btn-warning {
-    background-color: #ffc107; /* Bootstrap Yellow */
-    color: #333; /* Black text for readability on yellow */
-    border-color: #ffc107;
+  background-color: #ffc107;
+  color: #333;
+  border-color: #ffc107;
 }
+
 .btn-warning:hover {
-    background-color: #e0a800; /* Darker Yellow */
-    border-color: #e0a800;
-    color: #333;
+  background-color: #e0a800;
+  border-color: #e0a800;
+  color: #333;
 }
 
-/* Routines / Info Button (Cyan/Blue) */
 .btn-info {
-    background-color: #0dcaf0; /* Bootstrap Cyan */
-    color: #ffffff; /* White text */
-    border-color: #0dcaf0;
+  background-color: #0dcaf0;
+  color: #ffffff;
+  border-color: #0dcaf0;
 }
+
 .btn-info:hover {
-     background-color: #0baccc;
-     border-color: #0baccc;
-     color: #ffffff;
+  background-color: #0baccc;
+  border-color: #0baccc;
+  color: #ffffff;
 }
 
-/* Cancel / Secondary Button (Gray) */
 .btn-secondary {
-    background-color: #6c757d; /* Bootstrap Gray */
-    color: white;
-    border-color: #6c757d;
+  background-color: #6c757d;
+  color: #fff;
+  border-color: #6c757d;
 }
+
 .btn-secondary:hover {
-     background-color: #5a6268;
-     border-color: #5a6268;
+  background-color: #5a6268;
+  border-color: #5a6268;
 }
 
-/* Style for small buttons (used in btn-group) */
-.btn-sm, .btn-group-sm > .btn {
-    padding: 0.25rem 0.5rem; /* Reduced padding */
-    font-size: 0.875rem; /* Reduced font size */
-    border-radius: 0.2rem; /* Slightly smaller border radius */
+.btn-sm,
+.btn-group-sm>.btn {
+  padding: .25rem .5rem;
+  font-size: .875rem;
+  border-radius: .2rem;
 }
 
-/* ======================================== */
-/* 4. LIST STYLES                     */
-/* ======================================== */
-
-/* Common style for main list items */
 .list-group-item {
-    background-color: #333333;
-    border: 1px solid #444;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    padding: 12px 15px; /* Adjusted padding */
-    color: #ffffff; /* Base white text */
-    display: flex; /* Use flex for internal layout */
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
+  background-color: #333;
+  border: 1px solid #444;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  padding: 12px 15px;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-/* --- Specific List Styles --- */
-
-/* Generic container for scrollable lists */
-.global-list-container, .dynamic-list-container {
-    overflow-y: auto;
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 0; /* Remove padding if items have their own */
-    background-color: #444; /* Consistent background */
-}
-.global-list-container {
-    max-height: 160px; /* Height for global lists */
-}
+.global-list-container,
 .dynamic-list-container {
-    max-height: 150px; /* Height for dynamic lists (e.g., routine shutters) */
-    padding: 10px; /* Add padding inside if needed */
+  overflow-y: auto;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 0;
+  background-color: #444;
 }
+
+.global-list-container {
+  max-height: 160px;
+}
+
+.dynamic-list-container {
+  max-height: 150px;
+  padding: 10px;
+}
+
 .global-list-container .list-group-item,
 .dynamic-list-container .list-group-item {
-    padding: 0.4rem 0.8rem; /* Adjust item padding inside containers */
-    font-size: 0.9em;
-    background-color: transparent; /* Inherit container background */
-    border: none; /* Remove individual item borders */
-    border-bottom: 1px solid #555; /* Add separator */
-    margin-bottom: 0;
-    border-radius: 0;
+  padding: .4rem .8rem;
+  font-size: .9em;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid #555;
+  margin-bottom: 0;
+  border-radius: 0;
 }
+
 .global-list-container .list-group-item:last-child,
 .dynamic-list-container .list-group-item:last-child {
-    border-bottom: none; /* No border for the last item */
+  border-bottom: none;
 }
 
-
-/* Manage Homes List */
 #manage-homes-list .list-group-item {
-    background-color: #2a2a2a; /* Different background */
-    font-size: 18px;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #2a2a2a;
+  font-size: 18px;
+  transition: background-color .3s ease, transform .2s ease, box-shadow .3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .2);
 }
+
 #manage-homes-list .list-group-item:hover {
-    background-color: #383838;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    transform: scale(1.02); /* Slightly larger on hover */
+  background-color: #383838;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, .3);
+  transform: scale(1.02);
 }
-/* Home Name Text */
-#manage-homes-list .list-group-item span:first-child { /* Assuming name is first span */
-    font-weight: bold;
-    color: #ffffff;
-    margin-right: 15px; /* Space before buttons */
+
+#manage-homes-list .list-group-item span:first-child {
+  font-weight: bold;
+  color: #ffffff;
+  margin-right: 15px;
 }
-/* Action Buttons Container */
+
 #manage-homes-list .list-group-item .btn-group {
-    flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
 }
 
-
-/* Routines List (#Routines-list) */
 #Routines-list {
   margin-top: 20px;
   padding: 0;
   list-style: none;
 }
+
 #Routines-list li {
-  /* Inherits .list-group-item */
   font-size: 16px;
 }
+
 #Routines-list li div:first-child strong.routine-name {
-    font-weight: bold;
-    display: block; /* Or inline-block if preferred */
-    margin-bottom: 3px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 3px;
 }
-/* Routine Details (smaller, NOW WHITE) */
+
 #Routines-list li small {
-    color: white !important;
-    font-size: 0.85em;
-    font-weight: normal;
+  color: #fff !important;
+  font-size: .85em;
+  font-weight: normal;
 }
-/* Buttons inside routine list items (if any, like delete) */
-#Routines-list li .btn-group .btn { /* Target buttons inside the group */
-    padding: 5px 10px; /* Make buttons smaller */
-    font-size: 0.8rem;
+
+#Routines-list li .btn-group .btn {
+  padding: 5px 10px;
+  font-size: .8rem;
 }
-/* Routine list placeholder */
+
 #Routines-list li.list-group-item-placeholder {
-    color: #ffffff;
-    display: block;
-    justify-content: initial;
-    align-items: initial;
-    font-style: italic;
-    background-color: #2a2a2a;
-    font-weight: normal;
-    border: 1px dashed #555; /* Differentiate placeholder */
+  color: #ffffff;
+  display: block;
+  justify-content: initial;
+  align-items: initial;
+  font-style: italic;
+  background-color: #2a2a2a;
+  font-weight: normal;
+  border: 1px dashed #555;
 }
 
-/* Light Sensors List (#light-sensors-list) */
-#light-sensors-list { /* Example ID for sensor status display */
-    margin-top: 20px;
-    padding: 0;
-    list-style: none;
+#light-sensors-list {
+  margin-top: 20px;
+  padding: 0;
+  list-style: none;
 }
-#light-sensors-list li {
-   /* Inherits .list-group-item */
-}
-/* Sensor Name/Value Text Container */
+
 #light-sensors-list li div:first-child {
-    margin-right: 10px;
-    flex-grow: 1;
+  margin-right: 10px;
+  flex-grow: 1;
 }
-/* Sensor Name (Bold) */
+
 #light-sensors-list li strong {
-   font-weight: bold;
-}
-/* Sensor Value (could be in small or just text) */
-#light-sensors-list li small { /* If value is in small tag */
-    color: #cccccc; /* Keeping this light gray for sensors list */
-    font-size: 0.85em;
-    font-weight: normal;
-    display: block;
-    margin-top: 4px;
+  font-weight: bold;
 }
 
-/* Manage Sensors List (#manage-sensors-list) */
-#manage-sensors-list {
-    /* Inherits base list styles */
-}
-#manage-sensors-list li {
-    /* Inherits .list-group-item */
+#light-sensors-list li small {
+  color: #cccccc;
+  font-size: .85em;
+  font-weight: normal;
+  display: block;
+  margin-top: 4px;
 }
 
-/* Roller Shutter Control List (#rollerShutter-list-items) */
 #rollerShutter-list-items {
-    padding: 0;
-    list-style: none;
-    margin-top: 10px; /* Add some space above list */
+  padding: 0;
+  list-style: none;
+  margin-top: 10px;
 }
+
 #rollerShutter-list-items li {
-   /* Inherits .list-group-item */
-   font-size: 16px;
-   font-weight: bold; /* Bold text */
-   cursor: pointer; /* Indicate clickable */
-   transition: background-color 0.2s ease; /* Smooth transition */
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color .2s ease;
 }
+
 #rollerShutter-list-items li:hover {
-    background-color: #444; /* Slight highlight on hover */
+  background-color: #444;
 }
-#rollerShutter-list-items li.active { /* Selected shutter */
-    background-color: #1cb0ff; /* Custom blue */
-    border-color: #1cb0ff;
-    color: white;
+
+#rollerShutter-list-items li.active {
+  background-color: #1cb0ff;
+  border-color: #1cb0ff;
+  color: #fff;
 }
-#rollerShutter-list-items li span.opening { /* Style for opening % */
-    font-weight: normal;
-    font-size: 0.9em;
-    color: #ccc;
+
+#rollerShutter-list-items li span.opening {
+  font-weight: normal;
+  font-size: .9em;
+  color: #ccc;
 }
+
 #rollerShutter-list-items li.active span.opening {
-    color: white; /* Make opening % white when active */
+  color: #fff;
 }
 
-/* Manage Shutters List (#manage-shutters-list) */
 #manage-shutters-list {
-    /* Similar styles to #rollerShutter-list-items if needed */
-     padding: 0;
-     list-style: none;
-     margin-top: 10px;
+  padding: 0;
+  list-style: none;
+  margin-top: 10px;
 }
+
 #manage-shutters-list li {
-   /* Inherits .list-group-item */
-   font-size: 16px;
-   cursor: pointer;
-   transition: background-color 0.2s ease;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color .2s ease;
 }
+
 #manage-shutters-list li:hover {
-     background-color: #444;
+  background-color: #444;
 }
-#manage-shutters-list li.active { /* Selected shutter in manage view */
-    background-color: #1cb0ff; /* Custom blue */
-    border-color: #1cb0ff;
-    color: white;
+
+#manage-shutters-list li.active {
+  background-color: #1cb0ff;
+  border-color: #1cb0ff;
+  color: #fff;
 }
+
 #manage-shutters-list li span.opening {
-    font-weight: normal;
-    font-size: 0.9em;
-    color: #ccc;
+  font-weight: normal;
+  font-size: .9em;
+  color: #ccc;
 }
+
 #manage-shutters-list li.active span.opening {
-    color: white;
+  color: #fff;
 }
 
-
-/* ======================================== */
-/* 5. SPECIFIC ELEMENT STYLES         */
-/* ======================================== */
-
-/* Status text for selected shutter (White & Bold) */
-/* Using more specific IDs from updated HTML */
-#rollerShutterStatusControl, #rollerShutterStatusManage {
-    color: #ffffff;
-    font-weight: bold;
-    min-height: 1.5em; /* Prevent layout shift */
+#rollerShutterStatusControl,
+#rollerShutterStatusManage {
+  color: #ffffff;
+  font-weight: bold;
+  min-height: 1.5em;
 }
 
-/* Loading Spinner */
 .spinner {
-  border: 4px solid #555; /* Darker background */
-  border-top: 4px solid #1cb0ff; /* Blue color */
+  border: 4px solid #555;
+  border-top: 4px solid #1cb0ff;
   border-radius: 50%;
-  width: 30px; /* Slightly smaller */
+  width: 30px;
   height: 30px;
   animation: spin 1.5s linear infinite;
-  margin: 20px auto; /* Added margin */
-  display: none; /* Initially hidden */
+  margin: 20px auto;
+  display: none;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
+.modal-content {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #444;
+  border-radius: 8px;
+}
 
-/* ======================================== */
-/* 6. RESPONSIVENESS                  */
-/* ======================================== */
+.modal-content .form-label {
+  color: #ffffff !important;
+  font-weight: bold;
+}
 
-@media screen and (max-width: 768px) {
+.modal-content form input,
+.modal-content form select {
+  background-color: #444;
+  color: #ffffff;
+  border: 1px solid #666;
+}
+
+.modal-content form select.form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cccccc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+#Routines-form {
+  background-color: #2a2a2a;
+}
+
+.form-control-plaintext {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #666;
+  padding: 10px;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media screen and (max-width:768px) {
+  body {
+    padding: 10px;
+  }
+
   .container {
-    padding: 20px;
+    padding: 20px 15px;
   }
 
   h2 {
     font-size: 22px;
   }
 
-  /* Adjust list item padding and button sizes for mobile */
   .list-group-item {
-      padding: 10px;
-      /* Allow button groups to stack vertically if needed */
+    padding: 10px;
   }
-   .list-group-item > div:first-child { /* Target text container */
-       margin-bottom: 8px; /* Add space below text when buttons wrap */
-   }
 
-   .btn { /* Reduce base button size */
+  .list-group-item>div:first-child {
+    margin-bottom: 8px;
+  }
+
+  .btn {
     font-size: 14px;
     padding: 8px 15px;
-   }
-
-   .btn-sm, .btn-group-sm > .btn { /* Reduce small button size */
-     padding: 0.2rem 0.4rem;
-     font-size: 0.8rem;
-   }
-
-  /* Specific adjustments for home list on mobile */
-  #manage-homes-list .list-group-item span:first-child {
-     margin-right: 0; /* Remove right margin */
-     display: block; /* Ensure it takes full width */
-     width: 100%;
-     text-align: center; /* Center text */
   }
-   #manage-homes-list .list-group-item .btn-group {
-      width: 100%; /* Make button group take full width */
-      justify-content: center; /* Center buttons */
-      margin-top: 10px;
-   }
 
-   /* Adjust sensor list layout on mobile */
-   #light-sensors-list li {
-       justify-content: center; /* Center items when wrapping */
-   }
-   #light-sensors-list li div:first-child {
-       margin-right: 0;
-       text-align: center;
-       width: 100%;
-       margin-bottom: 10px;
-   }
+  .btn-sm,
+  .btn-group-sm>.btn {
+    padding: .2rem .4rem;
+    font-size: .8rem;
+  }
+
+  #manage-homes-list .list-group-item span:first-child {
+    margin-right: 0;
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  #manage-homes-list .list-group-item .btn-group {
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  #light-sensors-list li {
+    justify-content: center;
+  }
+
+  #light-sensors-list li div:first-child {
+    margin-right: 0;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+#Routines-form .form-label-sm {
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+#Routines-form #triggerLuminositySection .input-group.input-group-sm {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  width: 100%;
+}
+
+#Routines-form #triggerLuminositySection .input-group.input-group-sm > .form-select {
+  flex: 0 0 auto; /* Modifica chiave qui */
+  margin-right: 0.5rem;
+}
+
+#Routines-form #triggerLuminositySection .input-group.input-group-sm > .form-range {
+  flex: 1 1 auto;
+  margin-right: 0.5rem;
+  min-width: 50px;
+}
+
+#Routines-form #triggerLuminositySection .input-group.input-group-sm > .input-group-text {
+  flex: 0 0 auto;
+}
+
+#Routines-form input[type="text"],
+#Routines-form input[type="time"],
+#Routines-form select.form-select {
+  height: calc(1.5em + .5rem + 2px);
+  padding: .25rem .5rem;
+  font-size: .875rem;
+  line-height: 1.5;
+}
+
+#Routines-form .col-md-4.d-flex.align-items-center .form-range {
+  flex: 1 1 auto;
+}
+
+.label-static{
+  border:1px solid #666;
+  padding:10px;
+  border-radius:10px;
+  width:100%;
+  box-sizing:border-box;
+}
+
+
+#Routines-form .col-md-4.d-flex.align-items-center .input-group-text {
+  flex: 0 0 auto;
+}
+
+#routineTargetShuttersList {
+  border: 1px solid #666;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: #444;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+#routineTargetShuttersList .form-check {
+    margin-bottom: 0.5rem;
+}
+#routineTargetShuttersList .form-check:last-child {
+    margin-bottom: 0;
+}
+
+#Routines-form .form-control-plaintext {
+  color: #ffffff !important;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  display: inline-block;
+  margin-bottom: 0;
 }
