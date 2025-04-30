@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import com.hars.persistence.entities.routine.LightValueRecord;
 import com.hars.persistence.entities.routine.Routine;
 import com.hars.persistence.repository.routine.RoutineRepository;
 import com.hars.services.lightSensor.LightSensorService;
+import com.hars.services.mqtt.MqttPublisherService;
 import com.hars.services.rollerShutter.RollerShutterService;
 
 @Service
@@ -33,6 +36,12 @@ public class RoutineService {
 
     @Autowired
     private LightSensorService lightSensorService;
+
+    @Autowired
+    private MqttPublisherService mqttPublisherService;
+
+    @Autowired
+    private static final Logger logger = LoggerFactory.getLogger(RoutineService.class);
 
     public List<RoutineDTO> getAllRoutines(){
         try {
@@ -134,26 +143,39 @@ public class RoutineService {
     public void activateRoutine(Long id) {
         try {
             Routine routine = routineRepository.findById(id).get();
+            logger.warn("AAAAAAAAAAAAAAAA");
             for (RollerShutter rollerShutter : routine.getRollerShutters()) {
+                logger.warn("BBBBBBBBBBBBBBB");
                 rollerShutterService.patchOpeningRollerShutter(rollerShutter.getID(), routine.getRollerShutterValue());
-            }
+                String name = rollerShutterService.loadRollerShutterById(rollerShutter.getID()).getName();
+                logger.warn("CCCCCCCCCCCC");
+                try {
+                    logger.warn("DDDDDDDDDDD");
+                    mqttPublisherService.publish("$aws/things/ESP8266_Tapparella/shadow/update", "{ \"state\": {\"desired\": {\"" + name + "\": "+ routine.getRollerShutterValue() +"}}}");
+                } catch (Exception e) {
+                    logger.warn("EEEEEEEEEEEEE");
+                    throw new RuntimeException("Publish Error", e);
+                }
+            }           
         } catch (Exception e) {
-
+            throw new RuntimeException("ROUTINE ACTIVATOR ERROR", e);
         }
     }
 
+    @Transactional
     public void lightSensorValueCheck(Long id) {
         LightSensor lightSensor = lightSensorService.loadLightSensorById(id);
-        Optional<Routine> routine = routineRepository.findByLightSensorId(lightSensor.getID());
-        if (routine.isPresent()) {
-            Routine validRoutine = routine.get();
-            if (validRoutine.getLightSensorValue().method()) {
-                if ( lightSensor.getLightValue() >= validRoutine.getLightSensorValue().value()) {
-                    this.activateRoutine(validRoutine.getId());
-                }
-            } else {
-                if ( lightSensor.getLightValue() <= validRoutine.getLightSensorValue().value()) {
-                    this.activateRoutine(validRoutine.getId());
+        List<Routine> routines = routineRepository.findAllByLightSensorId(lightSensor.getID());
+        if (!routines.isEmpty()) {
+            for (Routine routine : routines) {
+                if (routine.getLightSensorValue().method()) {
+                    if ( lightSensor.getLightValue() >= routine.getLightSensorValue().value()) {
+                        this.activateRoutine(routine.getId());
+                    }
+                } else {
+                    if ( lightSensor.getLightValue() <= routine.getLightSensorValue().value()) {
+                        this.activateRoutine(routine.getId());
+                    }
                 }
             }
         }

@@ -42,7 +42,7 @@ public class Routine {
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
         name = "rollerShutter_routine",
-        joinColumns = @JoinColumn(name = "rolleShutterR_id"),
+        joinColumns = @JoinColumn(name = "rollerShutterR_id"),
         inverseJoinColumns = @JoinColumn(name = "routineR_id")
     )
     private List<RollerShutter> rollerShutters;  

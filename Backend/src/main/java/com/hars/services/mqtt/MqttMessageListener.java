@@ -29,11 +29,7 @@ import com.hars.services.routine.RoutineService;
 public class MqttMessageListener {
 
     private static final Logger logger = LoggerFactory.getLogger(MqttMessageListener.class);
-
     private static final Pattern SHADOW_TOPIC_PATTERN = Pattern.compile("^\\$aws/things/([^/]+)/shadow/(.+)$");
-
-    private static final String FIELD_LIGHT_VALUE = "lightValue";
-    private static final String FIELD_SHUTTER_PERCENTAGE = "percentageOpening";
 
     private final LightSensorService lightSensorService;
     private final RollerShutterService rollerShutterService;
@@ -88,18 +84,17 @@ public class MqttMessageListener {
             logger.debug("Messaggio identificato come AWS IoT Shadow per Thing '{}', suffisso '{}'", thingName, shadowSuffix);
 
             try {
+
                 ShadowPayload shadowData = objectMapper.readValue(payload, ShadowPayload.class);
 
                 if ("update/accepted".equals(shadowSuffix) || "get/accepted".equals(shadowSuffix)) {
+
                     handleShadowStateUpdate(thingName, shadowData);
-                }
-                else if ("update/delta".equals(shadowSuffix)) {
+                } else if ("update/delta".equals(shadowSuffix)) {
                     handleShadowDelta(thingName, shadowData);
-                }
-                else if (shadowSuffix.endsWith("/rejected")) {
+                } else if (shadowSuffix.endsWith("/rejected")) {
                      logger.warn("Operazione Shadow rifiutata per Thing '{}'. Topic: {}, Payload: {}", thingName, topic, payload);
-                }
-                else {
+                } else {
                     logger.debug("Suffisso topic Shadow ('{}') non gestito attivamente dal backend.", shadowSuffix);
                 }
 
@@ -114,71 +109,103 @@ public class MqttMessageListener {
     }
 
 
-    private void handleShadowStateUpdate(String thingName, ShadowPayload shadowData) {
-        logger.info("Ricevuto stato Shadow confermato per Thing '{}'. Versione: {}", thingName, shadowData.getVersion());
+
+    private void handleShadowStateUpdate(String originalThingName, ShadowPayload shadowData) {
+         logger.info("Ricevuto stato Shadow confermato per Thing '{}'. Versione: {}", originalThingName, shadowData.getVersion());
 
         if (shadowData.getState() == null || shadowData.getState().getReported() == null) {
-            logger.debug("Nessuno stato 'reported' trovato nel payload per Thing '{}'", thingName);
+            logger.debug("Nessuno stato 'reported' trovato nel payload per Thing '{}'", originalThingName);
             return;
         }
 
         Map<String, Object> reportedState = shadowData.getState().getReported();
-        logger.debug("Stato Reported per Thing '{}': {}", thingName, reportedState);
+        logger.debug("Stato Reported per Thing '{}': {}", originalThingName, reportedState);
 
-        Optional<LightSensor> lightSensorOpt = lightSensorRepository.findByName(thingName);
-        if (lightSensorOpt.isPresent()) {
-            extractAndProcessLightSensor(lightSensorOpt.get(), reportedState);
-        } else {
-            Optional<RollerShutter> rollerShutterOpt = rollerShutterRepository.findByName(thingName);
+
+        for (Map.Entry<String, Object> entry : reportedState.entrySet()) {
+            String payloadKey = entry.getKey();
+            Object rawValue = entry.getValue();
+
+            logger.debug("Elaborazione chiave/nome '{}' con valore '{}' da Thing '{}'", payloadKey, rawValue, originalThingName);
+
+
+            Optional<LightSensor> lightSensorOpt = lightSensorRepository.findByName(payloadKey);
+            if (lightSensorOpt.isPresent()) {
+                LightSensor sensor = lightSensorOpt.get();
+
+                Optional<Double> lightValueOpt = getDoubleValue(reportedState, payloadKey);
+                if(lightValueOpt.isPresent()) {
+                    int lightValueInt = lightValueOpt.get().intValue();
+
+                    logger.info("Chiave/Nome '{}' (ID: {}): Rilevato valore LightSensor = {}", payloadKey, sensor.getID(), lightValueInt);
+                    try {
+                        lightSensorService.patchValueLightSensor(sensor.getID(), lightValueInt);
+                        routineService.lightSensorValueCheck(sensor.getID());
+                        logger.debug("Stato LightSensor per Nome '{}' (ID: {}) aggiornato nel DB.", payloadKey, sensor.getID());
+                    } catch (Exception e) {
+                        logger.error("Errore durante l'aggiornamento DB per LightSensor (ID: {}, Nome: {}): {}", sensor.getID(), payloadKey, e.getMessage(), e);
+                    }
+                } else {
+                     logger.warn("Impossibile convertire il valore '{}' per la chiave/nome LightSensor '{}' in un numero.", rawValue, payloadKey);
+                }
+                continue;
+            }
+
+
+            Optional<RollerShutter> rollerShutterOpt = rollerShutterRepository.findByName(payloadKey);
             if (rollerShutterOpt.isPresent()) {
-                 extractAndProcessRollerShutter(rollerShutterOpt.get(), reportedState);
-            } else {
-                logger.warn("Thing '{}' non trovato nel database come LightSensor o RollerShutter tramite il nome.", thingName);
+                RollerShutter shutter = rollerShutterOpt.get();
+
+                Optional<Integer> positionOpt = getIntegerValue(reportedState, payloadKey);
+                 if(positionOpt.isPresent()) {
+                    int position = positionOpt.get();
+
+                    logger.info("Chiave/Nome '{}' (ID: {}): Rilevata posizione RollerShutter = {}", payloadKey, shutter.getID(), position);
+                    try {
+                        rollerShutterService.patchOpeningRollerShutter(shutter.getID(), position);
+                        logger.debug("Stato RollerShutter per Nome '{}' (ID: {}) aggiornato nel DB.", payloadKey, shutter.getID());
+                    } catch (Exception e) {
+                        logger.error("Errore durante l'aggiornamento DB per RollerShutter (ID: {}, Nome: {}): {}", shutter.getID(), payloadKey, e.getMessage(), e);
+                    }
+                } else {
+                     logger.warn("Impossibile convertire il valore '{}' per la chiave/nome RollerShutter '{}' in un intero.", rawValue, payloadKey);
+                }
+                continue;
             }
+
+
+            logger.warn("La chiave '{}' nel payload reported da Thing '{}' non corrisponde a nessun LightSensor o RollerShutter tramite il campo 'name'.", payloadKey, originalThingName);
         }
-    }
-
-    private void extractAndProcessLightSensor(LightSensor sensor, Map<String, Object> reportedState) {
-        Optional<Double> lightValueOpt = getDoubleValue(reportedState, FIELD_LIGHT_VALUE);
-
-        lightValueOpt.ifPresent(lightValue -> {
-            int lightValueInt = lightValue.intValue();
-            logger.info("Thing '{}' (ID: {}): Rilevato valore LightSensor = {}", sensor.getName(), sensor.getID(), lightValueInt);
-            try {
-                lightSensorService.patchValueLightSensor(sensor.getID(), lightValueInt);
-                routineService.lightSensorValueCheck(sensor.getID());
-
-                logger.debug("Stato LightSensor per Thing '{}' (ID: {}) aggiornato nel DB.", sensor.getName(), sensor.getID());
-            } catch (Exception e) {
-                logger.error("Errore durante l'aggiornamento DB per LightSensor (ID: {}): {}", sensor.getID(), e.getMessage(), e);
-            }
-        });
-    }
-
-     private void extractAndProcessRollerShutter(RollerShutter shutter, Map<String, Object> reportedState) {
-        Optional<Integer> positionOpt = getIntegerValue(reportedState, FIELD_SHUTTER_PERCENTAGE);
-
-        positionOpt.ifPresent(position -> {
-            logger.info("Thing '{}' (ID: {}): Rilevata posizione RollerShutter = {}", shutter.getName(), shutter.getID(), position);
-            try {
-                rollerShutterService.patchOpeningRollerShutter(shutter.getID(), position);
-
-                 logger.debug("Stato RollerShutter per Thing '{}' (ID: {}) aggiornato nel DB.", shutter.getName(), shutter.getID());
-            } catch (Exception e) {
-                 logger.error("Errore durante l'aggiornamento DB per RollerShutter (ID: {}): {}", shutter.getID(), e.getMessage(), e);
-            }
-        });
     }
 
 
     private void handleShadowDelta(String thingName, ShadowPayload shadowData) {
-        if (shadowData.getState() != null) {
+        if (shadowData.getState() != null && shadowData.getState().getDelta() != null) {
+            Map<String, Object> deltaState = shadowData.getState().getDelta();
             logger.info("Ricevuto Delta Shadow per Thing '{}'. Stato Delta: {}. Versione: {}",
-                        thingName, shadowData.getState(), shadowData.getVersion());
+                        thingName, deltaState, shadowData.getVersion());
+
+            for (Map.Entry<String, Object> entry : deltaState.entrySet()) {
+                String payloadKey = entry.getKey();
+                Object rawValue = entry.getValue();
+                Optional<RollerShutter> rollerShutterOpt = rollerShutterRepository.findByName(payloadKey);
+                if (rollerShutterOpt.isPresent()) {
+                    // ... (logica per aggiornare RollerShutter basata sul delta) ...
+                } else {
+                     Optional<LightSensor> lightSensorOpt = lightSensorRepository.findByName(payloadKey);
+                     if (lightSensorOpt.isPresent()) {
+                        // ... (logica per aggiornare LightSensor basata sul delta, se applicabile) ...
+                     } else {
+                         logger.warn("La chiave delta '{}' non corrisponde a nessun device noto.", payloadKey);
+                     }
+                }
+            }
+
         } else {
-            logger.warn("Ricevuto messaggio Delta senza un oggetto 'state' per Thing '{}'", thingName);
-        }
+           logger.warn("Ricevuto messaggio Delta senza un oggetto 'state' o 'delta' per Thing '{}'", thingName);
+       }
     }
+
 
     private Optional<Double> getDoubleValue(Map<String, Object> map, String key) {
         Object value = map.get(key);
@@ -215,6 +242,7 @@ public class MqttMessageListener {
         }
         return Optional.empty();
     }
+
 
 
     public static class ShadowPayload {
