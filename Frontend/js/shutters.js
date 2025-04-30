@@ -58,7 +58,7 @@ async function adjustRollerShutterOpening(increase = true) {
         await fetchApi(
             `/api/entities/rollerShutter/patch/opening/${selectedRollerShutterId}`,
             "PATCH",
-            { value: delta } 
+            { value: newOpening } 
         );
         const statusText = `Selected: ${selectedRollerShutterName} (Opening: ${newOpening}%)`;
         const statusControlEl = document.getElementById('rollerShutterStatusControl');
