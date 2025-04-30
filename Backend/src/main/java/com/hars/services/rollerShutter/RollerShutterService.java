@@ -68,16 +68,6 @@ public class RollerShutterService {
         }
     }
 
-    /*@ServiceActivator(inputChannel = "mqttInboundChannel")
-    public void mqttUpdateRollerShutter(Message<String> message) {
-        //String topic = message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC, String.class);
-        String payload = message.getPayload();
-        long id = 1;
-        if (payload != null) {
-            this.patchOpeningRollerShutter(id, 1);
-        }
-    }*/
-
     //Helpers
     private RollerShutterDTO convertToDTO(RollerShutter rollerShutter) {
         RollerShutterDTO dto = new RollerShutterDTO();
