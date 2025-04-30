@@ -200,8 +200,10 @@ La fase di validazione ha lo scopo di verificare che il sistema soddisfi i requi
 
 ## 5 Manuale Riuso
 Il codice è suddiviso in 3 sottocartelle:
-  - [Backend](Backend/): sistema in java che gestisce tutte le chiamate REST e la logica delle entità.
+  - [Backend](Docs/Backend.md): sistema in java che gestisce tutte le chiamate REST e la logica delle entità.
   - [Frontend](Frontend/): interfaccia in javascript e html per interazione utente e chiamate api.
-  - [RoutineAgent](routineAgent/) : sistema in java per la gestione delle routine basate sull'orario.
+  - [RoutineAgent](Docs/RoutineAgent.md) : sistema in java per la gestione delle routine basate sull'orario.
 
-All'esterno sono presenti alcuni file utili per la gestione del docker-compose.
+## 6 Build ed esecuzione
+Il progetto è inteso per essere eseguito tramite docker compose, per facilitarne la costruzione abbiamo realizzato uno script denominato **start.sh**.
+
