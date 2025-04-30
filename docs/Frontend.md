@@ -36,8 +36,6 @@ Il file `styles.css` definisce l'aspetto dell'applicazione, basandosi su Bootstr
 * **Form:** Stili per elementi dei form (`form`, `.form-label`, `.form-control`, `.form-select`, `.form-check`) per garantire un aspetto omogeneo.
 * **Responsività:** Regole `@media` per adattare l'interfaccia a diverse dimensioni dello schermo, migliorando l'usabilità su dispositivi mobili.
 
-**Come riutilizzare:** Per mantenere la coerenza visiva, utilizzare le classi Bootstrap standard e le classi personalizzate definite in `styles.css` per costruire nuove interfacce o modificare quelle esistenti.
-
 ### 2. Funzionalità JavaScript
 
 #### a. Gestione API (`js/auth.js`)
