@@ -1,8 +1,3 @@
-/****************************************************
- *  AWS IoT Shadow + Stepper + Light Sensor
- *  Version: cancella "desired" dopo ogni update
- ****************************************************/
-
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <MQTT.h>
@@ -10,12 +5,12 @@
 #include <time.h>
 #include <Stepper.h>
 
-#include "configuration.h"          // ssid, pass, cert, privkey, client_cert, THINGNAME, MQTT_HOST
+#include "configuration.h" 
 
 /************* PIN DEFINITIONS *************/
 #define LIGHTSENSOR1 A0
 
-const int stepsPerRevolution = 10;
+const int stepsPerRevolution = 100;
 Stepper stepperMotor(stepsPerRevolution, D1, D2, D5, D6);
 const int motorSpeed = 80;
 
@@ -39,7 +34,7 @@ time_t now;
 static unsigned long lastPub = 0;
 
 
-const unsigned long SENSOR_INTERVAL_MS = 10UL * 60UL * 1000UL;  // 10 minuti
+const unsigned long SENSOR_INTERVAL_MS = 1UL * 60UL * 1000UL;  // 10 minuti
 
 /************* PROTOTYPES *************/
 void publishDeviceStatus();
@@ -79,13 +74,13 @@ void publishDeviceStatus() {
   StaticJsonDocument<256> doc;
   JsonObject state = doc.createNestedObject("state");
   JsonObject rep   = state.createNestedObject("reported");
-  //JsonObject des   = state.createNestedObject("desired");
+  JsonObject des   = state.createNestedObject("desired");
 
   rep["shutter1"]      = currentHeight;
   rep["light_value"]   = analogRead(LIGHTSENSOR1);
   rep["timestamp_utc"] = time(nullptr);
 
-  //des["shutter1"] = nullptr;           // cancella desired
+  des["shutter1"] = nullptr;           // cancella desired
 
   char buf[256];
   size_t n = serializeJson(doc, buf);
@@ -129,23 +124,23 @@ void setup() {
 /************* LOOP *************/
 void loop() {
   client.loop();
+  //Serial.printf("%d\n", analogRead(LIGHTSENSOR1));
 
   /* execute pending command */
   if (pendingMove) {
     noInterrupts();
-    int localSteps = stepsToMove;
+    int localSteps = stepsToMove - currentHeight;
     pendingMove = false;
     interrupts();
 
     if (localSteps != 0) {
-      int target = currentHeight + localSteps;
-      if (target >= 0 && target <= 10000) {
+      if (abs(localSteps) >= 0 && abs(localSteps) <= 100) {
         int dir = (localSteps > 0) ? 1 : -1;
         for (int i = 0; i < abs(localSteps); i++) {
           stepperMotor.step(dir);
-          //client.loop();
+          client.loop();
         }
-        currentHeight = target;
+        currentHeight = currentHeight + localSteps;
       }
       publishDeviceStatus();
     }
@@ -157,8 +152,7 @@ void loop() {
     lastPub = millis();
     publishDeviceStatus();
   }
-  lastPub = 0;
-  
+  client.loop();
 
   /* reconnect if needed */
   if (!client.connected()) {
