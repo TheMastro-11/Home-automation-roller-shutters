@@ -46,7 +46,7 @@ public class DynamicRoutineSchedulerService {
         this.clock = Clock.systemDefaultZone();
     }
 
-    @Scheduled(cron = "0 */5 * * * ?")
+    @Scheduled(cron = "00 30 01 * * ?")
     public void scheduleDailyRoutines() {
         log.info("Inizio schedulazione giornaliera delle routine...");
 
@@ -86,7 +86,6 @@ public class DynamicRoutineSchedulerService {
             } catch (Exception e) {
                 log.error("Errore durante l'esecuzione del task per Routine ID: {}", routine.getId(), e);
             } finally {
-                // Rimuovi dalla mappa una volta eseguito (o fallito)
                 scheduledTasks.remove(routine.getId());
                  log.debug("Task per Routine ID: {} rimosso dalla mappa.", routine.getId());
             }
