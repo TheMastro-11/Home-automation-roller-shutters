@@ -10,7 +10,7 @@
 /************* PIN DEFINITIONS *************/
 #define LIGHTSENSOR1 A0
 
-const int stepsPerRevolution = 100;
+const int stepsPerRevolution = 200;
 Stepper stepperMotor(stepsPerRevolution, D1, D2, D5, D6);
 const int motorSpeed = 80;
 
@@ -34,11 +34,7 @@ time_t now;
 static unsigned long lastPub = 0;
 
 
-<<<<<<< HEAD
-const unsigned long SENSOR_INTERVAL_MS = 1UL * 60UL * 1000UL;  // 10 minuti
-=======
-const unsigned long SENSOR_INTERVAL_MS = 5UL * 60UL * 1000UL;
->>>>>>> 3797f27 (Chore: code clean)
+const unsigned long SENSOR_INTERVAL_MS = 1UL * 60UL * 1000UL;  
 
 /************* PROTOTYPES *************/
 void publishDeviceStatus();
@@ -139,7 +135,7 @@ void loop() {
     if (localSteps != 0) {
       if (abs(localSteps) >= 0 && abs(localSteps) <= 100) {
         int dir = (localSteps > 0) ? 1 : -1;
-        for (int i = 0; i < abs(localSteps); i++) {
+        for (int i = 0; i < abs(localSteps)*50; i++) {
           stepperMotor.step(dir);
           client.loop();
         }
