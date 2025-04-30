@@ -34,7 +34,11 @@ time_t now;
 static unsigned long lastPub = 0;
 
 
+<<<<<<< HEAD
 const unsigned long SENSOR_INTERVAL_MS = 1UL * 60UL * 1000UL;  // 10 minuti
+=======
+const unsigned long SENSOR_INTERVAL_MS = 5UL * 60UL * 1000UL;
+>>>>>>> 3797f27 (Chore: code clean)
 
 /************* PROTOTYPES *************/
 void publishDeviceStatus();
@@ -80,7 +84,7 @@ void publishDeviceStatus() {
   rep["light_value"]   = analogRead(LIGHTSENSOR1);
   rep["timestamp_utc"] = time(nullptr);
 
-  des["shutter1"] = nullptr;           // cancella desired
+  des["shutter1"] = nullptr;
 
   char buf[256];
   size_t n = serializeJson(doc, buf);
@@ -126,7 +130,6 @@ void loop() {
   client.loop();
   //Serial.printf("%d\n", analogRead(LIGHTSENSOR1));
 
-  /* execute pending command */
   if (pendingMove) {
     noInterrupts();
     int localSteps = stepsToMove - currentHeight;
@@ -145,8 +148,6 @@ void loop() {
       publishDeviceStatus();
     }
   }
-
-  /* periodic publishing */
   
   if (millis() - lastPub >= SENSOR_INTERVAL_MS) {
     lastPub = millis();
@@ -154,7 +155,6 @@ void loop() {
   }
   client.loop();
 
-  /* reconnect if needed */
   if (!client.connected()) {
     Serial.println("MQTT disconnected — reconnecting…");
     connectMQTT();
