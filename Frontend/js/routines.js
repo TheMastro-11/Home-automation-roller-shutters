@@ -18,17 +18,35 @@ async function loadRoutines() {
                 if (!routine || !routine.id) return;
                 let triggerInfo = 'N/A';
 
-                if (routine.actionTime 
-                    && typeof routine.actionTime === 'object'
-                    && routine.actionTime.hour !== undefined 
-                    && routine.actionTime.minute !== undefined) {
-                    
-                    triggerInfo = `Time: ${String(routine.actionTime.hour).padStart(2,'0')}:${String(routine.actionTime.minute).padStart(2,'0')}`;
-                }
-                else if (typeof routine.actionTime === 'string') {
-                    const hhmm = routine.actionTime.slice(0,5);
-                    triggerInfo = `Time: ${hhmm}`;
-                }
+                 let displayHour, displayMinute;
+
+                 if (routine.actionTime
+                     && typeof routine.actionTime === 'object'
+                     && routine.actionTime.hour !== undefined
+                     && routine.actionTime.minute !== undefined) {
+ 
+                     let originalHour = parseInt(routine.actionTime.hour, 10);
+                     let originalMinute = parseInt(routine.actionTime.minute, 10);
+
+                     displayHour = (originalHour + 2) % 24;
+                     displayMinute = originalMinute;
+
+                     triggerInfo = `Time: ${String(displayHour).padStart(2, '0')}:${String(displayMinute).padStart(2, '0')}`;
+ 
+                 } else if (typeof routine.actionTime === 'string') {
+                     const timeParts = routine.actionTime.match(/^(\d{2}):(\d{2})/);
+                     if (timeParts && timeParts.length === 3) {
+                          let originalHour = parseInt(timeParts[1], 10);
+                          let originalMinute = parseInt(timeParts[2], 10);
+ 
+                          displayHour = (originalHour + 2) % 24;
+                          displayMinute = originalMinute;
+ 
+                          triggerInfo = `Time: ${String(displayHour).padStart(2, '0')}:${String(displayMinute).padStart(2, '0')}`;
+                     } else {
+                         triggerInfo = `Time: ${routine.actionTime}`;
+                     }
+                 }
                 else if (routine.lightSensor && routine.lightSensor.name
                     && routine.lightValue && routine.lightValue.value !== undefined) {
                const sensorName = routine.lightSensor.name;
